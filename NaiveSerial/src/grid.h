@@ -27,8 +27,9 @@ struct grid_s *grid; // The grid used by the simulation.
 
 // All spheres in the grid.
 // Hardcoded for testing
-#define NUM_SPHERES 5
-struct sphere_s spheres[NUM_SPHERES];
+//#define NUM_SPHERES 5
+int NUM_SPHERES;
+struct sphere_s *spheres;
 
 void init_grid();
 double update_grid();

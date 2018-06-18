@@ -4,27 +4,58 @@
 #include "collision.h"
 #include "grid.h"
 
-
-struct sphere_s spheres[NUM_SPHERES] = {
-{ { -1.0, 0.0, 0.0 },{ 20.0, 10.0, 10.0 }, 1.0, 1.0 },
-{ { 0.0, 0.0, 0.0 },{ 10.0, 10.0, 10.0 }, 1.0, 1.0 },
-
-{ { 1.0, -1.0, 0.0 },{ 10.0, 10.0, 20.0 }, 1.0, 1.0 },
-{ { 1.0, 0.0,-1.0 },{ 10.0, 30.0, 10.0 }, 1.0, 1.0 },
-{ { -1.0, -2.0, 0.0 },{ 20.0, 10.0, 40.0 }, 1.0, 1.0 },
-
-};
-
-
 /*
-struct sphere_s spheres[NUM_SPHERES] = {
-	{ { 1.0, 0.1, 0.01 },{ 10.0, 10.0, 10.0 }, 1.0, 1.0 },
-	{ { 2.0, 0.2, 0.02 },{ 20.0, 20.0, 20.0 }, 1.0, 1.0 },
-	{ { 3.0, 0.3, 0.03 },{ 30.0, 30.0, 30.0 }, 1.0, 1.0 },
-	{ { 4.0, 0.4, 0.04 },{ 40.0, 40.0, 40.0 }, 1.0, 1.0 },
-	{ { 5.0, 0.5, 0.05 },{ 45.0, 45.0, 45.0 }, 1.0, 1.0 },
+TODO figure out why this breaks right away
+probably because time to next event is 0 as they are already touching
+NUM_SPHERES = 1000;
+spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
+double x = 2.0;
+double y = 2.0;
+int i, j;
+int count = 0;
+for (i = 0; i < 10; i++) {
+for (j = 0; j < 100; j++) {
+spheres[count].pos.x = x;
+spheres[count].pos.y = y;
+spheres[count].pos.z = 10.0;
+spheres[count].vel.x = rand() / (RAND_MAX + 1.0);
+spheres[count].vel.y = rand() / (RAND_MAX + 1.0);
+spheres[count].vel.z = rand() / (RAND_MAX + 1.0);
+spheres[count].mass = 1.0;
+spheres[count].radius = 1.0;
+y = y + 2.0;
+count++;
+}
+x = x + 2.0;
+}
+*/
 
-};*/
+// Generates spheres with random velocities;
+// Position is hardcoded for now
+static void init_spheres() {
+	NUM_SPHERES = 1000;
+	spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
+	double x = 2.0;
+	double y = 2.0;
+	int i, j;
+	int count = 0;
+	for (i = 0; i < 10; i++) {
+		for (j = 0; j < 100; j++) {
+			spheres[count].pos.x = x;
+			spheres[count].pos.y = y;
+			spheres[count].pos.z = 10.0;
+			spheres[count].vel.x = rand() / (RAND_MAX + 1.0);
+			spheres[count].vel.y = rand() / (RAND_MAX + 1.0);
+			spheres[count].vel.z = rand() / (RAND_MAX + 1.0);
+			spheres[count].mass = 1.0;
+			spheres[count].radius = 1.0;
+			y = y + 4.0;
+			count++;
+		}
+		y = 2.0;
+		x = x + 4.0;
+	}
+}
 
 // Using hardcoded values for now
 void init_grid() {
@@ -32,9 +63,10 @@ void init_grid() {
 	grid->x_start = 0.0;
 	grid->y_start = 0.0;
 	grid->z_start = 0.0;
-	grid->x_end = 50.0;
-	grid->y_end = 50.0;
-	grid->z_end = 50.0;
+	grid->x_end = 500.0;
+	grid->y_end = 500.0;
+	grid->z_end = 500.0;
+	init_spheres();
 }
 
 // For each sphere finds when it will collide with the grid, then finds when it
