@@ -69,8 +69,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LibraryPath>C:\Users\Michael\Documents\Visual Studio 2015\Projects\Visualiser\Visualiser\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>C:\Users\Michael\Documents\Visual Studio 2015\Projects\Visualiser\Visualiser\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Michael\Documents\GitHub\CollisionProject\Visualiser\Visualiser\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Michael\Documents\GitHub\CollisionProject\Visualiser\Visualiser\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
