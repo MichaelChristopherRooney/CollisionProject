@@ -6,6 +6,29 @@
 
 // Hardcoded for testing right now
 static void init_spheres() {
+	NUM_SPHERES = 1;
+	spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
+	int count = 0;
+	spheres[count].pos.x = 10.0;
+	spheres[count].pos.y = 10.0;
+	spheres[count].pos.z = 10.0;
+	spheres[count].vel.x = 10.0;
+	spheres[count].vel.y = 0.0;
+	spheres[count].vel.z = 0.0;
+	spheres[count].mass = 1.0;
+	spheres[count].radius = 1.0;
+	add_sphere_to_sector(&grid->sectors[0][0][0], &spheres[count]);
+	count = 1;
+	spheres[count].pos.x = 20;
+	spheres[count].pos.y = 10.0;
+	spheres[count].pos.z = 10.0;
+	spheres[count].vel.x = 20.0;
+	spheres[count].vel.y = 0.0;
+	spheres[count].vel.z = 0.0;
+	spheres[count].mass = 1.0;
+	spheres[count].radius = 1.0;
+	add_sphere_to_sector(&grid->sectors[0][0][0], &spheres[count]);
+	/*
 	NUM_SPHERES = 4;
 	spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
 	int count = 0;
@@ -23,7 +46,7 @@ static void init_spheres() {
 			grid->sectors[x][y][0].head->sphere = &spheres[count];
 			count++;
 		}
-	}
+	}*/
 }
 
 // Hardcoded for 4 even sectors at the moment.
@@ -55,29 +78,75 @@ void init_grid() {
 	init_spheres();
 }
 
+// Finds when all spheres in a given sector will collide with other and returns
+// the soonest time.
+static double find_collision_times_between_spheres_in_sector(struct sector_s *sector) {
+	double soonest_time = DBL_MAX; 
+	if (sector->num_spheres == 1) {
+		return soonest_time;
+	}
+	struct sphere_list_s *cur = sector->head;
+	do {
+		struct sphere_s *s1 = cur->sphere;
+		struct sphere_list_s *next = cur->next;
+		while (next != NULL) {
+			struct sphere_s *s2 = next->sphere;
+			double time = find_collision_time_spheres(s1, s2);
+			if (time < soonest_time) {
+				soonest_time = time;
+			}
+			next = next->next;
+		}
+		cur = cur->next;
+	} while (cur != NULL);
+	return soonest_time;
+}
+
+// Finds time to both collide with grid and to cross sector boundaries.
+// Can optimise further so that grid boundaries are not checked if another
+// sector will be entered first.
+// TODO: sector boundaries
+static double find_collision_times_grid_boundary_for_sector(struct sector_s *sector) {
+	double soonest_time = DBL_MAX;
+	enum axis axis = COL_NONE;
+	struct sphere_list_s *cur = sector->head;
+	do {
+		struct sphere_s *sphere = cur->sphere;
+		double time = find_collision_time_grid(sphere, &axis);
+		if (time < soonest_time) {
+			soonest_time = time;
+		}
+		cur = cur->next;
+	} while (cur != NULL);
+	return soonest_time;
+}
+
 // Given a sector finds the soonest occuring event.
 // The event will be either two spheres colliding, a sphere colliding with a grid
 // boundary, or a sphere passing into another sector.
 // TODO: handle transfering spheres between sectors.
 // TODO: handle edge case where spheres are partially over sector line.
-static void find_event_times_for_sector(struct sector_s *sector, int x, int y, int z) {
-	if (grid->sectors[x][y][z].head == NULL) {
-		return;
+static double find_event_times_for_sector(struct sector_s *sector, int x, int y, int z) {
+	double soonest_time = DBL_MAX;
+	if (sector->num_spheres == 0) {
+		return soonest_time;
 	}
-	struct sphere_list_s *cur = grid->sectors[x][y][z].head;
-	do {
-		struct sphere_s *s = cur->sphere;
-		cur = cur->next;
-	} while (cur != NULL);
+	soonest_time = find_collision_times_between_spheres_in_sector(sector);
+	double time = find_collision_times_grid_boundary_for_sector(sector);
 }
 
 // TODO: highly work in progress
 double update_grid() {
+	double soonest_time = DBL_MAX;
 	for (int x = 0; x < NUM_SECTORS_X; x++) {
 		for (int y = 0; y < NUM_SECTORS_Y; y++) {
 			for (int z = 0; z < NUM_SECTORS_Z; z++) {
-				find_event_times_for_sector(&grid->sectors[x][y][z], x, y, z);
+				double time = find_event_times_for_sector(&grid->sectors[x][y][z], x, y, z);
+				if (time < soonest_time) {
+					soonest_time = time;
+				}
 			}
 		}
 	}
+	return 0.0;
 }

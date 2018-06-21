@@ -1,27 +1,14 @@
 #pragma once
 
+#include "sector.h"
 #include "sphere.h"
 
-enum AXIS {
+enum axis {
 	X_AXIS = 0,
 	Y_AXIS = 1,
 	Z_AXIS = 2,
 	AXIS_NONE = -1
 };
-
-struct sector_s {
-	double x_start;
-	double y_start;
-	double z_start;
-	double x_end;
-	double y_end;
-	double z_end;
-	struct sphere_list_s *head;
-};
-
-#define NUM_SECTORS_X 2
-#define NUM_SECTORS_Y 2
-#define NUM_SECTORS_Z 1
 
 // This is the area in which the collisions take place. 
 // Imagine the grid is a 3D box with all collisions taking place inside it.

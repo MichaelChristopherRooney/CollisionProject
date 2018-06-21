@@ -119,14 +119,15 @@
     <ClCompile Include="src\collision.c" />
     <ClCompile Include="src\grid.c" />
     <ClCompile Include="src\main.c" />
+    <ClCompile Include="src\sector.c" />
     <ClCompile Include="src\simulation.c" />
     <ClCompile Include="src\sphere.c" />
-    <ClCompile Include="src\tests.c" />
     <ClCompile Include="src\vector_3.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\collision.h" />
     <ClInclude Include="src\grid.h" />
+    <ClInclude Include="src\sector.h" />
     <ClInclude Include="src\sphere.h" />
     <ClInclude Include="src\vector_3.h" />
   </ItemGroup>

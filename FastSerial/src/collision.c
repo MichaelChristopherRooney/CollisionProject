@@ -65,7 +65,7 @@ static double find_time_to_cross_boundary(const double bound_start, const double
 // TODO: in the extremely unlikely event that the sphere perfectly hits a corner
 // of the grid then two iterations will be needed before it bounces properly - it
 // would be good if this could be handled in a single iteration instead. 
-double find_collision_time_grid(const struct sphere_s *s,enum axis *col_axis) {
+double find_collision_time_grid(const struct sphere_s *s, enum axis *col_axis) {
 	double time = DBL_MAX;
 	*col_axis = AXIS_NONE;
 	if (s->vel.x != 0) {

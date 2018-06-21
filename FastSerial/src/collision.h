@@ -7,6 +7,7 @@
 enum collision_type {
 	COL_TWO_SPHERES = 0,
 	COL_SPHERE_WITH_GRID = 1,
+	COL_SPHERE_WITH_SECTOR = 2,
 	COL_NONE = -1
 };
 
