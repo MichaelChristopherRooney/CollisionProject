@@ -21,8 +21,8 @@ static void init_spheres() {
 	spheres[count].pos.x = 10.0;
 	spheres[count].pos.y = 10.0;
 	spheres[count].pos.z = 10.0;
-	spheres[count].vel.x = 200.0;
-	spheres[count].vel.y = 0.0;
+	spheres[count].vel.x = 30.0;
+	spheres[count].vel.y = 15.0;
 	spheres[count].vel.z = 0.0;
 	spheres[count].mass = 1.0;
 	spheres[count].radius = 1.0;
@@ -85,9 +85,9 @@ void init_grid() {
 	grid->x_start = 0.0;
 	grid->y_start = 0.0;
 	grid->z_start = 0.0;
-	grid->x_end = 500.0;
-	grid->y_end = 500.0;
-	grid->z_end = 500.0;
+	grid->x_end = 100.0;
+	grid->y_end = 100.0;
+	grid->z_end = 100.0;
 	init_sectors();
 	init_spheres();
 }
@@ -127,6 +127,7 @@ static void find_collision_times_grid_boundary_for_sector(const struct sector_s 
 			event = COL_SPHERE_WITH_GRID;
 			event_sphere_1 = sphere;
 			soonest_time = time;
+			event_axis = axis;
 		}
 		struct sector_s *temp_dest;
 		time = find_collision_time_sector(sector, sphere, &temp_dest);
@@ -162,6 +163,7 @@ double update_grid() {
 	source_sector = NULL;
 	dest_sector = NULL;
 	event = COL_NONE;
+	event_axis = AXIS_NONE;
 	// TODO: first thing to be done is check have any spheres moved outside their sector boundaries
 	for (int x = 0; x < NUM_SECTORS_X; x++) {
 		for (int y = 0; y < NUM_SECTORS_Y; y++) {

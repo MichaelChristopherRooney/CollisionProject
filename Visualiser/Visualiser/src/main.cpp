@@ -71,7 +71,7 @@ static void upload_buffers_and_uniforms() {
 	glGenBuffers(1, &normal_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, normal_buffer);
 	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
-	cam_pos = glm::vec3(25.0f, 25.0f, 75.0f); // nice effect if this is set to all 0s
+	cam_pos = glm::vec3(25.0f, 25.0f, 100.0f); // nice effect if this is set to all 0s
 	cam = glm::lookAt(cam_pos, glm::vec3(25.0f, 25.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	proj = glm::perspective(glm::radians(90.0f), 16.0f / 9.0f, 0.1f, 100.0f);
 	glUniformMatrix4fv(view_unif_id, 1, GL_FALSE, &cam[0][0]);
@@ -98,7 +98,7 @@ static int init() {
 	proj_unif_id = glGetUniformLocation(sphere_shader_prog, "projection");
 	trans_unif_id = glGetUniformLocation(sphere_shader_prog, "translation");
 	scale_unif_id = glGetUniformLocation(sphere_shader_prog, "scale");
-	if (loadOBJ("C:\\Users\\Michael\\Desktop\\sphere.obj", verts, normals) == false) {
+	if (loadOBJ("sphere.mdl", verts, normals) == false) {
 		glfwTerminate();
 		return -1;
 	}
