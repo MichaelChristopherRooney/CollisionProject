@@ -16,6 +16,7 @@ struct sphere_s {
 
 struct sphere_list_s {
 	struct sphere_s *sphere;
+	struct sphere_list_s *prev;
 	struct sphere_list_s *next;
 };
 

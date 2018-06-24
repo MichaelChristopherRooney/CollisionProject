@@ -58,6 +58,46 @@ static double find_time_to_cross_boundary(const double bound_start, const double
 	return dist / axis_vel;
 }
 
+// Finds the time when the sphere will pass into another sector
+// "col_axis" will default to AXIS_NONE, and will keep that value if the sphere is stationary.
+// Note: we want to know when the center of the sphere crosses the sector boundary so we set
+// radius to 0 when calling find_time_to_cross_boundary().
+double find_collision_time_sector(const struct sector_s *sector, const struct sphere_s *sphere, struct sector_s **dest) {
+	double time = DBL_MAX;
+	if (sphere->vel.x != 0.0 && !(sector->x == 0.0 && sphere->vel.x < 0.0) && !(sector->x == NUM_SECTORS_X - 1 && sphere->vel.x > 0.0)) {
+		time = find_time_to_cross_boundary(sector->x_start, sector->x_end, sphere->vel.x, sphere->pos.x, 0.0);
+		if (sphere->vel.x > 0.0) {
+			*dest = &grid->sectors[sector->x + 1][sector->y][sector->z];
+		} else {
+			*dest = &grid->sectors[sector->x - 1][sector->y][sector->z];
+		}
+	}
+	if (sphere->vel.y != 0.0 && !(sector->y == 0.0 && sphere->vel.y < 0.0) && !(sector->y == NUM_SECTORS_Y - 1 && sphere->vel.y > 0.0)) {
+		double y_time = find_time_to_cross_boundary(sector->y_start, sector->y_end, sphere->vel.y, sphere->pos.y, 0.0);
+		if (y_time < time) {
+			time = y_time;
+			if (sphere->vel.y > 0.0) {
+				*dest = &grid->sectors[sector->x][sector->y + 1][sector->z];
+			} else {
+				*dest = &grid->sectors[sector->x][sector->y - 1][sector->z];
+			}
+		}
+	}
+	if (sphere->vel.z != 0.0 && !(sector->z == 0.0 && sphere->vel.z < 0.0) && !(sector->z == NUM_SECTORS_Z - 1 && sphere->vel.z > 0.0)) {
+		double z_time = find_time_to_cross_boundary(sector->z_start, sector->z_end, sphere->vel.z, sphere->pos.z, 0.0);
+		if (z_time < time) {
+			time = z_time;
+			if (sphere->vel.x > 0.0) {
+				*dest = &grid->sectors[sector->x][sector->y][sector->z + 1];
+			} else {
+				*dest = &grid->sectors[sector->x][sector->y][sector->z - 1];
+			}
+
+		}
+	}
+	return time;
+}
+
 // Finds the time when the sphere will collide with the grid on its current path.
 // "col_axis" will default to AXIS_NONE, and will keep that value if the sphere is stationary.
 // The time will be DBL_MAX if the sphere is stationary so that we can still
