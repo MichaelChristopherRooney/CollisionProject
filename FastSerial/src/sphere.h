@@ -8,8 +8,8 @@
 // Position is given in metres and is the center of the sphere.
 // For now assuming all spheres have the same radius
 struct sphere_s {
-	struct vector_3_s vel;
-	struct vector_3_s pos;
+	union vector_3_s vel;
+	union vector_3_s pos;
 	double radius;
 	double mass;
 };
