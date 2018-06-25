@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 #include "sphere.h"
 
 struct sector_s {
@@ -15,6 +17,9 @@ struct sector_s {
 	int x;
 	int y;
 	int z;
+	double largest_radius; // Radius of the largest sphere in the sector.
+	bool largest_radius_shared; // If many spheres have the same radius as the largest radius
+	int num_largest_radius_shared; // How many spheres shared the largest radius
 };
 
 #define NUM_SECTORS_X 2
