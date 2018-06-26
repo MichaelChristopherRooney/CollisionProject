@@ -2,6 +2,7 @@
 
 #include "sector.h"
 #include "sphere.h"
+#include "vector_3.h"
 
 enum axis {
 	X_AXIS = 0,
@@ -16,12 +17,8 @@ enum axis {
 // built to work with other positive values.
 // Note that all values here MUST be positive. 
 struct grid_s {
-	double x_start;
-	double y_start;
-	double z_start;
-	double x_end;
-	double y_end;
-	double z_end;
+	union vector_3d start;
+	union vector_3d end;
 	struct sector_s sectors[NUM_SECTORS_X][NUM_SECTORS_Y][NUM_SECTORS_Z];
 };
 

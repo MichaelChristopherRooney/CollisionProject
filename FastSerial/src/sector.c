@@ -1,7 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "grid.h"
 #include "sector.h"
+
+// Can be indexed using coord enum
+const int SECTOR_DIMS[3] = { NUM_SECTORS_X, NUM_SECTORS_Y, NUM_SECTORS_Z };
+
+// Used when iterating over axes and nned to access sector adjacent on the current axis.
+const int SECTOR_MODIFIERS[3][3] = {
+	{ 1, 0, 0 }, // x
+	{ 0, 1, 0 }, // y
+	{ 0, 0, 1 }, // z
+};
 
 static void set_largest_radius_after_insertion(struct sector_s *sector, const struct sphere_s *sphere) {
 	if (sphere->radius == sector->largest_radius) {
@@ -67,4 +78,30 @@ void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *s
 	free(cur);
 	sector->num_spheres--;
 	set_largest_radius_after_removal(sector, sphere);
+}
+
+// Given a sector returns the sector adjacent in a negative direction on the
+// specified axis.
+// If x axis returns sector to the left.
+// If y axis returns sector below.
+// If z axis returns sector behind.
+struct sector_s *get_sector_in_negative_direction(const struct sector_s *sector, const enum coord c) {
+	int x = sector->pos.x - SECTOR_MODIFIERS[c][X_COORD];
+	int y = sector->pos.y - SECTOR_MODIFIERS[c][Y_COORD];
+	int z = sector->pos.z - SECTOR_MODIFIERS[c][Z_COORD];
+	struct sector_s *adj = &grid->sectors[x][y][z];
+	return adj;
+}
+
+// Given a sector returns the sector adjacent in a positive direction on the
+// specified axis.
+// If x axis returns sector to the right.
+// If y axis returns sector above.
+// If z axis returns sector in front.
+struct sector_s *get_sector_in_positive_direction(const struct sector_s *sector, const enum coord c) {
+	int x = sector->pos.x + SECTOR_MODIFIERS[c][X_COORD];
+	int y = sector->pos.y + SECTOR_MODIFIERS[c][Y_COORD];
+	int z = sector->pos.z + SECTOR_MODIFIERS[c][Z_COORD];
+	struct sector_s *adj = &grid->sectors[x][y][z];
+	return adj;
 }

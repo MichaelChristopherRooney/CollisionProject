@@ -26,12 +26,12 @@
 // Trigonometry is used to figure out where the spheres collide.
 // TODO: better comments on trig part
 double find_collision_time_spheres(const struct sphere_s *s1, const struct sphere_s *s2) {
-	union vector_3_s rel_vel = { s1->vel.x - s2->vel.x, s1->vel.y - s2->vel.y, s1->vel.z - s2->vel.z };
-	union vector_3_s rel_pos = { s2->pos.x - s1->pos.x, s2->pos.y - s1->pos.y, s2->pos.z - s1->pos.z };
-	double dp = get_vector_3_dot_product(&rel_vel, &rel_pos);
-	double vel_vec_mag = get_vector_3_magnitude(&rel_vel);
-	double pos_vec_mag = get_vector_3_magnitude(&rel_pos);
-	double angle = get_shortest_angle_between_vector_3(dp, vel_vec_mag, pos_vec_mag);
+	union vector_3d rel_vel = { s1->vel.x - s2->vel.x, s1->vel.y - s2->vel.y, s1->vel.z - s2->vel.z };
+	union vector_3d rel_pos = { s2->pos.x - s1->pos.x, s2->pos.y - s1->pos.y, s2->pos.z - s1->pos.z };
+	double dp = get_vector_3d_dot_product(&rel_vel, &rel_pos);
+	double vel_vec_mag = get_vector_3d_magnitude(&rel_vel);
+	double pos_vec_mag = get_vector_3d_magnitude(&rel_pos);
+	double angle = get_shortest_angle_between_vector_3d(dp, vel_vec_mag, pos_vec_mag);
 	if (angle >= 3.14159265358979323846 / 2.0) { //check if >= 90 degrees (note angle is in radians)
 		return DBL_MAX;
 	}
@@ -64,35 +64,18 @@ static double find_time_to_cross_boundary(const double bound_start, const double
 // radius to 0 when calling find_time_to_cross_boundary().
 double find_collision_time_sector(const struct sector_s *sector, const struct sphere_s *sphere, struct sector_s **dest) {
 	double time = DBL_MAX;
-	if (sphere->vel.x != 0.0 && !(sector->x == 0.0 && sphere->vel.x < 0.0) && !(sector->x == NUM_SECTORS_X - 1 && sphere->vel.x > 0.0)) {
-		time = find_time_to_cross_boundary(sector->x_start, sector->x_end, sphere->vel.x, sphere->pos.x, 0.0);
-		if (sphere->vel.x > 0.0) {
-			*dest = &grid->sectors[sector->x + 1][sector->y][sector->z];
-		} else {
-			*dest = &grid->sectors[sector->x - 1][sector->y][sector->z];
-		}
-	}
-	if (sphere->vel.y != 0.0 && !(sector->y == 0.0 && sphere->vel.y < 0.0) && !(sector->y == NUM_SECTORS_Y - 1 && sphere->vel.y > 0.0)) {
-		double y_time = find_time_to_cross_boundary(sector->y_start, sector->y_end, sphere->vel.y, sphere->pos.y, 0.0);
-		if (y_time < time) {
-			time = y_time;
-			if (sphere->vel.y > 0.0) {
-				*dest = &grid->sectors[sector->x][sector->y + 1][sector->z];
-			} else {
-				*dest = &grid->sectors[sector->x][sector->y - 1][sector->z];
+	enum coord c;
+	for (c = X_COORD; c <= Z_COORD; c++) {
+		if (sphere->vel.vals[c] != 0.0 && !(sector->pos.vals[c] == 0.0 && sphere->vel.vals[c] < 0.0) && !(sector->pos.vals[c] == SECTOR_DIMS[c] - 1 && sphere->vel.vals[c] > 0.0)) {
+			double temp_time = find_time_to_cross_boundary(sector->start.vals[c], sector->end.vals[c], sphere->vel.vals[c], sphere->pos.vals[c], 0.0);
+			if (temp_time < time) {
+				time = temp_time;
+				if (sphere->vel.vals[c] > 0.0) {
+					*dest = get_sector_in_positive_direction(sector, c);
+				} else {
+					*dest = get_sector_in_negative_direction(sector, c);
+				}
 			}
-		}
-	}
-	if (sphere->vel.z != 0.0 && !(sector->z == 0.0 && sphere->vel.z < 0.0) && !(sector->z == NUM_SECTORS_Z - 1 && sphere->vel.z > 0.0)) {
-		double z_time = find_time_to_cross_boundary(sector->z_start, sector->z_end, sphere->vel.z, sphere->pos.z, 0.0);
-		if (z_time < time) {
-			time = z_time;
-			if (sphere->vel.x > 0.0) {
-				*dest = &grid->sectors[sector->x][sector->y][sector->z + 1];
-			} else {
-				*dest = &grid->sectors[sector->x][sector->y][sector->z - 1];
-			}
-
 		}
 	}
 	return time;
@@ -109,18 +92,18 @@ double find_collision_time_grid(const struct sphere_s *s, enum axis *col_axis) {
 	double time = DBL_MAX;
 	*col_axis = AXIS_NONE;
 	if (s->vel.x != 0) {
-		time = find_time_to_cross_boundary(grid->x_start, grid->x_end, s->vel.x, s->pos.x, s->radius);
+		time = find_time_to_cross_boundary(grid->start.x, grid->end.x, s->vel.x, s->pos.x, s->radius);
 		*col_axis = X_AXIS;
 	}
 	if (s->vel.y != 0) {
-		double y_time = find_time_to_cross_boundary(grid->y_start, grid->y_end, s->vel.y, s->pos.y, s->radius);
+		double y_time = find_time_to_cross_boundary(grid->start.y, grid->end.y, s->vel.y, s->pos.y, s->radius);
 		if (y_time < time) {
 			time = y_time;
 			*col_axis = Y_AXIS;
 		}
 	}
 	if (s->vel.z != 0) {
-		double z_time = find_time_to_cross_boundary(grid->z_start, grid->z_end, s->vel.z, s->pos.z, s->radius);
+		double z_time = find_time_to_cross_boundary(grid->start.z, grid->end.z, s->vel.z, s->pos.z, s->radius);
 		if (z_time < time) {
 			time = z_time;
 			*col_axis = Z_AXIS;
@@ -132,10 +115,10 @@ double find_collision_time_grid(const struct sphere_s *s, enum axis *col_axis) {
 // For details on how this works see:
 // https://www.gamasutra.com/view/feature/131424/pool_hall_lessons_fast_accurate_.php?page=3
 void apply_bounce_between_spheres(struct sphere_s *s1, struct sphere_s *s2) {
-	union vector_3_s rel_pos = { s1->pos.x - s2->pos.x, s1->pos.y - s2->pos.y, s1->pos.z - s2->pos.z };
-	normalise_vector_3(&rel_pos);
-	double dp1 = get_vector_3_dot_product(&rel_pos, &s1->vel);
-	double dp2 = get_vector_3_dot_product(&rel_pos, &s2->vel);
+	union vector_3d rel_pos = { s1->pos.x - s2->pos.x, s1->pos.y - s2->pos.y, s1->pos.z - s2->pos.z };
+	normalise_vector_3d(&rel_pos);
+	double dp1 = get_vector_3d_dot_product(&rel_pos, &s1->vel);
+	double dp2 = get_vector_3d_dot_product(&rel_pos, &s2->vel);
 	double p = (2.0 * (dp1 - dp2)) / (s1->mass + s2->mass);
 	// Sphere one first
 	s1->vel.x = s1->vel.x - (p * s2->mass * rel_pos.x);

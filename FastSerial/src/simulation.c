@@ -31,12 +31,12 @@ static void save_sphere_state_to_file(uint64_t iteration_num, double time_elapse
 // TODO: probably need an id for each sphere
 static void init_binary_file() {
 	data_file = fopen("data.bin", "wb");
-	fwrite(&grid->x_start, sizeof(double), 1, data_file);
-	fwrite(&grid->x_end, sizeof(double), 1, data_file);
-	fwrite(&grid->y_start, sizeof(double), 1, data_file);
-	fwrite(&grid->y_end, sizeof(double), 1, data_file);
-	fwrite(&grid->z_start, sizeof(double), 1, data_file);
-	fwrite(&grid->z_end, sizeof(double), 1, data_file);
+	fwrite(&grid->start.x, sizeof(double), 1, data_file);
+	fwrite(&grid->end.x, sizeof(double), 1, data_file);
+	fwrite(&grid->start.y, sizeof(double), 1, data_file);
+	fwrite(&grid->end.y, sizeof(double), 1, data_file);
+	fwrite(&grid->start.z, sizeof(double), 1, data_file);
+	fwrite(&grid->end.z, sizeof(double), 1, data_file);
 	uint64_t temp = NUM_SPHERES;
 	fwrite(&temp, sizeof(uint64_t), 1, data_file);
 	save_sphere_state_to_file(0, 0.0);
