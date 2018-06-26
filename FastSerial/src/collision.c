@@ -91,22 +91,14 @@ double find_collision_time_sector(const struct sector_s *sector, const struct sp
 double find_collision_time_grid(const struct sphere_s *s, enum axis *col_axis) {
 	double time = DBL_MAX;
 	*col_axis = AXIS_NONE;
-	if (s->vel.x != 0) {
-		time = find_time_to_cross_boundary(grid->start.x, grid->end.x, s->vel.x, s->pos.x, s->radius);
-		*col_axis = X_AXIS;
-	}
-	if (s->vel.y != 0) {
-		double y_time = find_time_to_cross_boundary(grid->start.y, grid->end.y, s->vel.y, s->pos.y, s->radius);
-		if (y_time < time) {
-			time = y_time;
-			*col_axis = Y_AXIS;
-		}
-	}
-	if (s->vel.z != 0) {
-		double z_time = find_time_to_cross_boundary(grid->start.z, grid->end.z, s->vel.z, s->pos.z, s->radius);
-		if (z_time < time) {
-			time = z_time;
-			*col_axis = Z_AXIS;
+	enum coord c;
+	for (c = X_COORD; c <= Z_COORD; c++) {
+		if (s->vel.vals[c] != 0) {
+			double temp_time = find_time_to_cross_boundary(grid->start.vals[c], grid->end.vals[c], s->vel.vals[c], s->pos.vals[c], s->radius);
+			if (temp_time < time) {
+				time = temp_time;
+				*col_axis = c;
+			}
 		}
 	}
 	return time;
