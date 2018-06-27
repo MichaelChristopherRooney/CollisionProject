@@ -60,12 +60,12 @@ static void init_spheres() {
 // Using hardcoded values for now
 void init_grid() {
 	grid = calloc(1, sizeof(struct grid_s));
-	grid->x_start = 0.0;
-	grid->y_start = 0.0;
-	grid->z_start = 0.0;
-	grid->x_end = 500.0;
-	grid->y_end = 500.0;
-	grid->z_end = 500.0;
+	grid->start.x = 0.0;
+	grid->start.y = 0.0;
+	grid->start.z = 0.0;
+	grid->end.x = 500.0;
+	grid->end.y = 500.0;
+	grid->end.z = 500.0;
 	init_spheres();
 }
 

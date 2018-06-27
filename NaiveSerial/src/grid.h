@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sphere.h"
+#include "vector_3.h"
 
 enum AXIS {
 	X_AXIS = 0,
@@ -15,12 +16,8 @@ enum AXIS {
 // built to work with other positive values.
 // Note that all values here MUST be positive. 
 struct grid_s {
-	double x_start;
-	double y_start;
-	double z_start;
-	double x_end;
-	double y_end;
-	double z_end;
+	union vector_3d start;
+	union vector_3d end;
 };
 
 struct grid_s *grid; // The grid used by the simulation.
