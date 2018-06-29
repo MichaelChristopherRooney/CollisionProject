@@ -6,8 +6,6 @@
 static FILE *data_file;
 
 // First writes the current iteration as well as the simulation timestamp.
-// TODO: radius and mass will stay constant so can save space by writing them 
-// once at the start of the binary file
 static void save_sphere_state_to_file(uint64_t iteration_num, double time_elapsed) {
 	fwrite(&iteration_num, sizeof(uint64_t), 1, data_file);
 	fwrite(&time_elapsed, sizeof(double), 1, data_file);
@@ -19,8 +17,6 @@ static void save_sphere_state_to_file(uint64_t iteration_num, double time_elapse
 		fwrite(&spheres[i].pos.x, sizeof(double), 1, data_file);
 		fwrite(&spheres[i].pos.y, sizeof(double), 1, data_file);
 		fwrite(&spheres[i].pos.z, sizeof(double), 1, data_file);
-		fwrite(&spheres[i].radius, sizeof(double), 1, data_file);
-		fwrite(&spheres[i].mass, sizeof(double), 1, data_file);
 	}
 }
 
@@ -39,6 +35,11 @@ static void init_binary_file() {
 	fwrite(&grid->end.z, sizeof(double), 1, data_file);
 	uint64_t temp = NUM_SPHERES;
 	fwrite(&temp, sizeof(uint64_t), 1, data_file);
+	int i;
+	for (i = 0; i < NUM_SPHERES; i++) {
+		fwrite(&spheres[i].radius, sizeof(double), 1, data_file);
+		fwrite(&spheres[i].mass, sizeof(double), 1, data_file);
+	}
 	save_sphere_state_to_file(0, 0.0);
 }
 

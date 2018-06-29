@@ -60,10 +60,6 @@ int get_next_iteration_sphere_state() {
 		spheres[i].pos.y = (float)tempd;
 		fread(&tempd, sizeof(double), 1, bin_file);
 		spheres[i].pos.z = (float)tempd;
-		fread(&tempd, sizeof(double), 1, bin_file);
-		spheres[i].radius = (float)tempd;
-		fread(&tempd, sizeof(double), 1, bin_file);
-		spheres[i].mass = (float)tempd;
 	}
 	if (ftell(bin_file) == bin_file_size) {
 		return 1;
@@ -87,6 +83,15 @@ int init_parser(char *fp) {
 	read_grid_dims();
 	fread(&num_spheres, sizeof(uint64_t), 1, bin_file);
 	spheres = (struct sphere_s *) calloc(num_spheres, sizeof(struct sphere_s));
+	int i;
+	for (i = 0; i < num_spheres; i++) {
+		double tempd;
+		fread(&tempd, sizeof(double), 1, bin_file);
+		spheres[i].radius = (float)tempd;
+		fread(&tempd, sizeof(double), 1, bin_file);
+		spheres[i].mass = (float)tempd;
+
+	}
 	get_next_iteration_sphere_state();
 	return 0;
 }
