@@ -52,10 +52,11 @@ void simulation_init() {
 
 void simulation_run() {
 	double time_elapsed = 0;
-	int i;
-	for (i = 1; i < 100; i++) { // start at 1 as 0 is iteration num for the initial state
+	int i = 1; // start at 1 as 0 is iteration num for the initial state
+	while (time_elapsed < 10.0) {
 		time_elapsed += update_grid();
 		save_sphere_state_to_file(i, time_elapsed);
+		i++;
 	}
 }
 
