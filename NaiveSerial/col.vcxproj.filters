@@ -24,9 +24,6 @@
     <ClCompile Include="src\vector_3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\tests.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\sphere.c">
       <Filter>Source Files</Filter>
     </ClCompile>
