@@ -120,7 +120,6 @@
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\simulation.c" />
     <ClCompile Include="src\sphere.c" />
-    <ClCompile Include="src\tests.c" />
     <ClCompile Include="src\vector_3.c" />
   </ItemGroup>
   <ItemGroup>
