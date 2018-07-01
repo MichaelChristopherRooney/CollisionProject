@@ -39,27 +39,29 @@ static void read_grid_dims() {
 // The visualiser needs to know this information.
 // Note: for this to work correctly the position file pointer should not be
 // modified between calls.
-// TODO: end of file
-// TODO: radius and mass stay constant so these will be moved to the header eventually
 int get_next_iteration_sphere_state() {
 	uint64_t iter_num;
 	fread(&iter_num, sizeof(uint64_t), 1, bin_file);
 	double tempd;
 	fread(&tempd, sizeof(double), 1, bin_file);
 	simulation_time_of_last_event = (float)tempd;
-	for (int i = 0; i < num_spheres; i++) {
+	uint64_t num;
+	fread(&num, sizeof(uint64_t), 1, bin_file);
+	for (int i = 0; i < num; i++) {
+		uint64_t id;
+		fread(&id, sizeof(uint64_t), 1, bin_file);
 		fread(&tempd, sizeof(double), 1, bin_file);
-		spheres[i].vel.x = (float) tempd;
+		spheres[id].vel.x = (float) tempd;
 		fread(&tempd, sizeof(double), 1, bin_file);
-		spheres[i].vel.y = (float)tempd;
+		spheres[id].vel.y = (float)tempd;
 		fread(&tempd, sizeof(double), 1, bin_file);
-		spheres[i].vel.z = (float)tempd;
+		spheres[id].vel.z = (float)tempd;
 		fread(&tempd, sizeof(double), 1, bin_file);
-		spheres[i].pos.x = (float)tempd;
+		spheres[id].pos.x = (float)tempd;
 		fread(&tempd, sizeof(double), 1, bin_file);
-		spheres[i].pos.y = (float)tempd;
+		spheres[id].pos.y = (float)tempd;
 		fread(&tempd, sizeof(double), 1, bin_file);
-		spheres[i].pos.z = (float)tempd;
+		spheres[id].pos.z = (float)tempd;
 	}
 	if (ftell(bin_file) == bin_file_size) {
 		return 1;
@@ -90,7 +92,6 @@ int init_parser(char *fp) {
 		spheres[i].radius = (float)tempd;
 		fread(&tempd, sizeof(double), 1, bin_file);
 		spheres[i].mass = (float)tempd;
-
 	}
 	get_next_iteration_sphere_state();
 	return 0;

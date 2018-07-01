@@ -1,23 +1,16 @@
 #include <float.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "collision.h"
 #include "grid.h"
-
-static double soonest_time; // When the event happens
-static enum collision_type event; // What the next event is.
-static struct sphere_s *event_sphere_1; // Sphere that hits the grid, transfers to another sector, or is the first sphere in a sphere on sphere collision.
-static struct sphere_s *event_sphere_2; // Second sphere in a sphere on sphere collision, otherwise NULL
-static enum axis event_axis; // If the event is a sphere bouncing off the grid record the axis
-// If a sphere moves between sectors these record the details.
-static struct sector_s *source_sector;
-static struct sector_s *dest_sector;
 
 // Hardcoded for testing right now
 static void init_spheres() {
 	NUM_SPHERES = 2;
 	spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
 	int count = 0;
+	spheres[count].id = count;
 	spheres[count].pos.x = 10.0;
 	spheres[count].pos.y = 10.0;
 	spheres[count].pos.z = 10.0;
@@ -28,6 +21,7 @@ static void init_spheres() {
 	spheres[count].radius = 1.0;
 	add_sphere_to_sector(&grid->sectors[0][0][0], &spheres[count]);
 	count = 1;
+	spheres[count].id = count;
 	spheres[count].pos.x = 90.0;
 	spheres[count].pos.y = 10.0;
 	spheres[count].pos.z = 10.0;
@@ -112,11 +106,11 @@ static void find_collision_times_between_spheres_in_sector(const struct sector_s
 		while (next != NULL) {
 			struct sphere_s *s2 = next->sphere;
 			double time = find_collision_time_spheres(s1, s2);
-			if (time < soonest_time) {
-				event = COL_TWO_SPHERES;
-				event_sphere_1 = s1;
-				event_sphere_2 = s2;
-				soonest_time = time;
+			if (time < event_details.time) {
+				event_details.type = COL_TWO_SPHERES;
+				event_details.sphere_1 = s1;
+				event_details.sphere_2 = s2;
+				event_details.time = time;
 			}
 			next = next->next;
 		}
@@ -133,20 +127,20 @@ static void find_collision_times_grid_boundary_for_sector(const struct sector_s 
 	while (cur != NULL) {
 		struct sphere_s *sphere = cur->sphere;
 		double time = find_collision_time_grid(sphere, &axis);
-		if (time < soonest_time) {
-			event = COL_SPHERE_WITH_GRID;
-			event_sphere_1 = sphere;
-			soonest_time = time;
-			event_axis = axis;
+		if (time < event_details.time) {
+			event_details.type = COL_SPHERE_WITH_GRID;
+			event_details.sphere_1 = sphere;
+			event_details.time = time;
+			event_details.grid_axis = axis;
 		}
 		struct sector_s *temp_dest;
 		time = find_collision_time_sector(sector, sphere, &temp_dest);
-		if (time < soonest_time) {
-			event = COL_SPHERE_WITH_SECTOR;
-			event_sphere_1 = sphere;
-			soonest_time = time;
-			source_sector = sector;
-			dest_sector = temp_dest;
+		if (time < event_details.time) {
+			event_details.type = COL_SPHERE_WITH_SECTOR;
+			event_details.sphere_1 = sphere;
+			event_details.time = time;
+			event_details.source_sector = sector;
+			event_details.dest_sector = temp_dest;
 		}
 		cur = cur->next;
 	}
@@ -182,11 +176,11 @@ static void find_partial_crossing_events_between_sphere_and_sector(const struct 
 	while (cur_2 != NULL) {
 		struct sphere_s *sphere_2 = cur_2->sphere;
 		double time = find_collision_time_spheres(sphere_1, sphere_2);
-		if (time < soonest_time) {
-			event = COL_TWO_SPHERES;
-			event_sphere_1 = sphere_1;
-			event_sphere_2 = sphere_2;
-			soonest_time = time;
+		if (time < event_details.time) {
+			event_details.type = COL_TWO_SPHERES;
+			event_details.sphere_1 = sphere_1;
+			event_details.sphere_2 = sphere_2;
+			event_details.time = time;
 		}
 		cur_2 = cur_2->next;
 	}
@@ -204,12 +198,12 @@ static void find_partial_crossing_events_between_sectors_non_diagonal(const stru
 	while (cur_1 != NULL) {
 		struct sphere_s *sphere_1 = cur_1->sphere;
 		if (dir == 1 && sphere_1->vel.vals[c] > 0.0) {
-			double pos_new = sphere_1->pos.vals[c] + (sphere_1->vel.vals[c] * soonest_time);
+			double pos_new = sphere_1->pos.vals[c] + (sphere_1->vel.vals[c] * event_details.time);
 			if (pos_new >= sector_2->start.vals[c] - sphere_1->radius - sector_2->largest_radius) {
 				find_partial_crossing_events_between_sphere_and_sector(sphere_1, sector_2);
 			}
 		} else if (dir == -1 && sphere_1->vel.vals[c] < 0.0) {
-			double pos_new = sphere_1->pos.vals[c] + (sphere_1->vel.vals[c] * soonest_time);
+			double pos_new = sphere_1->pos.vals[c] + (sphere_1->vel.vals[c] * event_details.time);
 			if (pos_new <= sector_2->end.vals[c] + sphere_1->radius + sector_2->largest_radius) {
 				find_partial_crossing_events_between_sphere_and_sector(sphere_1, sector_2);
 			}
@@ -256,15 +250,15 @@ static void update_spheres() {
 	int i;
 	for (i = 0; i < NUM_SPHERES; i++) {
 		struct sphere_s *s = &(spheres[i]);
-		update_sphere_position(s, soonest_time);
+		update_sphere_position(s, event_details.time);
 	}
-	if (event == COL_SPHERE_WITH_GRID) {
-		event_sphere_1->vel.vals[event_axis] *= -1.0;
-	} else if (event == COL_TWO_SPHERES) {
-		apply_bounce_between_spheres(event_sphere_1, event_sphere_2);
-	} else if (event == COL_SPHERE_WITH_SECTOR) {
-		remove_sphere_from_sector(source_sector, event_sphere_1);
-		add_sphere_to_sector(dest_sector, event_sphere_1);
+	if (event_details.type == COL_SPHERE_WITH_GRID) {
+		event_details.sphere_1->vel.vals[event_details.grid_axis] *= -1.0;
+	} else if (event_details.type == COL_TWO_SPHERES) {
+		apply_bounce_between_spheres(event_details.sphere_1, event_details.sphere_2);
+	} else if (event_details.type == COL_SPHERE_WITH_SECTOR) {
+		remove_sphere_from_sector(event_details.source_sector, event_details.sphere_1);
+		add_sphere_to_sector(event_details.dest_sector, event_details.sphere_1);
 	}
 }
 
@@ -304,18 +298,18 @@ static void sanity_check() {
 // TODO: highly work in progress
 double update_grid() {
 	// First reset records.
-	soonest_time = DBL_MAX;
-	event_sphere_1 = NULL;
-	event_sphere_2 = NULL;
-	source_sector = NULL;
-	dest_sector = NULL;
-	event = COL_NONE;
-	event_axis = AXIS_NONE;
+	event_details.time = DBL_MAX;
+	event_details.sphere_1 = NULL;
+	event_details.sphere_2 = NULL;
+	event_details.source_sector = NULL;
+	event_details.dest_sector = NULL;
+	event_details.type = COL_NONE;
+	event_details.grid_axis = AXIS_NONE;
 	// Now find event + time of event
 	find_event_times_for_all_sectors();
 	find_partial_crossing_events_for_all_sectors();
 	// Lastly move forward to the next event
 	update_spheres();
 	sanity_check();
-	return soonest_time;
+	return event_details.time;
 }

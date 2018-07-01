@@ -5,18 +5,49 @@
 
 static FILE *data_file;
 
-// First writes the current iteration as well as the simulation timestamp.
+// Saves a sphere to the file
+static void save_sphere_to_file(struct sphere_s *s) {
+	fwrite(&s->id, sizeof(uint64_t), 1, data_file);
+	fwrite(&s->vel.x, sizeof(double), 1, data_file);
+	fwrite(&s->vel.y, sizeof(double), 1, data_file);
+	fwrite(&s->vel.z, sizeof(double), 1, data_file);
+	fwrite(&s->pos.x, sizeof(double), 1, data_file);
+	fwrite(&s->pos.y, sizeof(double), 1, data_file);
+	fwrite(&s->pos.z, sizeof(double), 1, data_file);
+}
+
+// Saves initial state of all spheres
+// Note: need to still write count as parsers want to know how many spheres have
+// changed since last iteration.
+// As this is the first iteration every sphere has "changed".
+static void save_sphere_initial_state_to_file() {
+	uint64_t iter_num = 0;
+	double time_elapsed = 0.0;
+	fwrite(&iter_num, sizeof(uint64_t), 1, data_file);
+	fwrite(&time_elapsed, sizeof(double), 1, data_file);
+	fwrite(&NUM_SPHERES, sizeof(uint64_t), 1, data_file);
+	int i;
+	for (i = 0; i < NUM_SPHERES; i++) {
+		save_sphere_to_file(&spheres[i]);
+	}
+}
+
+
+
+// First writes the current iteration number as well as the simulation timestamp.
+// Then writes the number of changed spheres to the file, followed by the data for each changed sphere.
 static void save_sphere_state_to_file(uint64_t iteration_num, double time_elapsed) {
 	fwrite(&iteration_num, sizeof(uint64_t), 1, data_file);
 	fwrite(&time_elapsed, sizeof(double), 1, data_file);
-	int i;
-	for (i = 0; i < NUM_SPHERES; i++) {
-		fwrite(&spheres[i].vel.x, sizeof(double), 1, data_file);
-		fwrite(&spheres[i].vel.y, sizeof(double), 1, data_file);
-		fwrite(&spheres[i].vel.z, sizeof(double), 1, data_file);
-		fwrite(&spheres[i].pos.x, sizeof(double), 1, data_file);
-		fwrite(&spheres[i].pos.y, sizeof(double), 1, data_file);
-		fwrite(&spheres[i].pos.z, sizeof(double), 1, data_file);
+	if (event_details.type == COL_TWO_SPHERES) {
+		uint64_t count = 2;
+		fwrite(&count, sizeof(uint64_t), 1, data_file);
+		save_sphere_to_file(event_details.sphere_1);
+		save_sphere_to_file(event_details.col_sphere_2);
+	} else {
+		uint64_t count = 1;
+		fwrite(&count, sizeof(uint64_t), 1, data_file);
+		save_sphere_to_file(event_details.sphere_1);
 	}
 }
 
@@ -40,7 +71,7 @@ static void init_binary_file() {
 		fwrite(&spheres[i].radius, sizeof(double), 1, data_file);
 		fwrite(&spheres[i].mass, sizeof(double), 1, data_file);
 	}
-	save_sphere_state_to_file(0, 0.0);
+	save_sphere_initial_state_to_file();
 }
 
 void simulation_init() {

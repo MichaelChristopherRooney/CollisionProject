@@ -41,6 +41,7 @@ static void init_spheres() {
 	int count = 0;
 	for (i = 0; i < 10; i++) {
 		for (j = 0; j < 100; j++) {
+			spheres[count].id = count;
 			spheres[count].pos.x = x;
 			spheres[count].pos.y = y;
 			spheres[count].pos.z = 10.0;
@@ -76,61 +77,56 @@ void init_grid() {
 // Then the colliding sphere(s) have their velocity updated, or if the soonest
 // collision is a sphere colliding with a grid then its velocity on the collision
 // axis is simply inverted.
-//
-// Variables used:
-// "soonest_time": Time to the soonest occuring collision.
-// "type": Type of the soonest occuring collision - either sphere on sphere or sphere on grid
-// "col_sphere_1": First sphere in the soonest occuring collision.
-// "col_sphere_2": Second sphere, NULL if first sphere will collide with grid
-// "col_axis": If soonest collision is sphere on grid this stores the axis it occurs on.
 double update_grid() {
-	double soonest_time = DBL_MAX; 
-	enum collision_type col_type = COL_NONE; 
-	enum AXIS col_axis = AXIS_NONE;
-	struct sphere_s *col_sphere_1 = NULL;
-	struct sphere_s *col_sphere_2 = NULL;
+	// reset
+	event_details.time = DBL_MAX;
+	event_details.type = COL_NONE;
+	event_details.col_axis = AXIS_NONE;
+	event_details.sphere_1 = NULL;
+	event_details.sphere_2 = NULL;
 	int i, j;
 	for (i = 0; i < NUM_SPHERES; i++) {
 		struct sphere_s *s1 = &(spheres[i]);
 		enum AXIS axis;
 		double time = find_collision_time_grid(s1, &axis);
-		if (time < soonest_time) {
-			col_type = COL_SPHERE_WITH_GRID;
-			col_axis = axis;
-			soonest_time = time;
-			col_sphere_1 = s1;
-			col_sphere_2 = NULL;
+		if (time < event_details.time) {
+			event_details.type = COL_SPHERE_WITH_GRID;
+			event_details.col_axis = axis;
+			event_details.time = time;
+			event_details.sphere_1 = s1;
+			event_details.sphere_2 = NULL;
 		}
 		for (j = i + 1; j < NUM_SPHERES; j++) {
 			struct sphere_s *s2 = &(spheres[j]);
 			time = find_collision_time_spheres(s1, s2);
-			if (time < soonest_time) {
-				col_type = COL_TWO_SPHERES;
-				col_axis = AXIS_NONE;
-				soonest_time = time;
-				col_sphere_1 = s1;
-				col_sphere_2 = s2;
+			if (time < event_details.time) {
+				event_details.type = COL_TWO_SPHERES;
+				event_details.col_axis = AXIS_NONE;
+				event_details.time = time;
+				event_details.sphere_1 = s1;
+				event_details.sphere_2 = s2;
 			}
 		}
 	}
 	for (i = 0; i < NUM_SPHERES; i++) {
 		struct sphere_s *s = &(spheres[i]);
-		update_sphere_position(s, soonest_time);
+		update_sphere_position(s, event_details.time);
 	}
-	if (col_type == COL_SPHERE_WITH_GRID) {
-		switch (col_axis) {
+	if (event_details.type == COL_SPHERE_WITH_GRID) {
+		//event_details.col_sphere_1->vel.vals[event_details.col_axis] *= -1.0;
+		switch (event_details.col_axis) {
 		case X_AXIS:
-			col_sphere_1->vel.x *= -1;
+			event_details.sphere_1->vel.x *= -1;
 			break;
 		case Y_AXIS:
-			col_sphere_1->vel.y *= -1;
+			event_details.sphere_1->vel.y *= -1;
 			break;
 		case Z_AXIS:
-			col_sphere_1->vel.z *= -1;
+			event_details.sphere_1->vel.z *= -1;
 			break;
 		}
-	} else if (col_type == COL_TWO_SPHERES) {
-		apply_bounce_between_spheres(col_sphere_1, col_sphere_2);
+	} else if (event_details.type == COL_TWO_SPHERES) {
+		apply_bounce_between_spheres(event_details.sphere_1, event_details.sphere_2);
 	}
-	return soonest_time;
+	return event_details.time;
 }

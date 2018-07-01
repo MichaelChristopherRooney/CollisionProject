@@ -140,9 +140,14 @@ int main(void) {
 	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		prepare_to_draw_spheres();
+		float time_left = simulation_time_of_next_event - simulation_time_of_last_event - time_elapsed_iter;
 		for (int i = 0; i < num_spheres; i++) {
 			draw_sphere_at(spheres[i].pos, spheres[i].radius);
-			update_sphere_position(&spheres[i], tick_rate);
+			if (time_left < tick_rate) {
+				update_sphere_position(&spheres[i], time_left);
+			} else {
+				update_sphere_position(&spheres[i], tick_rate);
+			}
 		}
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(0);

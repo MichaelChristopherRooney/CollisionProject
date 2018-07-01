@@ -1,5 +1,6 @@
 #pragma once
 
+#include "collision.h"
 #include "sphere.h"
 #include "vector_3.h"
 
@@ -22,10 +23,20 @@ struct grid_s {
 
 struct grid_s *grid; // The grid used by the simulation.
 
+struct event_s {
+	double time;  // When the event happens
+	enum collision_type type; // What the next event is.
+	struct sphere_s *sphere_1; // Sphere that hits the grid or is the first sphere in a sphere on sphere collision.
+	struct sphere_s *sphere_2; // Second sphere in a sphere on sphere collision, otherwise NULL
+	enum AXIS col_axis; // If the event is a sphere bouncing off the grid record the axis
+};
+
+struct event_s event_details;
+
 // All spheres in the grid.
 // Hardcoded for testing
 //#define NUM_SPHERES 5
-int NUM_SPHERES;
+uint64_t NUM_SPHERES;
 struct sphere_s *spheres;
 
 void init_grid();

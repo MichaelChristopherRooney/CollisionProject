@@ -1,7 +1,5 @@
 #include <stdio.h>
 
-void run_tests();
-
 void simulation_init();
 void simulation_run();
 void simulation_cleanup();
