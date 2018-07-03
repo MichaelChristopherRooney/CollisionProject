@@ -31,3 +31,4 @@ void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere
 void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *sphere);
 struct sector_s *get_sector_in_negative_direction(const struct sector_s *sector, const enum coord c);
 struct sector_s *get_sector_in_positive_direction(const struct sector_s *sector, const enum coord c);
+void add_sphere_to_correct_sector(const struct sphere_s *sphere);

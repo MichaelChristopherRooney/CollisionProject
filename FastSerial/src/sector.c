@@ -105,3 +105,35 @@ struct sector_s *get_sector_in_positive_direction(const struct sector_s *sector,
 	struct sector_s *adj = &grid->sectors[x][y][z];
 	return adj;
 }
+
+// Helper for add_sphere_to_correct_sector function.
+static bool does_sphere_belong_to_sector(const struct sphere_s *sphere, const struct sector_s *sector) {
+	enum axis a;
+	for (a = X_AXIS; a <= Z_AXIS; a++) {
+		if (sphere->pos.vals[a] < sector->start.vals[a] || sphere->pos.vals[a] >= sector->end.vals[a]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+// Given a sphere adds it to the correct sector.
+// This should only be used when randomly generating spheres at startup.
+void add_sphere_to_correct_sector(const struct sphere_s *sphere) {
+	int x, y, z;
+	for (x = 0; x < NUM_SECTORS_X; x++) {
+		for (y = 0; y < NUM_SECTORS_Y; y++) {
+			for (z = 0; z < NUM_SECTORS_Z; z++) {
+				bool res = does_sphere_belong_to_sector(sphere, &grid->sectors[x][y][z]);
+				if (res) {
+					add_sphere_to_sector(&grid->sectors[x][y][z], sphere);
+					return;
+				}
+			}
+		}
+	}
+	// Shouldn't reach here
+	printf("Error: sphere does not belong to any sector\n");
+	getchar();
+	exit(1);
+}

@@ -19,7 +19,7 @@ static void init_spheres() {
 	spheres[count].vel.z = 0.0;
 	spheres[count].mass = 1.0;
 	spheres[count].radius = 1.0;
-	add_sphere_to_sector(&grid->sectors[0][0][0], &spheres[count]);
+	add_sphere_to_correct_sector(&spheres[count]);
 	count = 1;
 	spheres[count].id = count;
 	spheres[count].pos.x = 90.0;
@@ -30,7 +30,7 @@ static void init_spheres() {
 	spheres[count].vel.z = 0.0;
 	spheres[count].mass = 1.0;
 	spheres[count].radius = 1.0;
-	add_sphere_to_sector(&grid->sectors[1][0][0], &spheres[count]);
+	add_sphere_to_correct_sector(&spheres[count]);
 	/*count = 1;
 	spheres[count].pos.x = 20;
 	spheres[count].pos.y = 10.0;
@@ -297,6 +297,7 @@ static void sanity_check() {
 
 // TODO: highly work in progress
 double update_grid() {
+	sanity_check();
 	// First reset records.
 	event_details.time = DBL_MAX;
 	event_details.sphere_1 = NULL;
