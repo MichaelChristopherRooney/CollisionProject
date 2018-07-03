@@ -43,7 +43,7 @@ static void save_sphere_state_to_file(uint64_t iteration_num, double time_elapse
 		uint64_t count = 2;
 		fwrite(&count, sizeof(uint64_t), 1, data_file);
 		save_sphere_to_file(event_details.sphere_1);
-		save_sphere_to_file(event_details.col_sphere_2);
+		save_sphere_to_file(event_details.sphere_2);
 	} else {
 		uint64_t count = 1;
 		fwrite(&count, sizeof(uint64_t), 1, data_file);
