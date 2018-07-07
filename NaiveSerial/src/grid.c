@@ -30,32 +30,40 @@ x = x + 2.0;
 }
 */
 
+// Creates a number of spheres in a line
+static void create_spheres(int num, double x_start, double y_start, double z_start, double x_inc, double y_inc, double z_inc) {
+	static int count = 0;
+	double x = x_start;
+	double y = y_start;
+	double z = z_start;
+	int i;
+	for (i = 0; i < num; i++) {
+		spheres[count].id = count;
+		spheres[count].pos.x = x;
+		spheres[count].pos.y = y;
+		spheres[count].pos.z = z;
+		spheres[count].vel.x = rand() / (RAND_MAX + 1.0);
+		spheres[count].vel.y = rand() / (RAND_MAX + 1.0);
+		spheres[count].vel.z = rand() / (RAND_MAX + 1.0);
+		spheres[count].mass = 1.0;
+		spheres[count].radius = 1.0;
+		x += x_inc;
+		y += y_inc;
+		z += z_inc;
+		count++;
+	}
+}
+
 // Generates spheres with random velocities;
 // Position is hardcoded for now
 static void init_spheres() {
 	NUM_SPHERES = 1000;
 	spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
-	double x = 2.0;
-	double y = 2.0;
-	int i, j;
-	int count = 0;
-	for (i = 0; i < 10; i++) {
-		for (j = 0; j < 100; j++) {
-			spheres[count].id = count;
-			spheres[count].pos.x = x;
-			spheres[count].pos.y = y;
-			spheres[count].pos.z = 10.0;
-			spheres[count].vel.x = rand() / (RAND_MAX + 1.0);
-			spheres[count].vel.y = rand() / (RAND_MAX + 1.0);
-			spheres[count].vel.z = rand() / (RAND_MAX + 1.0);
-			spheres[count].mass = 1.0;
-			spheres[count].radius = 1.0;
-			y = y + 4.0;
-			count++;
-		}
-		y = 2.0;
-		x = x + 4.0;
-	}
+	srand(123);
+	create_spheres(250, 10.0, 10.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 490.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 510.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 990.0, 10.0, 3.5, 0.0, 0.0);
 }
 
 // Using hardcoded values for now
@@ -64,9 +72,9 @@ void init_grid() {
 	grid->start.x = 0.0;
 	grid->start.y = 0.0;
 	grid->start.z = 0.0;
-	grid->end.x = 500.0;
-	grid->end.y = 500.0;
-	grid->end.z = 500.0;
+	grid->end.x = 1000.0;
+	grid->end.y = 1000.0;
+	grid->end.z = 1000.0;
 	init_spheres();
 }
 
