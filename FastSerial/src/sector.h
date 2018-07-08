@@ -29,6 +29,10 @@ const int SECTOR_MODIFIERS[3][3];
 
 void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere);
 void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *sphere);
+struct sector_s *get_sector_in_negative_negative_direction_diagonal(const struct sector_s *sector, const enum coord c1, const enum coord c2);
+struct sector_s *get_sector_in_negative_positive_direction_diagonal(const struct sector_s *sector, const enum coord c1, const enum coord c2);
+struct sector_s *get_sector_in_positive_negative_direction_diagonal(const struct sector_s *sector, const enum coord c1, const enum coord c2);
+struct sector_s *get_sector_in_positive_positive_direction_diagonal(const struct sector_s *sector, const enum coord c1, const enum coord c2);
 struct sector_s *get_sector_in_negative_direction(const struct sector_s *sector, const enum coord c);
 struct sector_s *get_sector_in_positive_direction(const struct sector_s *sector, const enum coord c);
 void add_sphere_to_correct_sector(const struct sphere_s *sphere);

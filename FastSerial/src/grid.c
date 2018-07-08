@@ -5,9 +5,10 @@
 #include "collision.h"
 #include "grid.h"
 
+static int count = 0; // number of spheres that have been initialised
+
 // Creates a number of spheres in a line
 static void create_spheres(int num, double x_start, double y_start, double z_start, double x_inc, double y_inc, double z_inc) {
-	static int count = 0;
 	double x = x_start;
 	double y = y_start;
 	double z = z_start;
@@ -30,16 +31,36 @@ static void create_spheres(int num, double x_start, double y_start, double z_sta
 	}
 }
 
+static void create_sphere(double x, double y, double z, double x_vel, double y_vel, double z_vel) {
+	spheres[count].id = count;
+	spheres[count].pos.x = x;
+	spheres[count].pos.y = y;
+	spheres[count].pos.z = z;
+	spheres[count].vel.x = x_vel;
+	spheres[count].vel.y = y_vel;
+	spheres[count].vel.z = z_vel;
+	spheres[count].mass = 1.0;
+	spheres[count].radius = 1.0;
+	add_sphere_to_correct_sector(&spheres[count]);
+	count++;
+}
+
 // Generates spheres with random velocities;
 // Position is hardcoded for now
 static void init_spheres() {
-	NUM_SPHERES = 1000;
+	//NUM_SPHERES = 1000;
+	//spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
+	//srand(123);
+	//create_spheres(250, 10.0, 10.0, 10.0, 3.5, 0.0, 0.0);
+	//create_spheres(250, 10.0, 490.0, 10.0, 3.5, 0.0, 0.0);
+	//create_spheres(250, 10.0, 510.0, 10.0, 3.5, 0.0, 0.0);
+	//create_spheres(250, 10.0, 990.0, 10.0, 3.5, 0.0, 0.0);
+	NUM_SPHERES = 4;
 	spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
-	srand(123);
-	create_spheres(250, 10.0, 10.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 490.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 510.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 990.0, 10.0, 3.5, 0.0, 0.0);
+	create_sphere(25.0, 25.0, 10.0, 5.0, 5.0, 0.0);
+	create_sphere(25.0, 75.0, 10.0, 5.0, -5.0, 0.0);
+	create_sphere(75.0, 75.0, 10.0, -5.0, -5.0, 0.0);
+	create_sphere(75.0, 25.0, 10.0, -1.0, 1.0, 0.0);
 }
 
 // Hardcoded for 4 even sectors at the moment.
@@ -69,9 +90,9 @@ void init_grid() {
 	grid->start.x = 0.0;
 	grid->start.y = 0.0;
 	grid->start.z = 0.0;
-	grid->end.x = 1000.0;
-	grid->end.y = 1000.0;
-	grid->end.z = 1000.0;
+	grid->end.x = 100.0;
+	grid->end.y = 100.0;
+	grid->end.z = 100.0;
 	init_sectors();
 	init_spheres();
 }
@@ -170,27 +191,64 @@ static void find_partial_crossing_events_between_sphere_and_sector(const struct 
 // of sector_2 at soonest_time.
 // If so then we need to check its collision against spheres in sector_2.
 // If sector_2 is further along the axis than sector_1 dir will be 1, else -1.
+static void find_partial_crossing_events_between_sectors_diagonal(const struct sector_s *sector_1, const struct sector_s *sector_2, const enum coord c1, const int c1_dir, const enum coord c2, const int c2_dir) {
+	if (sector_2->num_spheres == 0) {
+		return;
+	}
+	struct sphere_list_s *cur = sector_1->head;
+	while (cur != NULL) {
+		struct sphere_s *sphere = cur->sphere;
+		double c1_pos = sphere->pos.vals[c1] + (sphere->vel.vals[c1] * event_details.time);
+		double c2_pos = sphere->pos.vals[c2] + (sphere->vel.vals[c2] * event_details.time);
+		if ((c1_dir == 1 && sphere->vel.vals[c1] > 0.0) && (c2_dir == 1 && sphere->vel.vals[c2] > 0.0)) {
+			// Positive on c1 and c2
+			if (c1_pos >= sector_2->start.vals[c1] - sphere->radius - sector_2->largest_radius && c2_pos >= sector_2->start.vals[c2] - sphere->radius - sector_2->largest_radius) {
+				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			}
+		} else if ((c1_dir == 1 && sphere->vel.vals[c1] > 0.0) && (c2_dir == -1 && sphere->vel.vals[c2] < 0.0)) {
+			// Positive on c1 and negative on c2
+			if (c1_pos >= sector_2->start.vals[c1] - sphere->radius - sector_2->largest_radius && c2_pos >= sector_2->start.vals[c2] + sphere->radius + sector_2->largest_radius) {
+				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			}
+		} else if ((c1_dir == -1 && sphere->vel.vals[c1] < 0.0) && (c2_dir == 1 && sphere->vel.vals[c2] > 0.0)) {
+			// Negative on c1 and positive on c2
+			if (c1_pos >= sector_2->start.vals[c1] + sphere->radius + sector_2->largest_radius && c2_pos >= sector_2->start.vals[c2] - sphere->radius - sector_2->largest_radius) {
+				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			}
+		} else if ((c1_dir == 1 && sphere->vel.vals[c1] > 0.0) && (c2_dir == 1 && sphere->vel.vals[c2] > 0.0)) {
+			// Negative on c1 and c2
+			if (c1_pos >= sector_2->start.vals[c1] + sphere->radius + sector_2->largest_radius && c2_pos >= sector_2->start.vals[c2] + sphere->radius + sector_2->largest_radius) {
+				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			}
+		}
+		cur = cur->next;
+	}
+
+}
+
+// For each sphere in sector_1 check if it is within its radius + sector_2->largest_radius
+// of sector_2 at soonest_time.
+// If so then we need to check its collision against spheres in sector_2.
+// If sector_2 is further along the axis than sector_1 dir will be 1, else -1.
 static void find_partial_crossing_events_between_sectors_non_diagonal(const struct sector_s *sector_1, const struct sector_s *sector_2, const enum coord c, const int dir) {
 	if (sector_2->num_spheres == 0) {
 		return;
 	}
-	struct sphere_list_s *cur_1 = sector_1->head;
-	while (cur_1 != NULL) {
-		struct sphere_s *sphere_1 = cur_1->sphere;
-		if (dir == 1 && sphere_1->vel.vals[c] > 0.0) {
-			double pos_new = sphere_1->pos.vals[c] + (sphere_1->vel.vals[c] * event_details.time);
-			if (pos_new >= sector_2->start.vals[c] - sphere_1->radius - sector_2->largest_radius) {
-				find_partial_crossing_events_between_sphere_and_sector(sphere_1, sector_2);
+	struct sphere_list_s *cur = sector_1->head;
+	while (cur != NULL) {
+		struct sphere_s *sphere = cur->sphere;
+		double pos_new = sphere->pos.vals[c] + (sphere->vel.vals[c] * event_details.time);
+		if (dir == 1 && sphere->vel.vals[c] > 0.0) {
+			if (pos_new >= sector_2->start.vals[c] - sphere->radius - sector_2->largest_radius) {
+				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
 			}
-		} else if (dir == -1 && sphere_1->vel.vals[c] < 0.0) {
-			double pos_new = sphere_1->pos.vals[c] + (sphere_1->vel.vals[c] * event_details.time);
-			if (pos_new <= sector_2->end.vals[c] + sphere_1->radius + sector_2->largest_radius) {
-				find_partial_crossing_events_between_sphere_and_sector(sphere_1, sector_2);
+		} else if (dir == -1 && sphere->vel.vals[c] < 0.0) {
+			if (pos_new <= sector_2->end.vals[c] + sphere->radius + sector_2->largest_radius) {
+				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
 			}
 		}
-		cur_1 = cur_1->next;
+		cur = cur->next;
 	}
-
 }
 
 // Iterates over every adjacent sector in each axis and looks for partial crossings.
@@ -199,16 +257,41 @@ static void find_partial_crossing_events_for_sector(const struct sector_s *secto
 	if (sector->num_spheres == 0) {
 		return;
 	}
-	enum coord c;
-	for (c = X_COORD; c <= Z_COORD; c++) {
-		if (sector->pos.vals[c] != 0) { // behind/below/left
-			struct sector_s *sector_2 = get_sector_in_negative_direction(sector, c);
-			find_partial_crossing_events_between_sectors_non_diagonal(sector, sector_2, c, -1);
+	enum coord c1, c2;
+	for (c1 = X_COORD; c1 <= Z_COORD; c1++) {
+		if (sector->pos.vals[c1] != 0) { // behind/below/left
+			struct sector_s *sector_2 = get_sector_in_negative_direction(sector, c1);
+			find_partial_crossing_events_between_sectors_non_diagonal(sector, sector_2, c1, -1);
 		}
-		if (sector->pos.vals[c] != SECTOR_DIMS[c] - 1) { // front/above/right
-			struct sector_s *sector_2 = get_sector_in_positive_direction(sector, c);
-			find_partial_crossing_events_between_sectors_non_diagonal(sector, sector_2, c, 1);
+		if (sector->pos.vals[c1] != SECTOR_DIMS[c1] - 1) { // front/above/right
+			struct sector_s *sector_2 = get_sector_in_positive_direction(sector, c1);
+			find_partial_crossing_events_between_sectors_non_diagonal(sector, sector_2, c1, 1);
 		}
+		// Check diagonal along c1 and c2
+		// This will check sectors on the bottom left, bottom right, top left and top right
+		for (c2 = c1 + 1; c2 <= Z_COORD; c2++) {
+			// Positive on c1 and c2
+			if (sector->pos.vals[c1] != SECTOR_DIMS[c1] - 1 && sector->pos.vals[c2] != SECTOR_DIMS[c2] - 1) {
+				struct sector_s *sector_2 = get_sector_in_positive_positive_direction_diagonal(sector, c1, c2);
+				find_partial_crossing_events_between_sectors_diagonal(sector, sector_2, c1, 1, c2, 1);
+			}
+			// Positive on c1, negative on c2
+			if (sector->pos.vals[c1] != SECTOR_DIMS[c1] - 1 && sector->pos.vals[c2] != 0) {
+				struct sector_s *sector_2 = get_sector_in_positive_negative_direction_diagonal(sector, c1, c2);
+				find_partial_crossing_events_between_sectors_diagonal(sector, sector_2, c1, 1, c2, -1);
+			}
+			// Negative on c1, positive on c2
+			if (sector->pos.vals[c1] != 0 && sector->pos.vals[c2] != SECTOR_DIMS[c2] - 1) {
+				struct sector_s *sector_2 = get_sector_in_negative_positive_direction_diagonal(sector, c1, c2);
+				find_partial_crossing_events_between_sectors_diagonal(sector, sector_2, c1, -1, c2, 1);
+			}
+			// Negative on c1 and c2
+			if (sector->pos.vals[c1] != 0 && sector->pos.vals[c2] != 0) {
+				struct sector_s *sector_2 = get_sector_in_negative_negative_direction_diagonal(sector, c1, c2);
+				find_partial_crossing_events_between_sectors_diagonal(sector, sector_2, c1, -1, c2, -1);
+			}
+		}
+		// TODO: other diagonal checks
 	}
 }
 
@@ -277,7 +360,7 @@ static void sanity_check() {
 
 // TODO: highly work in progress
 double update_grid() {
-	//sanity_check();
+	sanity_check();
 	// First reset records.
 	event_details.time = DBL_MAX;
 	event_details.sphere_1 = NULL;
@@ -291,6 +374,6 @@ double update_grid() {
 	find_partial_crossing_events_for_all_sectors();
 	// Lastly move forward to the next event
 	update_spheres();
-	//sanity_check();
+	sanity_check();
 	return event_details.time;
 }
