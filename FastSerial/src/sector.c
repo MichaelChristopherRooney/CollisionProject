@@ -90,10 +90,10 @@ void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *s
 // direction on both axes.
 // Ex: if provided sector is at { 0, 0, 0 } and the sector adjacent positively
 // along the x and y axis is requested then the sector at { 1, 1, 0 } will be returned.
-struct sector_s *get_adjacent_sector_diagonal(const struct sector_s *sector, const enum coord c1, const enum direction c1_dir, const enum coord c2, const enum direction c2_dir) {
-	int x = sector->pos.x + SECTOR_MODIFIERS[c1_dir][c1][X_COORD] + SECTOR_MODIFIERS[c2_dir][c2][X_COORD];
-	int y = sector->pos.y + SECTOR_MODIFIERS[c1_dir][c1][Y_COORD] + SECTOR_MODIFIERS[c2_dir][c2][Y_COORD];
-	int z = sector->pos.z + SECTOR_MODIFIERS[c1_dir][c1][Z_COORD] + SECTOR_MODIFIERS[c2_dir][c2][Z_COORD];
+struct sector_s *get_adjacent_sector_diagonal(const struct sector_s *sector, const enum axis a1, const enum direction a1_dir, const enum axis a2, const enum direction a2_dir) {
+	int x = sector->pos.x + SECTOR_MODIFIERS[a1_dir][a1][X_AXIS] + SECTOR_MODIFIERS[a2_dir][a2][X_AXIS];
+	int y = sector->pos.y + SECTOR_MODIFIERS[a1_dir][a1][Y_AXIS] + SECTOR_MODIFIERS[a2_dir][a2][Y_AXIS];
+	int z = sector->pos.z + SECTOR_MODIFIERS[a1_dir][a1][Z_AXIS] + SECTOR_MODIFIERS[a2_dir][a2][Z_AXIS];
 	struct sector_s *adj = &grid->sectors[x][y][z];
 	return adj;
 }
@@ -101,10 +101,10 @@ struct sector_s *get_adjacent_sector_diagonal(const struct sector_s *sector, con
 // Given a sector returns the sector adjacent in specified direction on the
 // specified axis.
 // Ex: If x axis and positive direction returns sector to the right.
-struct sector_s *get_adjacent_sector_non_diagonal(const struct sector_s *sector, const enum coord c, const enum direction dir) {
-	int x = sector->pos.x + SECTOR_MODIFIERS[dir][c][X_COORD];
-	int y = sector->pos.y + SECTOR_MODIFIERS[dir][c][Y_COORD];
-	int z = sector->pos.z + SECTOR_MODIFIERS[dir][c][Z_COORD];
+struct sector_s *get_adjacent_sector_non_diagonal(const struct sector_s *sector, const enum axis a, const enum direction dir) {
+	int x = sector->pos.x + SECTOR_MODIFIERS[dir][a][X_AXIS];
+	int y = sector->pos.y + SECTOR_MODIFIERS[dir][a][Y_AXIS];
+	int z = sector->pos.z + SECTOR_MODIFIERS[dir][a][Z_AXIS];
 	struct sector_s *adj = &grid->sectors[x][y][z];
 	return adj;
 }

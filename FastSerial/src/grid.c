@@ -191,33 +191,33 @@ static void find_partial_crossing_events_between_sphere_and_sector(const struct 
 // of sector_2 at soonest_time.
 // If so then we need to check its collision against spheres in sector_2.
 // If sector_2 is further along the axis than sector_1 dir will be 1, else -1.
-static void find_partial_crossing_events_between_sectors_diagonal(const struct sector_s *sector_1, const struct sector_s *sector_2, const enum coord c1, const enum direction c1_dir, const enum coord c2, const enum direction c2_dir) {
+static void find_partial_crossing_events_between_sectors_diagonal(const struct sector_s *sector_1, const struct sector_s *sector_2, const enum axis a1, const enum direction a1_dir, const enum axis a2, const enum direction a2_dir) {
 	if (sector_2->num_spheres == 0) {
 		return;
 	}
 	struct sphere_list_s *cur = sector_1->head;
 	while (cur != NULL) {
 		struct sphere_s *sphere = cur->sphere;
-		double c1_pos = sphere->pos.vals[c1] + (sphere->vel.vals[c1] * event_details.time);
-		double c2_pos = sphere->pos.vals[c2] + (sphere->vel.vals[c2] * event_details.time);
-		if ((c1_dir == DIR_POSITIVE && sphere->vel.vals[c1] > 0.0) && (c2_dir == DIR_POSITIVE && sphere->vel.vals[c2] > 0.0)) {
-			// Positive on c1 and c2
-			if (c1_pos >= sector_2->start.vals[c1] - sphere->radius - sector_2->largest_radius && c2_pos >= sector_2->start.vals[c2] - sphere->radius - sector_2->largest_radius) {
+		double a1_pos = sphere->pos.vals[a1] + (sphere->vel.vals[a1] * event_details.time);
+		double a2_pos = sphere->pos.vals[a2] + (sphere->vel.vals[a2] * event_details.time);
+		if ((a1_dir == DIR_POSITIVE && sphere->vel.vals[a1] > 0.0) && (a2_dir == DIR_POSITIVE && sphere->vel.vals[a2] > 0.0)) {
+			// Positive on a1 and a2
+			if (a1_pos >= sector_2->start.vals[a1] - sphere->radius - sector_2->largest_radius && a2_pos >= sector_2->start.vals[a2] - sphere->radius - sector_2->largest_radius) {
 				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
 			}
-		} else if ((c1_dir == DIR_POSITIVE && sphere->vel.vals[c1] > 0.0) && (c2_dir == DIR_NEGATIVE && sphere->vel.vals[c2] < 0.0)) {
-			// Positive on c1 and negative on c2
-			if (c1_pos >= sector_2->start.vals[c1] - sphere->radius - sector_2->largest_radius && c2_pos >= sector_2->start.vals[c2] + sphere->radius + sector_2->largest_radius) {
+		} else if ((a1_dir == DIR_POSITIVE && sphere->vel.vals[a1] > 0.0) && (a2_dir == DIR_NEGATIVE && sphere->vel.vals[a2] < 0.0)) {
+			// Positive on a1 and negative on a2
+			if (a1_pos >= sector_2->start.vals[a1] - sphere->radius - sector_2->largest_radius && a2_pos >= sector_2->start.vals[a2] + sphere->radius + sector_2->largest_radius) {
 				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
 			}
-		} else if ((c1_dir == DIR_NEGATIVE && sphere->vel.vals[c1] < 0.0) && (c2_dir == DIR_POSITIVE && sphere->vel.vals[c2] > 0.0)) {
-			// Negative on c1 and positive on c2
-			if (c1_pos >= sector_2->start.vals[c1] + sphere->radius + sector_2->largest_radius && c2_pos >= sector_2->start.vals[c2] - sphere->radius - sector_2->largest_radius) {
+		} else if ((a1_dir == DIR_NEGATIVE && sphere->vel.vals[a1] < 0.0) && (a2_dir == DIR_POSITIVE && sphere->vel.vals[a2] > 0.0)) {
+			// Negative on a1 and positive on a2
+			if (a1_pos >= sector_2->start.vals[a1] + sphere->radius + sector_2->largest_radius && a2_pos >= sector_2->start.vals[a2] - sphere->radius - sector_2->largest_radius) {
 				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
 			}
-		} else if ((c1_dir == DIR_NEGATIVE && sphere->vel.vals[c1] > 0.0) && (c2_dir == DIR_NEGATIVE && sphere->vel.vals[c2] > 0.0)) {
-			// Negative on c1 and c2
-			if (c1_pos >= sector_2->start.vals[c1] + sphere->radius + sector_2->largest_radius && c2_pos >= sector_2->start.vals[c2] + sphere->radius + sector_2->largest_radius) {
+		} else if ((a1_dir == DIR_NEGATIVE && sphere->vel.vals[a1] > 0.0) && (a2_dir == DIR_NEGATIVE && sphere->vel.vals[a2] > 0.0)) {
+			// Negative on a1 and a2
+			if (a1_pos >= sector_2->start.vals[a1] + sphere->radius + sector_2->largest_radius && a2_pos >= sector_2->start.vals[a2] + sphere->radius + sector_2->largest_radius) {
 				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
 			}
 		}
@@ -230,20 +230,20 @@ static void find_partial_crossing_events_between_sectors_diagonal(const struct s
 // of sector_2 at soonest_time.
 // If so then we need to check its collision against spheres in sector_2.
 // If sector_2 is further along the axis than sector_1 dir will be 1, else -1.
-static void find_partial_crossing_events_between_sectors_non_diagonal(const struct sector_s *sector_1, const struct sector_s *sector_2, const enum coord c, const enum direction dir) {
+static void find_partial_crossing_events_between_sectors_non_diagonal(const struct sector_s *sector_1, const struct sector_s *sector_2, const enum axis a, const enum direction dir) {
 	if (sector_2->num_spheres == 0) {
 		return;
 	}
 	struct sphere_list_s *cur = sector_1->head;
 	while (cur != NULL) {
 		struct sphere_s *sphere = cur->sphere;
-		double pos_new = sphere->pos.vals[c] + (sphere->vel.vals[c] * event_details.time);
-		if (dir == DIR_POSITIVE && sphere->vel.vals[c] > 0.0) {
-			if (pos_new >= sector_2->start.vals[c] - sphere->radius - sector_2->largest_radius) {
+		double pos_new = sphere->pos.vals[a] + (sphere->vel.vals[a] * event_details.time);
+		if (dir == DIR_POSITIVE && sphere->vel.vals[a] > 0.0) {
+			if (pos_new >= sector_2->start.vals[a] - sphere->radius - sector_2->largest_radius) {
 				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
 			}
-		} else if (dir == DIR_NEGATIVE && sphere->vel.vals[c] < 0.0) {
-			if (pos_new <= sector_2->end.vals[c] + sphere->radius + sector_2->largest_radius) {
+		} else if (dir == DIR_NEGATIVE && sphere->vel.vals[a] < 0.0) {
+			if (pos_new <= sector_2->end.vals[a] + sphere->radius + sector_2->largest_radius) {
 				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
 			}
 		}
@@ -257,38 +257,38 @@ static void find_partial_crossing_events_for_sector(const struct sector_s *secto
 	if (sector->num_spheres == 0) {
 		return;
 	}
-	enum coord c1, c2;
-	for (c1 = X_COORD; c1 <= Z_COORD; c1++) {
-		if (sector->pos.vals[c1] != 0) { // behind/below/left
-			struct sector_s *sector_2 = get_adjacent_sector_non_diagonal(sector, c1, DIR_NEGATIVE);
-			find_partial_crossing_events_between_sectors_non_diagonal(sector, sector_2, c1, DIR_NEGATIVE);
+	enum axis a1, a2;
+	for (a1 = X_AXIS; a1 <= Z_AXIS; a1++) {
+		if (sector->pos.vals[a1] != 0) { // behind/below/left
+			struct sector_s *sector_2 = get_adjacent_sector_non_diagonal(sector, a1, DIR_NEGATIVE);
+			find_partial_crossing_events_between_sectors_non_diagonal(sector, sector_2, a1, DIR_NEGATIVE);
 		}
-		if (sector->pos.vals[c1] != SECTOR_DIMS[c1] - 1) { // front/above/right
-			struct sector_s *sector_2 = get_adjacent_sector_non_diagonal(sector, c1, DIR_POSITIVE);
-			find_partial_crossing_events_between_sectors_non_diagonal(sector, sector_2, c1, DIR_POSITIVE);
+		if (sector->pos.vals[a1] != SECTOR_DIMS[a1] - 1) { // front/above/right
+			struct sector_s *sector_2 = get_adjacent_sector_non_diagonal(sector, a1, DIR_POSITIVE);
+			find_partial_crossing_events_between_sectors_non_diagonal(sector, sector_2, a1, DIR_POSITIVE);
 		}
-		// Check diagonal along c1 and c2
+		// Check diagonal along a1 and a2
 		// This will check sectors on the bottom left, bottom right, top left and top right
-		for (c2 = c1 + 1; c2 <= Z_COORD; c2++) {
-			// Positive on c1 and c2
-			if (sector->pos.vals[c1] != SECTOR_DIMS[c1] - 1 && sector->pos.vals[c2] != SECTOR_DIMS[c2] - 1) {
-				struct sector_s *sector_2 = get_adjacent_sector_diagonal(sector, c1, DIR_POSITIVE, c2, DIR_POSITIVE);
-				find_partial_crossing_events_between_sectors_diagonal(sector, sector_2, c1, DIR_POSITIVE, c2, DIR_POSITIVE);
+		for (a2 = a1 + 1; a2 <= Z_AXIS; a2++) {
+			// Positive on a1 and a2
+			if (sector->pos.vals[a1] != SECTOR_DIMS[a1] - 1 && sector->pos.vals[a2] != SECTOR_DIMS[a2] - 1) {
+				struct sector_s *sector_2 = get_adjacent_sector_diagonal(sector, a1, DIR_POSITIVE, a2, DIR_POSITIVE);
+				find_partial_crossing_events_between_sectors_diagonal(sector, sector_2, a1, DIR_POSITIVE, a2, DIR_POSITIVE);
 			}
-			// Positive on c1, negative on c2
-			if (sector->pos.vals[c1] != SECTOR_DIMS[c1] - 1 && sector->pos.vals[c2] != 0) {
-				struct sector_s *sector_2 = get_adjacent_sector_diagonal(sector, c1, DIR_POSITIVE, c2, DIR_NEGATIVE);
-				find_partial_crossing_events_between_sectors_diagonal(sector, sector_2, c1, DIR_POSITIVE, c2, DIR_NEGATIVE);
+			// Positive on a1, negative on a2
+			if (sector->pos.vals[a1] != SECTOR_DIMS[a1] - 1 && sector->pos.vals[a2] != 0) {
+				struct sector_s *sector_2 = get_adjacent_sector_diagonal(sector, a1, DIR_POSITIVE, a2, DIR_NEGATIVE);
+				find_partial_crossing_events_between_sectors_diagonal(sector, sector_2, a1, DIR_POSITIVE, a2, DIR_NEGATIVE);
 			}
-			// Negative on c1, positive on c2
-			if (sector->pos.vals[c1] != 0 && sector->pos.vals[c2] != SECTOR_DIMS[c2] - 1) {
-				struct sector_s *sector_2 = get_adjacent_sector_diagonal(sector, c1, DIR_NEGATIVE, c2, DIR_POSITIVE);
-				find_partial_crossing_events_between_sectors_diagonal(sector, sector_2, c1, DIR_NEGATIVE, c2, DIR_POSITIVE);
+			// Negative on a1, positive on a2
+			if (sector->pos.vals[a1] != 0 && sector->pos.vals[a2] != SECTOR_DIMS[a2] - 1) {
+				struct sector_s *sector_2 = get_adjacent_sector_diagonal(sector, a1, DIR_NEGATIVE, a2, DIR_POSITIVE);
+				find_partial_crossing_events_between_sectors_diagonal(sector, sector_2, a1, DIR_NEGATIVE, a2, DIR_POSITIVE);
 			}
-			// Negative on c1 and c2
-			if (sector->pos.vals[c1] != 0 && sector->pos.vals[c2] != 0) {
-				struct sector_s *sector_2 = get_adjacent_sector_diagonal(sector, c1, DIR_NEGATIVE, c2, DIR_NEGATIVE);
-				find_partial_crossing_events_between_sectors_diagonal(sector, sector_2, c1, DIR_NEGATIVE, c2, DIR_NEGATIVE);
+			// Negative on a1 and a2
+			if (sector->pos.vals[a1] != 0 && sector->pos.vals[a2] != 0) {
+				struct sector_s *sector_2 = get_adjacent_sector_diagonal(sector, a1, DIR_NEGATIVE, a2, DIR_NEGATIVE);
+				find_partial_crossing_events_between_sectors_diagonal(sector, sector_2, a1, DIR_NEGATIVE, a2, DIR_NEGATIVE);
 			}
 		}
 		// TODO: other diagonal checks
@@ -337,12 +337,12 @@ static void sanity_check() {
 				while (cur != NULL) {
 					struct sphere_s *sphere = cur->sphere;
 					int error = 0;
-					enum coord c;
-					for (c = X_COORD; c <= Z_COORD; c++) {
-						if (sphere->pos.vals[c] > s->end.vals[c]) {
+					enum axis a;
+					for (a = X_AXIS; a <= Z_AXIS; a++) {
+						if (sphere->pos.vals[a] > s->end.vals[a]) {
 							error = 1;
 						}
-						if (sphere->pos.vals[c] < s->start.vals[c]) {
+						if (sphere->pos.vals[a] < s->start.vals[a]) {
 							error = 1;
 						}
 					}

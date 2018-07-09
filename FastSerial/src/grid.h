@@ -5,13 +5,6 @@
 #include "sphere.h"
 #include "vector_3.h"
 
-enum axis {
-	X_AXIS = 0,
-	Y_AXIS = 1,
-	Z_AXIS = 2,
-	AXIS_NONE = -1
-};
-
 // This is the area in which the collisions take place. 
 // Imagine the grid is a 3D box with all collisions taking place inside it.
 // Normally x_start, y_start and z_start will all be 0, but the code is 

@@ -26,14 +26,15 @@ struct sector_s {
 #define NUM_SECTORS_Y 2
 #define NUM_SECTORS_Z 1
 
-// Can be indexed using coord enum
+// Can be indexed using axis enum
 const int SECTOR_DIMS[3];
 
 // Used when iterating over axes and nned to access sector adjacent on the current axis.
+// Allows sectors to be found in a generic way. 
 const int SECTOR_MODIFIERS[2][3][3];
 
 void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere);
 void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *sphere);
-struct sector_s *get_adjacent_sector_diagonal(const struct sector_s *sector, const enum coord c1, const enum direction c1_dir, const enum coord c2, const enum direction c2_dir);
-struct sector_s *get_adjacent_sector_non_diagonal(const struct sector_s *sector, const enum coord c, const enum direction dir);
+struct sector_s *get_adjacent_sector_diagonal(const struct sector_s *sector, const enum axis a1, const enum direction a1_dir, const enum axis a2, const enum direction a2_dir);
+struct sector_s *get_adjacent_sector_non_diagonal(const struct sector_s *sector, const enum axis a, const enum direction dir);
 void add_sphere_to_correct_sector(const struct sphere_s *sphere);

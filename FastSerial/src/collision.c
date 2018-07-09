@@ -64,16 +64,16 @@ static double find_time_to_cross_boundary(const double bound_start, const double
 // radius to 0 when calling find_time_to_cross_boundary().
 double find_collision_time_sector(const struct sector_s *sector, const struct sphere_s *sphere, struct sector_s **dest) {
 	double time = DBL_MAX;
-	enum coord c;
-	for (c = X_COORD; c <= Z_COORD; c++) {
-		if (sphere->vel.vals[c] != 0.0 && !(sector->pos.vals[c] == 0.0 && sphere->vel.vals[c] < 0.0) && !(sector->pos.vals[c] == SECTOR_DIMS[c] - 1 && sphere->vel.vals[c] > 0.0)) {
-			double temp_time = find_time_to_cross_boundary(sector->start.vals[c], sector->end.vals[c], sphere->vel.vals[c], sphere->pos.vals[c], 0.0);
+	enum axis a;
+	for (a = X_AXIS; a <= Z_AXIS; a++) {
+		if (sphere->vel.vals[a] != 0.0 && !(sector->pos.vals[a] == 0.0 && sphere->vel.vals[a] < 0.0) && !(sector->pos.vals[a] == SECTOR_DIMS[a] - 1 && sphere->vel.vals[a] > 0.0)) {
+			double temp_time = find_time_to_cross_boundary(sector->start.vals[a], sector->end.vals[a], sphere->vel.vals[a], sphere->pos.vals[a], 0.0);
 			if (temp_time < time) {
 				time = temp_time;
-				if (sphere->vel.vals[c] > 0.0) {
-					*dest = get_adjacent_sector_non_diagonal(sector, c, DIR_POSITIVE);
+				if (sphere->vel.vals[a] > 0.0) {
+					*dest = get_adjacent_sector_non_diagonal(sector, a, DIR_POSITIVE);
 				} else {
-					*dest = get_adjacent_sector_non_diagonal(sector, c, DIR_NEGATIVE);
+					*dest = get_adjacent_sector_non_diagonal(sector, a, DIR_NEGATIVE);
 				}
 			}
 		}
@@ -91,13 +91,13 @@ double find_collision_time_sector(const struct sector_s *sector, const struct sp
 double find_collision_time_grid(const struct sphere_s *s, enum axis *col_axis) {
 	double time = DBL_MAX;
 	*col_axis = AXIS_NONE;
-	enum coord c;
-	for (c = X_COORD; c <= Z_COORD; c++) {
-		if (s->vel.vals[c] != 0) {
-			double temp_time = find_time_to_cross_boundary(grid->start.vals[c], grid->end.vals[c], s->vel.vals[c], s->pos.vals[c], s->radius);
+	enum axis a;
+	for (a = X_AXIS; a <= Z_AXIS; a++) {
+		if (s->vel.vals[a] != 0) {
+			double temp_time = find_time_to_cross_boundary(grid->start.vals[a], grid->end.vals[a], s->vel.vals[a], s->pos.vals[a], s->radius);
 			if (temp_time < time) {
 				time = temp_time;
-				*col_axis = c;
+				*col_axis = a;
 			}
 		}
 	}

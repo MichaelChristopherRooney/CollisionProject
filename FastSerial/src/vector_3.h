@@ -2,13 +2,14 @@
 
 #include <stdint.h>
 
-enum coord {
-	X_COORD = 0,
-	Y_COORD = 1,
-	Z_COORD = 2,
+enum axis {
+	X_AXIS = 0,
+	Y_AXIS = 1,
+	Z_AXIS = 2,
+	AXIS_NONE = -1
 };
 
-// Can either access x/y/z directly, or access coords[X/Y/Z_COORD]
+// Can either access x/y/z directly, or access vals[X/Y/Z_AXIS]
 union vector_3d {
 	struct {
 		double x;
