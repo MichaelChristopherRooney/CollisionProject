@@ -5,6 +5,11 @@
 #include "sphere.h"
 #include "vector_3.h"
 
+enum direction {
+	DIR_POSITIVE = 0,
+	DIR_NEGATIVE = 1
+};
+
 struct sector_s {
 	union vector_3d start;
 	union vector_3d end;
@@ -25,14 +30,10 @@ struct sector_s {
 const int SECTOR_DIMS[3];
 
 // Used when iterating over axes and nned to access sector adjacent on the current axis.
-const int SECTOR_MODIFIERS[3][3];
+const int SECTOR_MODIFIERS[2][3][3];
 
 void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere);
 void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *sphere);
-struct sector_s *get_sector_in_negative_negative_direction_diagonal(const struct sector_s *sector, const enum coord c1, const enum coord c2);
-struct sector_s *get_sector_in_negative_positive_direction_diagonal(const struct sector_s *sector, const enum coord c1, const enum coord c2);
-struct sector_s *get_sector_in_positive_negative_direction_diagonal(const struct sector_s *sector, const enum coord c1, const enum coord c2);
-struct sector_s *get_sector_in_positive_positive_direction_diagonal(const struct sector_s *sector, const enum coord c1, const enum coord c2);
-struct sector_s *get_sector_in_negative_direction(const struct sector_s *sector, const enum coord c);
-struct sector_s *get_sector_in_positive_direction(const struct sector_s *sector, const enum coord c);
+struct sector_s *get_adjacent_sector_diagonal(const struct sector_s *sector, const enum coord c1, const enum direction c1_dir, const enum coord c2, const enum direction c2_dir);
+struct sector_s *get_adjacent_sector_non_diagonal(const struct sector_s *sector, const enum coord c, const enum direction dir);
 void add_sphere_to_correct_sector(const struct sphere_s *sphere);

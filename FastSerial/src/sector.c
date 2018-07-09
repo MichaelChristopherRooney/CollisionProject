@@ -8,10 +8,17 @@
 const int SECTOR_DIMS[3] = { NUM_SECTORS_X, NUM_SECTORS_Y, NUM_SECTORS_Z };
 
 // Used when iterating over axes and nned to access sector adjacent on the current axis.
-const int SECTOR_MODIFIERS[3][3] = {
-	{ 1, 0, 0 }, // x
-	{ 0, 1, 0 }, // y
-	{ 0, 0, 1 }, // z
+const int SECTOR_MODIFIERS[2][3][3] = {
+	{
+		{ 1, 0, 0 }, // x
+		{ 0, 1, 0 }, // y
+		{ 0, 0, 1 }, // z
+	},
+	{
+		{ -1, 0, 0 }, // x
+		{ 0, -1, 0 }, // y
+		{ 0, 0, -1 }, // z
+	}
 };
 
 static void set_largest_radius_after_insertion(struct sector_s *sector, const struct sphere_s *sphere) {
@@ -79,68 +86,25 @@ void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *s
 	set_largest_radius_after_removal(sector, sphere);
 }
 
-// Given a sector returns the sector adjacent diagonally adjacent in a negative
+// Given a sector returns the sector adjacent diagonally in the specified
 // direction on both axes.
-struct sector_s *get_sector_in_negative_negative_direction_diagonal(const struct sector_s *sector, const enum coord c1, const enum coord c2) {
-	int x = sector->pos.x - SECTOR_MODIFIERS[c1][X_COORD] - SECTOR_MODIFIERS[c2][X_COORD];
-	int y = sector->pos.y - SECTOR_MODIFIERS[c1][Y_COORD] - SECTOR_MODIFIERS[c2][Y_COORD];
-	int z = sector->pos.z - SECTOR_MODIFIERS[c1][Z_COORD] - SECTOR_MODIFIERS[c2][Z_COORD];
+// Ex: if provided sector is at { 0, 0, 0 } and the sector adjacent positively
+// along the x and y axis is requested then the sector at { 1, 1, 0 } will be returned.
+struct sector_s *get_adjacent_sector_diagonal(const struct sector_s *sector, const enum coord c1, const enum direction c1_dir, const enum coord c2, const enum direction c2_dir) {
+	int x = sector->pos.x + SECTOR_MODIFIERS[c1_dir][c1][X_COORD] + SECTOR_MODIFIERS[c2_dir][c2][X_COORD];
+	int y = sector->pos.y + SECTOR_MODIFIERS[c1_dir][c1][Y_COORD] + SECTOR_MODIFIERS[c2_dir][c2][Y_COORD];
+	int z = sector->pos.z + SECTOR_MODIFIERS[c1_dir][c1][Z_COORD] + SECTOR_MODIFIERS[c2_dir][c2][Z_COORD];
 	struct sector_s *adj = &grid->sectors[x][y][z];
 	return adj;
 }
 
-// Given a sector returns the sector adjacent diagonally adjacent in a negative
-// direction on axis c1 and a positive direction on axis c2
-struct sector_s *get_sector_in_negative_positive_direction_diagonal(const struct sector_s *sector, const enum coord c1, const enum coord c2) {
-	int x = sector->pos.x - SECTOR_MODIFIERS[c1][X_COORD] + SECTOR_MODIFIERS[c2][X_COORD];
-	int y = sector->pos.y - SECTOR_MODIFIERS[c1][Y_COORD] + SECTOR_MODIFIERS[c2][Y_COORD];
-	int z = sector->pos.z - SECTOR_MODIFIERS[c1][Z_COORD] + SECTOR_MODIFIERS[c2][Z_COORD];
-	struct sector_s *adj = &grid->sectors[x][y][z];
-	return adj;
-}
-
-// Given a sector returns the sector adjacent diagonally adjacent in a positive
-// direction on axis c1 and a negative direction on axis c2
-struct sector_s *get_sector_in_positive_negative_direction_diagonal(const struct sector_s *sector, const enum coord c1, const enum coord c2) {
-	int x = sector->pos.x + SECTOR_MODIFIERS[c1][X_COORD] - SECTOR_MODIFIERS[c2][X_COORD];
-	int y = sector->pos.y + SECTOR_MODIFIERS[c1][Y_COORD] - SECTOR_MODIFIERS[c2][Y_COORD];
-	int z = sector->pos.z + SECTOR_MODIFIERS[c1][Z_COORD] - SECTOR_MODIFIERS[c2][Z_COORD];
-	struct sector_s *adj = &grid->sectors[x][y][z];
-	return adj;
-}
-
-// Given a sector returns the sector adjacent diagonally adjacent in a positive
-// direction on both axes.
-struct sector_s *get_sector_in_positive_positive_direction_diagonal(const struct sector_s *sector, const enum coord c1, const enum coord c2) {
-	int x = sector->pos.x + SECTOR_MODIFIERS[c1][X_COORD] + SECTOR_MODIFIERS[c2][X_COORD];
-	int y = sector->pos.y + SECTOR_MODIFIERS[c1][Y_COORD] + SECTOR_MODIFIERS[c2][Y_COORD];
-	int z = sector->pos.z + SECTOR_MODIFIERS[c1][Z_COORD] + SECTOR_MODIFIERS[c2][Z_COORD];
-	struct sector_s *adj = &grid->sectors[x][y][z];
-	return adj;
-}
-
-// Given a sector returns the sector adjacent in a negative direction on the
+// Given a sector returns the sector adjacent in specified direction on the
 // specified axis.
-// If x axis returns sector to the left.
-// If y axis returns sector below.
-// If z axis returns sector behind.
-struct sector_s *get_sector_in_negative_direction(const struct sector_s *sector, const enum coord c) {
-	int x = sector->pos.x - SECTOR_MODIFIERS[c][X_COORD];
-	int y = sector->pos.y - SECTOR_MODIFIERS[c][Y_COORD];
-	int z = sector->pos.z - SECTOR_MODIFIERS[c][Z_COORD];
-	struct sector_s *adj = &grid->sectors[x][y][z];
-	return adj;
-}
-
-// Given a sector returns the sector adjacent in a positive direction on the
-// specified axis.
-// If x axis returns sector to the right.
-// If y axis returns sector above.
-// If z axis returns sector in front.
-struct sector_s *get_sector_in_positive_direction(const struct sector_s *sector, const enum coord c) {
-	int x = sector->pos.x + SECTOR_MODIFIERS[c][X_COORD];
-	int y = sector->pos.y + SECTOR_MODIFIERS[c][Y_COORD];
-	int z = sector->pos.z + SECTOR_MODIFIERS[c][Z_COORD];
+// Ex: If x axis and positive direction returns sector to the right.
+struct sector_s *get_adjacent_sector_non_diagonal(const struct sector_s *sector, const enum coord c, const enum direction dir) {
+	int x = sector->pos.x + SECTOR_MODIFIERS[dir][c][X_COORD];
+	int y = sector->pos.y + SECTOR_MODIFIERS[dir][c][Y_COORD];
+	int z = sector->pos.z + SECTOR_MODIFIERS[dir][c][Z_COORD];
 	struct sector_s *adj = &grid->sectors[x][y][z];
 	return adj;
 }
