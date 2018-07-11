@@ -80,10 +80,11 @@ void simulation_init() {
 }
 
 void simulation_run() {
+	double limit = 10.0;
 	double time_elapsed = 0;
 	int i = 1; // start at 1 as 0 is iteration num for the initial state
-	while (time_elapsed < 10.0) {
-		time_elapsed += update_grid();
+	while (time_elapsed < limit) {
+		time_elapsed += update_grid(limit, time_elapsed);
 		save_sphere_state_to_file(i, time_elapsed);
 		i++;
 	}

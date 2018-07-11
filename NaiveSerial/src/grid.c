@@ -57,12 +57,16 @@ static void create_spheres(int num, double x_start, double y_start, double z_sta
 // Generates spheres with random velocities;
 // Position is hardcoded for now
 static void init_spheres() {
-	NUM_SPHERES = 1000;
+	NUM_SPHERES = 2000;
 	spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
 	srand(123);
 	create_spheres(250, 10.0, 10.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 40.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 460.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 490.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 510.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 540.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 960.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 990.0, 10.0, 3.5, 0.0, 0.0);
 }
 
@@ -85,7 +89,7 @@ void init_grid() {
 // Then the colliding sphere(s) have their velocity updated, or if the soonest
 // collision is a sphere colliding with a grid then its velocity on the collision
 // axis is simply inverted.
-double update_grid() {
+double update_grid(const double limit, const double time_elapsed) {
 	// reset
 	event_details.time = DBL_MAX;
 	event_details.type = COL_NONE;
@@ -115,6 +119,11 @@ double update_grid() {
 				event_details.sphere_2 = s2;
 			}
 		}
+	}
+	// Final event may take place after time limit, so cut it short
+	if (limit - time_elapsed < event_details.time) {
+		event_details.time = limit - time_elapsed;
+		event_details.type = COL_NONE;
 	}
 	for (i = 0; i < NUM_SPHERES; i++) {
 		struct sphere_s *s = &(spheres[i]);

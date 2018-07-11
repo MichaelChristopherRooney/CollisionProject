@@ -13,8 +13,9 @@ enum direction {
 struct sector_s {
 	union vector_3d start;
 	union vector_3d end;
-	struct sphere_list_s *head;
+	struct sphere_s **spheres;
 	int num_spheres;
+	int max_spheres;
 	// Location in sector array
 	union vector_3i pos;
 	double largest_radius; // Radius of the largest sphere in the sector.

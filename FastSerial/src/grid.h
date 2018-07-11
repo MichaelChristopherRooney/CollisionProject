@@ -38,4 +38,4 @@ int NUM_SPHERES;
 struct sphere_s *spheres;
 
 void init_grid();
-double update_grid();
+double update_grid(double limit, double time_elapsed);

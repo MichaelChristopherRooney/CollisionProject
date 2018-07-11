@@ -40,4 +40,4 @@ uint64_t NUM_SPHERES;
 struct sphere_s *spheres;
 
 void init_grid();
-double update_grid();
+double update_grid(const double limit, const double time_elapsed);

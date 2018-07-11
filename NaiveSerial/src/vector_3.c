@@ -14,6 +14,9 @@ double get_vector_3d_dot_product(const union vector_3d *v1, const union vector_3
 // Given the already computed dot product and magnitudes returns the angle between two xyz vectors.
 double get_shortest_angle_between_vector_3d(const double dp, const double mag1, const double mag2) {
 	double cos_inv = dp / (mag1 * mag2);
+	if (cos_inv > 1.0) { // sometimes floating point inaccuracies mean we get 1.00....002 when angle is 0, so clamp it
+		cos_inv = 1.0;
+	}
 	return acos(cos_inv);
 }
 
