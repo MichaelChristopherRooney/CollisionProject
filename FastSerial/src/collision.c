@@ -59,7 +59,6 @@ static double find_time_to_cross_boundary(const double bound_start, const double
 }
 
 // Finds the time when the sphere will pass into another sector
-// "col_axis" will default to AXIS_NONE, and will keep that value if the sphere is stationary.
 // Note: we want to know when the center of the sphere crosses the sector boundary so we set
 // radius to 0 when calling find_time_to_cross_boundary().
 double find_collision_time_sector(const struct sector_s *sector, const struct sphere_s *sphere, struct sector_s **dest) {

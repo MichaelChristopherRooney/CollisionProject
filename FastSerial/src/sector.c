@@ -77,18 +77,6 @@ void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *s
 	set_largest_radius_after_removal(sector, sphere);
 }
 
-// Given a sector returns the sector adjacent diagonally in the specified
-// direction on both axes.
-// Ex: if provided sector is at { 0, 0, 0 } and the sector adjacent positively
-// along the x and y axis is requested then the sector at { 1, 1, 0 } will be returned.
-struct sector_s *get_adjacent_sector_diagonal(const struct sector_s *sector, const enum axis a1, const enum direction a1_dir, const enum axis a2, const enum direction a2_dir) {
-	int x = sector->pos.x + SECTOR_MODIFIERS[a1_dir][a1][X_AXIS] + SECTOR_MODIFIERS[a2_dir][a2][X_AXIS];
-	int y = sector->pos.y + SECTOR_MODIFIERS[a1_dir][a1][Y_AXIS] + SECTOR_MODIFIERS[a2_dir][a2][Y_AXIS];
-	int z = sector->pos.z + SECTOR_MODIFIERS[a1_dir][a1][Z_AXIS] + SECTOR_MODIFIERS[a2_dir][a2][Z_AXIS];
-	struct sector_s *adj = &grid->sectors[x][y][z];
-	return adj;
-}
-
 // Given a sector returns the sector adjacent in specified direction on the
 // specified axis.
 // Ex: If x axis and positive direction returns sector to the right.

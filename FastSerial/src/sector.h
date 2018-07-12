@@ -36,6 +36,5 @@ const int SECTOR_MODIFIERS[2][3][3];
 
 void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere);
 void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *sphere);
-struct sector_s *get_adjacent_sector_diagonal(const struct sector_s *sector, const enum axis a1, const enum direction a1_dir, const enum axis a2, const enum direction a2_dir);
 struct sector_s *get_adjacent_sector_non_diagonal(const struct sector_s *sector, const enum axis a, const enum direction dir);
 void add_sphere_to_correct_sector(const struct sphere_s *sphere);
