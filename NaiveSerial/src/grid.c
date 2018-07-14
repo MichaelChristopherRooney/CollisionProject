@@ -57,15 +57,23 @@ static void create_spheres(int num, double x_start, double y_start, double z_sta
 // Generates spheres with random velocities;
 // Position is hardcoded for now
 static void init_spheres() {
-	NUM_SPHERES = 2000;
+	NUM_SPHERES = 4000;
 	spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
 	srand(123);
 	create_spheres(250, 10.0, 10.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 40.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 100.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 140.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 360.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 390.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 460.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 490.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 510.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 540.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 610.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 640.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 860.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 890.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 960.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 990.0, 10.0, 3.5, 0.0, 0.0);
 }

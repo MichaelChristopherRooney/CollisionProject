@@ -48,32 +48,60 @@ static void create_sphere(double x, double y, double z, double x_vel, double y_v
 // Generates spheres with random velocities;
 // Position is hardcoded for now
 static void init_spheres() {
-	NUM_SPHERES = 2000;
+	NUM_SPHERES = 4000;
 	spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
 	srand(123);
 	create_spheres(250, 10.0, 10.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 40.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 100.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 140.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 360.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 390.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 460.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 490.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 510.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 540.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 610.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 640.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 860.0, 10.0, 3.5, 0.0, 0.0);
+	create_spheres(250, 10.0, 890.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 960.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 990.0, 10.0, 3.5, 0.0, 0.0);
 }
 
-// Hardcoded for 4 even sectors at the moment.
+// Note: size of grid in each dimension should be divisible by number of s
+// ectors in that dimension.
 static void init_sectors() {
+	SECTOR_DIMS[X_AXIS] = 4;
+	SECTOR_DIMS[Y_AXIS] = 4;
+	SECTOR_DIMS[Z_AXIS] = 2;
+	grid->sectors = calloc(SECTOR_DIMS[X_AXIS], sizeof(struct sector_s **));
+	struct sector_s *z_arr = calloc(SECTOR_DIMS[X_AXIS] * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS], sizeof(struct sector_s));
+	int i, j, k;
+	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
+		grid->sectors[i] = calloc(SECTOR_DIMS[Y_AXIS], sizeof(struct sector_s *));
+		for (j = 0; j < SECTOR_DIMS[Y_AXIS]; j++) {
+			int idx = (i * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS]) + (j * SECTOR_DIMS[Z_AXIS]);
+			grid->sectors[i][j] = &z_arr[idx];
+		}
+	}
+	double x_inc = (grid->end.x - grid->start.x) / SECTOR_DIMS[X_AXIS];
+	double y_inc = (grid->end.y - grid->start.y) / SECTOR_DIMS[Y_AXIS];
+	double z_inc = (grid->end.z - grid->start.z) / SECTOR_DIMS[Z_AXIS];
 	int count = 0;
-	for (int i = 0; i < NUM_SECTORS_X; i++) {
-		for (int j = 0; j < NUM_SECTORS_Y; j++) {
-			for (int k = 0; k < NUM_SECTORS_Z; k++) {
-				struct sector_s *s = &grid->sectors[i][j][0];
-				s->start.x = grid->start.x + ((grid->end.x / 2.0) * i);
-				s->end.x = grid->start.x + ((grid->end.x / 2.0) * (i + 1));
-				s->start.y = grid->start.y + ((grid->end.y / 2.0) * j);
-				s->end.y = grid->start.y + ((grid->end.y / 2.0) * (j + 1));
-				s->start.z = grid->start.z;
-				s->end.z = grid->end.z;
+	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
+		for (j = 0; j < SECTOR_DIMS[Y_AXIS]; j++) {
+			for (k = 0; k < SECTOR_DIMS[Z_AXIS]; k++) {
+				struct sector_s *s = &grid->sectors[i][j][k];
+				s->start.x = grid->start.x + x_inc * i;
+				s->end.x = s->start.x + x_inc;
+	
+				s->start.y = grid->start.y + y_inc * j;
+				s->end.y = s->start.y + y_inc;
+
+				s->start.z = grid->start.z + z_inc * k;
+				s->end.z = s->start.z + z_inc;
+
 				s->pos.x = i;
 				s->pos.y = j;
 				s->pos.z = k;
@@ -159,9 +187,9 @@ static void find_event_times_for_sector(const struct sector_s *sector) {
 
 // Finds event times for each sector, excluding partial crossings
 static void find_event_times_for_all_sectors() {
-	for (int x = 0; x < NUM_SECTORS_X; x++) {
-		for (int y = 0; y < NUM_SECTORS_Y; y++) {
-			for (int z = 0; z < NUM_SECTORS_Z; z++) {
+	for (int x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
+		for (int y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
+			for (int z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
 				find_event_times_for_sector(&grid->sectors[x][y][z]);
 			}
 		}
@@ -256,9 +284,9 @@ static void find_partial_crossing_events_for_sector(const struct sector_s *secto
 // If needed find any sphere on sphere collisions that occur between spheres
 // that partially cross sector boundaries. 
 static void find_partial_crossing_events_for_all_sectors() {
-	for (int x = 0; x < NUM_SECTORS_X; x++) {
-		for (int y = 0; y < NUM_SECTORS_Y; y++) {
-			for (int z = 0; z < NUM_SECTORS_Z; z++) {
+	for (int x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
+		for (int y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
+			for (int z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
 				find_partial_crossing_events_for_sector(&grid->sectors[x][y][z]);
 			}
 		}
@@ -287,9 +315,9 @@ static void update_spheres() {
 // Ensures each sphere is located within the sector responsible for it.
 // Helps catch any issues with transfering spheres between sectors.
 static void sanity_check() {
-	for (int x = 0; x < NUM_SECTORS_X; x++) {
-		for (int y = 0; y < NUM_SECTORS_Y; y++) {
-			for (int z = 0; z < NUM_SECTORS_Z; z++) {
+	for (int x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
+		for (int y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
+			for (int z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
 				struct sector_s *s = &grid->sectors[x][y][z];
 				int i;
 				for (i = 0; i < s->num_spheres; i++) {

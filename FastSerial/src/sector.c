@@ -5,9 +5,6 @@
 #include "grid.h"
 #include "sector.h"
 
-// Can be indexed using coord enum
-const int SECTOR_DIMS[3] = { NUM_SECTORS_X, NUM_SECTORS_Y, NUM_SECTORS_Z };
-
 // Used when iterating over axes and nned to access sector adjacent on the current axis.
 const int SECTOR_MODIFIERS[2][3][3] = {
 	{
@@ -103,9 +100,9 @@ static bool does_sphere_belong_to_sector(const struct sphere_s *sphere, const st
 // This should only be used when randomly generating spheres at startup.
 void add_sphere_to_correct_sector(const struct sphere_s *sphere) {
 	int x, y, z;
-	for (x = 0; x < NUM_SECTORS_X; x++) {
-		for (y = 0; y < NUM_SECTORS_Y; y++) {
-			for (z = 0; z < NUM_SECTORS_Z; z++) {
+	for (x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
+		for (y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
+			for (z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
 				bool res = does_sphere_belong_to_sector(sphere, &grid->sectors[x][y][z]);
 				if (res) {
 					add_sphere_to_sector(&grid->sectors[x][y][z], sphere);

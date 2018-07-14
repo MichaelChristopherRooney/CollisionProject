@@ -23,12 +23,8 @@ struct sector_s {
 	int num_largest_radius_shared; // How many spheres shared the largest radius
 };
 
-#define NUM_SECTORS_X 2
-#define NUM_SECTORS_Y 2
-#define NUM_SECTORS_Z 1
-
 // Can be indexed using axis enum
-const int SECTOR_DIMS[3];
+int SECTOR_DIMS[3];
 
 // Used when iterating over axes and nned to access sector adjacent on the current axis.
 // Allows sectors to be found in a generic way. 

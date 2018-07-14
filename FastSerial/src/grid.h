@@ -13,7 +13,7 @@
 struct grid_s {
 	union vector_3d start;
 	union vector_3d end;
-	struct sector_s sectors[NUM_SECTORS_X][NUM_SECTORS_Y][NUM_SECTORS_Z];
+	struct sector_s ***sectors;
 };
 
 struct grid_s *grid; // The grid used by the simulation.
