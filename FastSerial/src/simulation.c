@@ -92,11 +92,12 @@ void simulation_run() {
 
 void simulation_cleanup() {
 	free(grid->sectors[0][0]);
-	int i, j;
+	int i;
 	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
 		free(grid->sectors[i]);
 	}
 	free(grid->sectors);
+	free(spheres);
 	fclose(data_file);
 	free(grid);
 }

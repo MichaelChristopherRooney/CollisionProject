@@ -34,3 +34,5 @@ void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere
 void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *sphere);
 struct sector_s *get_adjacent_sector_non_diagonal(const struct sector_s *sector, const enum axis a, const enum direction dir);
 void add_sphere_to_correct_sector(const struct sphere_s *sphere);
+void find_partial_crossing_events_for_all_sectors();
+void find_event_times_for_all_sectors();
