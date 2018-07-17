@@ -124,13 +124,18 @@ void init_grid(union vector_3i *divs, union vector_3d *grid_start, union vector_
 	grid->end.x = grid_end->x;
 	grid->end.y = grid_end->y;
 	grid->end.z = grid_end->z;
-	if (divs->x == divs->y == divs->z == 1) {
+	if (divs->x == 1 && divs->y == 1 && divs->z == 1) {
 		grid->uses_sectors = false;
 	} else {
 		grid->uses_sectors = true;
 		init_sectors(divs);
 	}
 	init_spheres();
+#ifdef RECORD_STATS
+	grid->num_two_sphere_collisions = 0;
+	grid->num_grid_collisions = 0;
+	grid->num_sector_transfers = 0;
+#endif
 }
 
 // This updates the positions and velocities of each sphere once the next
@@ -143,11 +148,20 @@ static void update_spheres() {
 	}
 	if (event_details.type == COL_SPHERE_WITH_GRID) {
 		event_details.sphere_1->vel.vals[event_details.grid_axis] *= -1.0;
+#ifdef RECORD_STATS
+		grid->num_grid_collisions++;
+#endif
 	} else if (event_details.type == COL_TWO_SPHERES) {
 		apply_bounce_between_spheres(event_details.sphere_1, event_details.sphere_2);
+#ifdef RECORD_STATS
+		grid->num_two_sphere_collisions++;
+#endif
 	} else if (event_details.type == COL_SPHERE_WITH_SECTOR) {
 		remove_sphere_from_sector(event_details.source_sector, event_details.sphere_1);
 		add_sphere_to_sector(event_details.dest_sector, event_details.sphere_1);
+#ifdef RECORD_STATS
+		grid->num_sector_transfers++;
+#endif
 	}
 }
 
