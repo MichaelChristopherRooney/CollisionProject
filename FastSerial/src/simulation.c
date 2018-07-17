@@ -75,18 +75,16 @@ static void init_binary_file(char *fp) {
 	save_sphere_initial_state_to_file();
 }
 
-void simulation_init(char *fp, union vector_3i *divs, union vector_3d *grid_start, union vector_3d *grid_end) {
-	init_grid(divs, grid_start, grid_end);
+void simulation_init(char *fp, union vector_3i *divs, union vector_3d *grid_start, union vector_3d *grid_end, double time_limit) {
+	init_grid(divs, grid_start, grid_end, time_limit);
 	init_binary_file(fp);
 }
 
 void simulation_run() {
-	double limit = 10.0;
-	double time_elapsed = 0;
 	int i = 1; // start at 1 as 0 is iteration num for the initial state
-	while (time_elapsed < limit) {
-		time_elapsed += update_grid(limit, time_elapsed);
-		save_sphere_state_to_file(i, time_elapsed);
+	while (grid->elapsed_time < grid->time_limit) {
+		grid->elapsed_time += update_grid();
+		save_sphere_state_to_file(i, grid->elapsed_time);
 		i++;
 	}
 }

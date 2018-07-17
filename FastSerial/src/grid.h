@@ -15,6 +15,8 @@
 struct grid_s {
 	union vector_3d start;
 	union vector_3d end;
+	double time_limit;
+	double elapsed_time;
 	struct sector_s ***sectors;
 	bool uses_sectors;
 #ifdef RECORD_STATS
@@ -45,5 +47,5 @@ struct event_s event_details;
 int NUM_SPHERES;
 struct sphere_s *spheres;
 
-void init_grid(union vector_3i *divs, union vector_3d *grid_start, union vector_3d *grid_end);
-double update_grid(double limit, double time_elapsed);
+void init_grid(union vector_3i *divs, union vector_3d *grid_start, union vector_3d *grid_end, double time_limit);
+double update_grid();

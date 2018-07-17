@@ -7,32 +7,6 @@
 
 static int count = 0; // number of spheres that have been initialised
 
-// Creates a number of spheres in a line
-static void create_spheres(int num, double x_start, double y_start, double z_start, double x_inc, double y_inc, double z_inc) {
-	double x = x_start;
-	double y = y_start;
-	double z = z_start;
-	int i;
-	for (i = 0; i < num; i++) {
-		spheres[count].id = count;
-		spheres[count].pos.x = x;
-		spheres[count].pos.y = y;
-		spheres[count].pos.z = z;
-		spheres[count].vel.x = rand() / (RAND_MAX + 1.0);
-		spheres[count].vel.y = rand() / (RAND_MAX + 1.0);
-		spheres[count].vel.z = rand() / (RAND_MAX + 1.0);
-		spheres[count].mass = 1.0;
-		spheres[count].radius = 1.0;
-		if (grid->uses_sectors) {
-			add_sphere_to_correct_sector(&spheres[count]);
-		}
-		x += x_inc;
-		y += y_inc;
-		z += z_inc;
-		count++;
-	}
-}
-
 static void create_sphere(double x, double y, double z, double x_vel, double y_vel, double z_vel) {
 	spheres[count].id = count;
 	spheres[count].pos.x = x;
@@ -46,7 +20,24 @@ static void create_sphere(double x, double y, double z, double x_vel, double y_v
 	if (grid->uses_sectors) {
 		add_sphere_to_correct_sector(&spheres[count]);
 	}
-	count++;
+}
+
+// Creates a number of spheres in a line
+static void create_spheres(int num, double x_start, double y_start, double z_start, double x_inc, double y_inc, double z_inc) {
+	double x = x_start;
+	double y = y_start;
+	double z = z_start;
+	int i;
+	for (i = 0; i < num; i++) {
+		double xv = rand() / (RAND_MAX + 1.0);
+		double yv = rand() / (RAND_MAX + 1.0);
+		double zv = rand() / (RAND_MAX + 1.0);
+		create_sphere(x, y, z, xv, yv, zv, count);
+		x += x_inc;
+		y += y_inc;
+		z += z_inc;
+		count++;
+	}
 }
 
 // Generates spheres with random velocities;
@@ -55,6 +46,7 @@ static void init_spheres() {
 	NUM_SPHERES = 4000;
 	spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
 	srand(123);
+	count = 0; // reset if previously set from prior run
 	create_spheres(250, 10.0, 10.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 40.0, 10.0, 3.5, 0.0, 0.0);
 	create_spheres(250, 10.0, 100.0, 10.0, 3.5, 0.0, 0.0);
@@ -116,7 +108,7 @@ static void init_sectors(union vector_3i *divs) {
 }
 
 // Using hardcoded values for now
-void init_grid(union vector_3i *divs, union vector_3d *grid_start, union vector_3d *grid_end) {
+void init_grid(union vector_3i *divs, union vector_3d *grid_start, union vector_3d *grid_end, double time_limit) {
 	grid = calloc(1, sizeof(struct grid_s));
 	grid->start.x = grid_start->x;
 	grid->start.y = grid_start->y;
@@ -130,6 +122,8 @@ void init_grid(union vector_3i *divs, union vector_3d *grid_start, union vector_
 		grid->uses_sectors = true;
 		init_sectors(divs);
 	}
+	grid->elapsed_time = 0.0;
+	grid->time_limit = time_limit;
 	init_spheres();
 #ifdef RECORD_STATS
 	grid->num_two_sphere_collisions = 0;
@@ -227,7 +221,7 @@ static void find_event_times_no_dd() {
 	}
 }
 
-double update_grid(double limit, double time_elapsed) {
+double update_grid() {
 	sanity_check();
 	// First reset records.
 	event_details.time = DBL_MAX;
@@ -245,8 +239,8 @@ double update_grid(double limit, double time_elapsed) {
 		find_event_times_no_dd();
 	}
 	// Final event may take place after time limit, so cut it short
-	if (limit - time_elapsed < event_details.time) {
-		event_details.time = limit - time_elapsed;
+	if (grid->time_limit - grid->elapsed_time < event_details.time) {
+		event_details.time = grid->time_limit - grid->elapsed_time;
 		event_details.type = COL_NONE;
 	}
 	// Lastly move forward to the next event
