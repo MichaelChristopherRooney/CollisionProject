@@ -23,7 +23,9 @@ static void create_spheres(int num, double x_start, double y_start, double z_sta
 		spheres[count].vel.z = rand() / (RAND_MAX + 1.0);
 		spheres[count].mass = 1.0;
 		spheres[count].radius = 1.0;
-		add_sphere_to_correct_sector(&spheres[count]);
+		if (grid->uses_sectors) {
+			add_sphere_to_correct_sector(&spheres[count]);
+		}
 		x += x_inc;
 		y += y_inc;
 		z += z_inc;
@@ -41,7 +43,9 @@ static void create_sphere(double x, double y, double z, double x_vel, double y_v
 	spheres[count].vel.z = z_vel;
 	spheres[count].mass = 1.0;
 	spheres[count].radius = 1.0;
-	add_sphere_to_correct_sector(&spheres[count]);
+	if (grid->uses_sectors) {
+		add_sphere_to_correct_sector(&spheres[count]);
+	}
 	count++;
 }
 
@@ -69,12 +73,12 @@ static void init_spheres() {
 	create_spheres(250, 10.0, 990.0, 10.0, 3.5, 0.0, 0.0);
 }
 
-// Note: size of grid in each dimension should be divisible by number of s
-// ectors in that dimension.
-static void init_sectors() {
-	SECTOR_DIMS[X_AXIS] = 4;
-	SECTOR_DIMS[Y_AXIS] = 4;
-	SECTOR_DIMS[Z_AXIS] = 2;
+// Note: size of grid in each dimension should be divisible by number of
+// sectors in that dimension.
+static void init_sectors(union vector_3i *divs) {
+	SECTOR_DIMS[X_AXIS] = divs->x;
+	SECTOR_DIMS[Y_AXIS] = divs->y;
+	SECTOR_DIMS[Z_AXIS] = divs->z;
 	grid->sectors = calloc(SECTOR_DIMS[X_AXIS], sizeof(struct sector_s **));
 	struct sector_s *z_arr = calloc(SECTOR_DIMS[X_AXIS] * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS], sizeof(struct sector_s));
 	int i, j, k;
@@ -95,13 +99,10 @@ static void init_sectors() {
 				struct sector_s *s = &grid->sectors[i][j][k];
 				s->start.x = grid->start.x + x_inc * i;
 				s->end.x = s->start.x + x_inc;
-	
 				s->start.y = grid->start.y + y_inc * j;
 				s->end.y = s->start.y + y_inc;
-
 				s->start.z = grid->start.z + z_inc * k;
 				s->end.z = s->start.z + z_inc;
-
 				s->pos.x = i;
 				s->pos.y = j;
 				s->pos.z = k;
@@ -115,15 +116,20 @@ static void init_sectors() {
 }
 
 // Using hardcoded values for now
-void init_grid() {
+void init_grid(union vector_3i *divs, union vector_3d *grid_start, union vector_3d *grid_end) {
 	grid = calloc(1, sizeof(struct grid_s));
-	grid->start.x = 0.0;
-	grid->start.y = 0.0;
-	grid->start.z = 0.0;
-	grid->end.x = 1000.0;
-	grid->end.y = 1000.0;
-	grid->end.z = 1000.0;
-	init_sectors();
+	grid->start.x = grid_start->x;
+	grid->start.y = grid_start->y;
+	grid->start.z = grid_start->z;
+	grid->end.x = grid_end->x;
+	grid->end.y = grid_end->y;
+	grid->end.z = grid_end->z;
+	if (divs->x == divs->y == divs->z == 1) {
+		grid->uses_sectors = false;
+	} else {
+		grid->uses_sectors = true;
+		init_sectors(divs);
+	}
 	init_spheres();
 }
 
@@ -149,6 +155,9 @@ static void update_spheres() {
 // Ensures each sphere is located within the sector responsible for it.
 // Helps catch any issues with transfering spheres between sectors.
 static void sanity_check() {
+	if (grid->uses_sectors == false) {
+		return;
+	}
 	for (int x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
 		for (int y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
 			for (int z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
@@ -177,9 +186,35 @@ static void sanity_check() {
 	}
 }
 
-// TODO: highly work in progress
+static void find_event_times_no_dd() {
+	int i, j;
+	for (i = 0; i < NUM_SPHERES; i++) {
+		struct sphere_s *s1 = &(spheres[i]);
+		enum AXIS axis;
+		double time = find_collision_time_grid(s1, &axis);
+		if (time < event_details.time) {
+			event_details.type = COL_SPHERE_WITH_GRID;
+			event_details.grid_axis = axis;
+			event_details.time = time;
+			event_details.sphere_1 = s1;
+			event_details.sphere_2 = NULL;
+		}
+		for (j = i + 1; j < NUM_SPHERES; j++) {
+			struct sphere_s *s2 = &(spheres[j]);
+			time = find_collision_time_spheres(s1, s2);
+			if (time < event_details.time) {
+				event_details.type = COL_TWO_SPHERES;
+				event_details.grid_axis = AXIS_NONE;
+				event_details.time = time;
+				event_details.sphere_1 = s1;
+				event_details.sphere_2 = s2;
+			}
+		}
+	}
+}
+
 double update_grid(double limit, double time_elapsed) {
-	//sanity_check();
+	sanity_check();
 	// First reset records.
 	event_details.time = DBL_MAX;
 	event_details.sphere_1 = NULL;
@@ -189,8 +224,12 @@ double update_grid(double limit, double time_elapsed) {
 	event_details.type = COL_NONE;
 	event_details.grid_axis = AXIS_NONE;
 	// Now find event + time of event
-	find_event_times_for_all_sectors();
-	find_partial_crossing_events_for_all_sectors();
+	if (grid->uses_sectors) { // domain decomposition
+		find_event_times_for_all_sectors();
+		find_partial_crossing_events_for_all_sectors();
+	} else { // no domain decomposition 
+		find_event_times_no_dd();
+	}
 	// Final event may take place after time limit, so cut it short
 	if (limit - time_elapsed < event_details.time) {
 		event_details.time = limit - time_elapsed;
@@ -198,6 +237,6 @@ double update_grid(double limit, double time_elapsed) {
 	}
 	// Lastly move forward to the next event
 	update_spheres();
-	//sanity_check();
+	sanity_check();
 	return event_details.time;
 }

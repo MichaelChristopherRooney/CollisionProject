@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "grid.h"
+#include "vector_3.h"
 
 static FILE *data_file;
 
@@ -56,8 +57,8 @@ static void save_sphere_state_to_file(uint64_t iteration_num, double time_elapse
 // The iteration number and the time elapsed are 0 as nothing has
 // happened yet.
 // TODO: probably need an id for each sphere
-static void init_binary_file() {
-	data_file = fopen("data.bin", "wb");
+static void init_binary_file(char *fp) {
+	data_file = fopen(fp, "wb");
 	fwrite(&grid->start.x, sizeof(double), 1, data_file);
 	fwrite(&grid->end.x, sizeof(double), 1, data_file);
 	fwrite(&grid->start.y, sizeof(double), 1, data_file);
@@ -74,9 +75,9 @@ static void init_binary_file() {
 	save_sphere_initial_state_to_file();
 }
 
-void simulation_init() {
-	init_grid();
-	init_binary_file();
+void simulation_init(char *fp, union vector_3i *divs, union vector_3d *grid_start, union vector_3d *grid_end) {
+	init_grid(divs, grid_start, grid_end);
+	init_binary_file(fp);
 }
 
 void simulation_run() {
@@ -91,12 +92,14 @@ void simulation_run() {
 }
 
 void simulation_cleanup() {
-	free(grid->sectors[0][0]);
-	int i;
-	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
-		free(grid->sectors[i]);
+	if (grid->uses_sectors) {
+		free(grid->sectors[0][0]);
+		int i;
+		for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
+			free(grid->sectors[i]);
+		}
+		free(grid->sectors);
 	}
-	free(grid->sectors);
 	free(spheres);
 	fclose(data_file);
 	free(grid);
