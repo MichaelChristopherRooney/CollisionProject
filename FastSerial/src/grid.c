@@ -32,7 +32,7 @@ static void create_spheres(int num, double x_start, double y_start, double z_sta
 		double xv = rand() / (RAND_MAX + 1.0);
 		double yv = rand() / (RAND_MAX + 1.0);
 		double zv = rand() / (RAND_MAX + 1.0);
-		create_sphere(x, y, z, xv, yv, zv, count);
+		create_sphere(x, y, z, xv, yv, zv);
 		x += x_inc;
 		y += y_inc;
 		z += z_inc;
@@ -222,7 +222,7 @@ static void find_event_times_no_dd() {
 }
 
 double update_grid() {
-	sanity_check();
+	//sanity_check();
 	// First reset records.
 	event_details.time = DBL_MAX;
 	event_details.sphere_1 = NULL;
@@ -245,6 +245,6 @@ double update_grid() {
 	}
 	// Lastly move forward to the next event
 	update_spheres();
-	sanity_check();
+	//sanity_check();
 	return event_details.time;
 }

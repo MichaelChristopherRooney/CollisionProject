@@ -63,6 +63,14 @@ static void shift(struct sector_s *sector, const struct sphere_s *sphere) {
 	}
 }
 
+// Each sphere has a sector id which gives its location in the sector's sphere
+// array.
+// If the sphere to be removed is the only or last it can just be removed normally.
+// Otherwise each sphere after it in the array must be shifted down by one and
+// have its own sector id decremented. 
+// I previously tried doing this without a sector id. A linear search followed 
+// by a memmove was done, but this was not any faster with 4'000 spheres.
+// It may be faster when dealing with a much larger number of spheres however.
 void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *sphere) {
 	if (sector->num_spheres == 1 || sector->num_spheres - 1 == sphere->sector_id) {
 		sector->num_spheres--;
