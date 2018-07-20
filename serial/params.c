@@ -41,6 +41,16 @@ static void print_config(){
 		printf("Compare file not set\n");
 	}
 }
+
+static void validate_args(){
+	check_slice_arg(SECTOR_DIMS[X_AXIS], 'x');
+	check_slice_arg(SECTOR_DIMS[Y_AXIS], 'y');
+	check_slice_arg(SECTOR_DIMS[Z_AXIS], 'z');
+	if(output_file == NULL){
+		printf("Error: output file (-o) cannot be null\n");
+		exit(1);
+	}
+}
 	
 static void print_help(){
 	printf("-x, -y, -z:\n");
@@ -57,16 +67,13 @@ void parse_args(int argc, char *argv[]) {
 	while((c = getopt(argc, argv, "c:f:ho:x:y:z:")) != -1) {
 		switch(c) {
 		case 'x':
-			SECTOR_DIMS[0] = atoi(optarg);
-			check_slice_arg(SECTOR_DIMS[0], 'x');
+			SECTOR_DIMS[X_AXIS] = atoi(optarg);
 			break;
 		case 'y':
-			SECTOR_DIMS[1] = atoi(optarg);
-			check_slice_arg(SECTOR_DIMS[1], 'y');
+			SECTOR_DIMS[Y_AXIS] = atoi(optarg);
 			break;
 		case 'z':
-			SECTOR_DIMS[2] = atoi(optarg);
-			check_slice_arg(SECTOR_DIMS[2], 'z');
+			SECTOR_DIMS[Z_AXIS] = atoi(optarg);
 			break;
 		case 'f':
 			final_state_file = optarg;
@@ -82,5 +89,6 @@ void parse_args(int argc, char *argv[]) {
 			break;
 		}
 	}
+	validate_args();
 	print_config();
 }

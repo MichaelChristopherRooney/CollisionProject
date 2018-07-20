@@ -56,7 +56,6 @@ static void save_sphere_state_to_file(uint64_t iteration_num, double time_elapse
 // Then write the initial state of the spheres.
 // The iteration number and the time elapsed are 0 as nothing has
 // happened yet.
-// TODO: probably need an id for each sphere
 static void init_binary_file() {
 	data_file = fopen(output_file, "wb");
 	fwrite(&grid->size.x, sizeof(double), 1, data_file);
@@ -106,18 +105,18 @@ static void compare_results() {
 	double max_vel_err = 0.0;
 	int i;
 	for (i = 0; i < NUM_SPHERES; i++) {
-		struct sphere_s s1 = spheres[i];
+		struct sphere_s s = spheres[i];
 		union vector_3d vel_comp;
 		union vector_3d pos_comp;
 		fread(&vel_comp, sizeof(union vector_3d), 1, fp);
 		fread(&pos_comp, sizeof(union vector_3d), 1, fp);
 		enum axis a;
 		for (a = X_AXIS; a <= Z_AXIS; a++) {
-			if (fabs(s1.pos.vals[a] - pos_comp.vals[a]) > max_pos_err) {
-				max_pos_err = fabs(s1.pos.vals[a] - pos_comp.vals[a]);
+			if (fabs(s.pos.vals[a] - pos_comp.vals[a]) > max_pos_err) {
+				max_pos_err = fabs(s.pos.vals[a] - pos_comp.vals[a]);
 			}
-			if (fabs(s1.vel.vals[a] - vel_comp.vals[a]) > max_vel_err) {
-				max_vel_err = fabs(s1.vel.vals[a] - vel_comp.vals[a]);
+			if (fabs(s.vel.vals[a] - vel_comp.vals[a]) > max_vel_err) {
+				max_vel_err = fabs(s.vel.vals[a] - vel_comp.vals[a]);
 			}
 		}
 	}
