@@ -96,7 +96,8 @@ static void compare_results() {
 	}
 	FILE *fp = fopen(compare_file, "rb");
 	int64_t comp_num_spheres;
-	fread(&comp_num_spheres, sizeof(int64_t), 1, fp);
+	// result is just to shut up gcc's warnings
+	int result = fread(&comp_num_spheres, sizeof(int64_t), 1, fp);
 	if(comp_num_spheres != NUM_SPHERES){
 		printf("Error: cannot compare files as number of spheres differs\n");
 		return;
@@ -108,8 +109,8 @@ static void compare_results() {
 		struct sphere_s s = spheres[i];
 		union vector_3d vel_comp;
 		union vector_3d pos_comp;
-		fread(&vel_comp, sizeof(union vector_3d), 1, fp);
-		fread(&pos_comp, sizeof(union vector_3d), 1, fp);
+		result = fread(&vel_comp, sizeof(union vector_3d), 1, fp);
+		result = fread(&pos_comp, sizeof(union vector_3d), 1, fp);
 		enum axis a;
 		for (a = X_AXIS; a <= Z_AXIS; a++) {
 			if (fabs(s.pos.vals[a] - pos_comp.vals[a]) > max_pos_err) {
@@ -124,8 +125,8 @@ static void compare_results() {
 	printf("pos abs err: %.17g\n", max_pos_err);
 }
 
-void simulation_init(union vector_3d *grid_size, double time_limit) {
-	init_grid(grid_size, time_limit);
+void simulation_init(double time_limit) {
+	init_grid(time_limit);
 	init_binary_file();
 }
 

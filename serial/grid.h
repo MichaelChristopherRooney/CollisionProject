@@ -5,8 +5,6 @@
 #include "sphere.h"
 #include "vector_3.h"
 
-#define RECORD_STATS
-
 // This is the area in which the collisions take place. 
 // Imagine the grid is a 3D box with all collisions taking place inside it.
 // Normally x_start, y_start and z_start will all be 0, but the code is 
@@ -18,11 +16,9 @@ struct grid_s {
 	double elapsed_time;
 	struct sector_s ***sectors;
 	bool uses_sectors;
-#ifdef RECORD_STATS
 	int num_two_sphere_collisions;
 	int num_grid_collisions;
 	int num_sector_transfers;
-#endif
 };
 
 struct grid_s *grid; // The grid used by the simulation.
@@ -45,5 +41,5 @@ struct event_s event_details;
 int64_t NUM_SPHERES;
 struct sphere_s *spheres;
 
-void init_grid(union vector_3d *grid_size, double time_limit);
+void init_grid(double time_limit);
 double update_grid();

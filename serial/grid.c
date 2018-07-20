@@ -11,19 +11,20 @@ static FILE *initial_state_fp;
 
 // Loads spheres from the specified inital state file
 static void load_spheres() {
-	fread(&NUM_SPHERES, sizeof(int64_t), 1, initial_state_fp);
+	// result is just to shut up gcc's warnings
+	int result = fread(&NUM_SPHERES, sizeof(int64_t), 1, initial_state_fp);
 	spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
 	int64_t i;
 	for(i = 0; i < NUM_SPHERES; i++){
-		fread(&spheres[i].id, sizeof(int64_t), 1, initial_state_fp);
-		fread(&spheres[i].pos.x, sizeof(double), 1, initial_state_fp);
-		fread(&spheres[i].pos.y, sizeof(double), 1, initial_state_fp);
-		fread(&spheres[i].pos.z, sizeof(double), 1, initial_state_fp);
-		fread(&spheres[i].vel.x, sizeof(double), 1, initial_state_fp);
-		fread(&spheres[i].vel.y, sizeof(double), 1, initial_state_fp);
-		fread(&spheres[i].vel.z, sizeof(double), 1, initial_state_fp);
-		fread(&spheres[i].mass, sizeof(double), 1, initial_state_fp);
-		fread(&spheres[i].radius, sizeof(double), 1, initial_state_fp);
+		result = fread(&spheres[i].id, sizeof(int64_t), 1, initial_state_fp);
+		result = fread(&spheres[i].pos.x, sizeof(double), 1, initial_state_fp);
+		result = fread(&spheres[i].pos.y, sizeof(double), 1, initial_state_fp);
+		result = fread(&spheres[i].pos.z, sizeof(double), 1, initial_state_fp);
+		result = fread(&spheres[i].vel.x, sizeof(double), 1, initial_state_fp);
+		result = fread(&spheres[i].vel.y, sizeof(double), 1, initial_state_fp);
+		result = fread(&spheres[i].vel.z, sizeof(double), 1, initial_state_fp);
+		result = fread(&spheres[i].mass, sizeof(double), 1, initial_state_fp);
+		result = fread(&spheres[i].radius, sizeof(double), 1, initial_state_fp);
 		if (grid->uses_sectors) {
 			add_sphere_to_correct_sector(&spheres[i]);
 		}
@@ -70,12 +71,13 @@ static void init_sectors() {
 }
 
 // Loads the grid from the initial state file
-void init_grid(union vector_3d *grid_size, double time_limit) {
+void init_grid(double time_limit) {
 	initial_state_fp = fopen(initial_state_file, "rb");
 	grid = calloc(1, sizeof(struct grid_s));
-	fread(&grid->size.x, sizeof(double), 1, initial_state_fp);
-	fread(&grid->size.y, sizeof(double), 1, initial_state_fp);
-	fread(&grid->size.z, sizeof(double), 1, initial_state_fp);
+	// result is just to shut up gcc's warnings
+	int result = fread(&grid->size.x, sizeof(double), 1, initial_state_fp);
+	result = fread(&grid->size.y, sizeof(double), 1, initial_state_fp);
+	result = fread(&grid->size.z, sizeof(double), 1, initial_state_fp);
 	if (SECTOR_DIMS[X_AXIS] == 1 && SECTOR_DIMS[Y_AXIS] == 1 && SECTOR_DIMS[Z_AXIS] == 1) {
 		grid->uses_sectors = false;
 	} else {
@@ -85,11 +87,9 @@ void init_grid(union vector_3d *grid_size, double time_limit) {
 	grid->elapsed_time = 0.0;
 	grid->time_limit = time_limit;
 	load_spheres();
-#ifdef RECORD_STATS
 	grid->num_two_sphere_collisions = 0;
 	grid->num_grid_collisions = 0;
 	grid->num_sector_transfers = 0;
-#endif
 	fclose(initial_state_fp);
 }
 
@@ -103,20 +103,14 @@ static void update_spheres() {
 	}
 	if (event_details.type == COL_SPHERE_WITH_GRID) {
 		event_details.sphere_1->vel.vals[event_details.grid_axis] *= -1.0;
-#ifdef RECORD_STATS
 		grid->num_grid_collisions++;
-#endif
 	} else if (event_details.type == COL_TWO_SPHERES) {
 		apply_bounce_between_spheres(event_details.sphere_1, event_details.sphere_2);
-#ifdef RECORD_STATS
 		grid->num_two_sphere_collisions++;
-#endif
 	} else if (event_details.type == COL_SPHERE_WITH_SECTOR) {
 		remove_sphere_from_sector(event_details.source_sector, event_details.sphere_1);
 		add_sphere_to_sector(event_details.dest_sector, event_details.sphere_1);
-#ifdef RECORD_STATS
 		grid->num_sector_transfers++;
-#endif
 	}
 }
 
@@ -155,6 +149,7 @@ static void sanity_check() {
 	}
 }
 
+// Used to find the next event when domain decomposition is not used.
 static void find_event_times_no_dd() {
 	int i, j;
 	for (i = 0; i < NUM_SPHERES; i++) {
@@ -183,7 +178,7 @@ static void find_event_times_no_dd() {
 }
 
 double update_grid() {
-	sanity_check();
+	//sanity_check();
 	// First reset records.
 	event_details.time = DBL_MAX;
 	event_details.sphere_1 = NULL;
@@ -206,6 +201,6 @@ double update_grid() {
 	}
 	// Lastly move forward to the next event
 	update_spheres();
-	sanity_check();
+	//sanity_check();
 	return event_details.time;
 }
