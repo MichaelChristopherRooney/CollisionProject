@@ -42,8 +42,7 @@ struct event_s event_details;
 
 // All spheres in the grid.
 // Hardcoded for testing
-//#define NUM_SPHERES 5
-int NUM_SPHERES;
+int64_t NUM_SPHERES;
 struct sphere_s *spheres;
 
 void init_grid(union vector_3d *grid_size, double time_limit);

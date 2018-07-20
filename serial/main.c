@@ -9,12 +9,12 @@
 #include "sector.h"
 #include "vector_3.h"
 
-void simulation_init(char *fp, union vector_3d *grid_size, double time_limit);
+void simulation_init(union vector_3d *grid_size, double time_limit);
 void simulation_run();
 void simulation_cleanup();
 
-static void run(char *fp, union vector_3d *grid_size) {
-	simulation_init(fp, grid_size, 10.0);
+static void run(union vector_3d *grid_size) {
+	simulation_init(grid_size, 10.0);
 	clock_t start = clock();
 	simulation_run();
 	clock_t end = clock();
@@ -28,34 +28,9 @@ static void run(char *fp, union vector_3d *grid_size) {
 	simulation_cleanup();
 }
 
-/*
-static void compare_results(struct sphere_s *results_1, struct sphere_s *results_2) {
-	double max_pos_err = 0.0;
-	double max_vel_err = 0.0;
-	int i;
-	for (i = 0; i < NUM_SPHERES; i++) {
-		struct sphere_s s1 = results_1[i];
-		struct sphere_s s2 = results_2[i];
-		enum axis a;
-		for (a = X_AXIS; a <= Z_AXIS; a++) {
-			if (fabs(s1.pos.vals[a] - s2.pos.vals[a]) > max_pos_err) {
-				max_pos_err = fabs(s1.pos.vals[a] - s2.pos.vals[a]);
-			}
-			if (fabs(s1.vel.vals[a] - s2.vel.vals[a]) > max_vel_err) {
-				max_vel_err = fabs(s1.vel.vals[a] - s2.vel.vals[a]);
-			}
-		}
-	}
-	printf("vel abs err: %.17g\n", max_vel_err);
-	printf("pos abs err: %.17g\n", max_pos_err);
-}
-*/
-
 int main(int argc, char *argv[]) {
 	parse_args(argc, argv);
 	union vector_3d grid_end = { .x = 1000.0,.y = 1000.0, .z = 1000.0 };
-	run("dd.bin", &grid_end);
-	printf("Press enter to exit...\n");
-	getchar();
+	run(&grid_end);
 	return 0;
 }

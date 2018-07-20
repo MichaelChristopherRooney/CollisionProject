@@ -1,7 +1,9 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "grid.h"
+#include "params.h"
 #include "vector_3.h"
 
 static FILE *data_file;
@@ -33,8 +35,6 @@ static void save_sphere_initial_state_to_file() {
 	}
 }
 
-
-
 // First writes the current iteration number as well as the simulation timestamp.
 // Then writes the number of changed spheres to the file, followed by the data for each changed sphere.
 static void save_sphere_state_to_file(uint64_t iteration_num, double time_elapsed) {
@@ -57,14 +57,13 @@ static void save_sphere_state_to_file(uint64_t iteration_num, double time_elapse
 // The iteration number and the time elapsed are 0 as nothing has
 // happened yet.
 // TODO: probably need an id for each sphere
-static void init_binary_file(char *fp) {
-	data_file = fopen(fp, "wb");
+static void init_binary_file() {
+	data_file = fopen(output_file, "wb");
 	fwrite(&grid->size.x, sizeof(double), 1, data_file);
 	fwrite(&grid->size.y, sizeof(double), 1, data_file);
 	fwrite(&grid->size.z, sizeof(double), 1, data_file);
-	uint64_t temp = NUM_SPHERES;
-	fwrite(&temp, sizeof(uint64_t), 1, data_file);
-	int i;
+	fwrite(&NUM_SPHERES, sizeof(int64_t), 1, data_file);
+	int64_t i;
 	for (i = 0; i < NUM_SPHERES; i++) {
 		fwrite(&spheres[i].radius, sizeof(double), 1, data_file);
 		fwrite(&spheres[i].mass, sizeof(double), 1, data_file);
@@ -72,9 +71,63 @@ static void init_binary_file(char *fp) {
 	save_sphere_initial_state_to_file();
 }
 
-void simulation_init(char *fp, union vector_3d *grid_size, double time_limit) {
+// Writes the final state of the spheres.
+// This can be used to compare results and ensure correctness
+static void write_final_state(){
+	if(final_state_file == NULL){
+		return;
+	}
+	FILE *fp = fopen(final_state_file, "wb");
+	fwrite(&NUM_SPHERES, sizeof(int64_t), 1, fp);
+	int64_t i;
+	for (i = 0; i < NUM_SPHERES; i++) {
+		fwrite(&spheres[i].vel.x, sizeof(double), 1, fp);
+		fwrite(&spheres[i].vel.y, sizeof(double), 1, fp);
+		fwrite(&spheres[i].vel.z, sizeof(double), 1, fp);
+		fwrite(&spheres[i].pos.x, sizeof(double), 1, fp);
+		fwrite(&spheres[i].pos.y, sizeof(double), 1, fp);
+		fwrite(&spheres[i].pos.z, sizeof(double), 1, fp);
+	}
+	fclose(fp);
+}
+
+static void compare_results() {
+	if(compare_file == NULL){
+		return;
+	}
+	FILE *fp = fopen(compare_file, "rb");
+	int64_t comp_num_spheres;
+	fread(&comp_num_spheres, sizeof(int64_t), 1, fp);
+	if(comp_num_spheres != NUM_SPHERES){
+		printf("Error: cannot compare files as number of spheres differs\n");
+		return;
+	}
+	double max_pos_err = 0.0;
+	double max_vel_err = 0.0;
+	int i;
+	for (i = 0; i < NUM_SPHERES; i++) {
+		struct sphere_s s1 = spheres[i];
+		union vector_3d vel_comp;
+		union vector_3d pos_comp;
+		fread(&vel_comp, sizeof(union vector_3d), 1, fp);
+		fread(&pos_comp, sizeof(union vector_3d), 1, fp);
+		enum axis a;
+		for (a = X_AXIS; a <= Z_AXIS; a++) {
+			if (fabs(s1.pos.vals[a] - pos_comp.vals[a]) > max_pos_err) {
+				max_pos_err = fabs(s1.pos.vals[a] - pos_comp.vals[a]);
+			}
+			if (fabs(s1.vel.vals[a] - vel_comp.vals[a]) > max_vel_err) {
+				max_vel_err = fabs(s1.vel.vals[a] - vel_comp.vals[a]);
+			}
+		}
+	}
+	printf("vel abs err: %.17g\n", max_vel_err);
+	printf("pos abs err: %.17g\n", max_pos_err);
+}
+
+void simulation_init(union vector_3d *grid_size, double time_limit) {
 	init_grid(grid_size, time_limit);
-	init_binary_file(fp);
+	init_binary_file();
 }
 
 void simulation_run() {
@@ -84,6 +137,8 @@ void simulation_run() {
 		save_sphere_state_to_file(i, grid->elapsed_time);
 		i++;
 	}
+	write_final_state();
+	compare_results();
 }
 
 void simulation_cleanup() {
