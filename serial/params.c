@@ -9,6 +9,7 @@ static void set_default_params(){
 	SECTOR_DIMS[0] = 1;
 	SECTOR_DIMS[1] = 1;
 	SECTOR_DIMS[2] = 1;
+	initial_state_file = NULL;
 	final_state_file = NULL;
 	compare_file = NULL;
 	output_file = NULL;
@@ -25,11 +26,8 @@ static void print_config(){
 	printf("Number of x slices: %d\n", SECTOR_DIMS[0]);
 	printf("Number of y slices: %d\n", SECTOR_DIMS[1]);
 	printf("Number of z slices: %d\n", SECTOR_DIMS[2]);
-	if(output_file != NULL){
-		printf("Output file: %s\n", output_file);
-	} else {
-		printf("Output file not set.\n");
-	}
+	printf("Initial state file: %s\n", initial_state_file);
+	printf("Output file: %s\n", output_file);
 	if(final_state_file != NULL){
 		printf("Final state file: %s\n", final_state_file);
 	} else {
@@ -50,21 +48,26 @@ static void validate_args(){
 		printf("Error: output file (-o) cannot be null\n");
 		exit(1);
 	}
+	if(initial_state_file == NULL){
+		printf("Error: initial state file (-i) cannot be null\n");
+		exit(1);
+	}
 }
 	
 static void print_help(){
 	printf("-x, -y, -z:\n");
 	printf("\tOptional.\n\tSets the number of slices in the specified axis.\n\tDefaults to 1.\n\tMust be at least 1.\n");
 	printf("-c:\n\tOptional.\n\tSets the compare file. This should be a final state file from a previous run.\n\tThe max error between this run and the compare file will be printed.\n");
-	printf("-f:\n\tSet the final state file. This will contain only the final velocity and position of each sphere.\n");
-	printf("-o:\n\tSet the output file. This contains all data needed to make use of the simulation.\n");
+	printf("-f:\n\tOptional.\n\tSets the final state file. This will contain only the final velocity and position of each sphere.\n");
+	printf("-o:\n\tRequired.\n\tSets the output file. This contains all data needed to make use of the simulation.\n");
+	printf("-i:\n\tRequired.\n\tSets the inital state file.\n");
 	exit(0);
 }
 
 void parse_args(int argc, char *argv[]) {
 	set_default_params();
 	int c;
-	while((c = getopt(argc, argv, "c:f:ho:x:y:z:")) != -1) {
+	while((c = getopt(argc, argv, "i:c:f:ho:x:y:z:")) != -1) {
 		switch(c) {
 		case 'x':
 			SECTOR_DIMS[X_AXIS] = atoi(optarg);
@@ -86,6 +89,9 @@ void parse_args(int argc, char *argv[]) {
 			break;
 		case 'h':
 			print_help();
+			break;
+		case 'i':
+			initial_state_file = optarg;
 			break;
 		}
 	}

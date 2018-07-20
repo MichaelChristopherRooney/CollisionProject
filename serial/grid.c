@@ -7,64 +7,27 @@
 #include "params.h"
 #include "vector_3.h"
 
-static int64_t count = 0; // number of spheres that have been initialised
+static FILE *initial_state_fp;
 
-static void create_sphere(double x, double y, double z, double x_vel, double y_vel, double z_vel) {
-	spheres[count].id = count;
-	spheres[count].pos.x = x;
-	spheres[count].pos.y = y;
-	spheres[count].pos.z = z;
-	spheres[count].vel.x = x_vel;
-	spheres[count].vel.y = y_vel;
-	spheres[count].vel.z = z_vel;
-	spheres[count].mass = 1.0;
-	spheres[count].radius = 1.0;
-	if (grid->uses_sectors) {
-		add_sphere_to_correct_sector(&spheres[count]);
-	}
-}
-
-// Creates a number of spheres in a line
-static void create_spheres(int num, double x_start, double y_start, double z_start, double x_inc, double y_inc, double z_inc) {
-	double x = x_start;
-	double y = y_start;
-	double z = z_start;
-	int i;
-	for (i = 0; i < num; i++) {
-		double xv = rand() / (RAND_MAX + 1.0);
-		double yv = rand() / (RAND_MAX + 1.0);
-		double zv = rand() / (RAND_MAX + 1.0);
-		create_sphere(x, y, z, xv, yv, zv);
-		x += x_inc;
-		y += y_inc;
-		z += z_inc;
-		count++;
-	}
-}
-
-// Generates spheres with random velocities;
-// Position is hardcoded for now
-static void init_spheres() {
-	NUM_SPHERES = 4000;
+// Loads spheres from the specified inital state file
+static void load_spheres() {
+	fread(&NUM_SPHERES, sizeof(int64_t), 1, initial_state_fp);
 	spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
-	srand(123);
-	count = 0; // reset if previously set from prior run
-	create_spheres(250, 10.0, 10.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 40.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 100.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 140.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 360.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 390.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 460.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 490.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 510.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 540.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 610.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 640.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 860.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 890.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 960.0, 10.0, 3.5, 0.0, 0.0);
-	create_spheres(250, 10.0, 990.0, 10.0, 3.5, 0.0, 0.0);
+	int64_t i;
+	for(i = 0; i < NUM_SPHERES; i++){
+		fread(&spheres[i].id, sizeof(int64_t), 1, initial_state_fp);
+		fread(&spheres[i].pos.x, sizeof(double), 1, initial_state_fp);
+		fread(&spheres[i].pos.y, sizeof(double), 1, initial_state_fp);
+		fread(&spheres[i].pos.z, sizeof(double), 1, initial_state_fp);
+		fread(&spheres[i].vel.x, sizeof(double), 1, initial_state_fp);
+		fread(&spheres[i].vel.y, sizeof(double), 1, initial_state_fp);
+		fread(&spheres[i].vel.z, sizeof(double), 1, initial_state_fp);
+		fread(&spheres[i].mass, sizeof(double), 1, initial_state_fp);
+		fread(&spheres[i].radius, sizeof(double), 1, initial_state_fp);
+		if (grid->uses_sectors) {
+			add_sphere_to_correct_sector(&spheres[i]);
+		}
+	}
 }
 
 // Note: size of grid in each dimension should be divisible by number of
@@ -106,12 +69,13 @@ static void init_sectors() {
 	}
 }
 
-// Using hardcoded values for now
+// Loads the grid from the initial state file
 void init_grid(union vector_3d *grid_size, double time_limit) {
+	initial_state_fp = fopen(initial_state_file, "rb");
 	grid = calloc(1, sizeof(struct grid_s));
-	grid->size.x = grid_size->x;
-	grid->size.y = grid_size->y;
-	grid->size.z = grid_size->z;
+	fread(&grid->size.x, sizeof(double), 1, initial_state_fp);
+	fread(&grid->size.y, sizeof(double), 1, initial_state_fp);
+	fread(&grid->size.z, sizeof(double), 1, initial_state_fp);
 	if (SECTOR_DIMS[X_AXIS] == 1 && SECTOR_DIMS[Y_AXIS] == 1 && SECTOR_DIMS[Z_AXIS] == 1) {
 		grid->uses_sectors = false;
 	} else {
@@ -120,12 +84,13 @@ void init_grid(union vector_3d *grid_size, double time_limit) {
 	}
 	grid->elapsed_time = 0.0;
 	grid->time_limit = time_limit;
-	init_spheres();
+	load_spheres();
 #ifdef RECORD_STATS
 	grid->num_two_sphere_collisions = 0;
 	grid->num_grid_collisions = 0;
 	grid->num_sector_transfers = 0;
 #endif
+	fclose(initial_state_fp);
 }
 
 // This updates the positions and velocities of each sphere once the next
@@ -218,7 +183,7 @@ static void find_event_times_no_dd() {
 }
 
 double update_grid() {
-	//sanity_check();
+	sanity_check();
 	// First reset records.
 	event_details.time = DBL_MAX;
 	event_details.sphere_1 = NULL;
@@ -241,6 +206,6 @@ double update_grid() {
 	}
 	// Lastly move forward to the next event
 	update_spheres();
-	//sanity_check();
+	sanity_check();
 	return event_details.time;
 }
