@@ -4,6 +4,7 @@
 
 #include "collision.h"
 #include "grid.h"
+#include "params.h"
 #include "vector_3.h"
 
 static int64_t count = 0; // number of spheres that have been initialised
@@ -68,10 +69,7 @@ static void init_spheres() {
 
 // Note: size of grid in each dimension should be divisible by number of
 // sectors in that dimension.
-static void init_sectors(union vector_3i *divs) {
-	SECTOR_DIMS[X_AXIS] = divs->x;
-	SECTOR_DIMS[Y_AXIS] = divs->y;
-	SECTOR_DIMS[Z_AXIS] = divs->z;
+static void init_sectors() {
 	grid->sectors = calloc(SECTOR_DIMS[X_AXIS], sizeof(struct sector_s **));
 	struct sector_s *z_arr = calloc(SECTOR_DIMS[X_AXIS] * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS], sizeof(struct sector_s));
 	int i, j, k;
@@ -82,19 +80,19 @@ static void init_sectors(union vector_3i *divs) {
 			grid->sectors[i][j] = &z_arr[idx];
 		}
 	}
-	double x_inc = (grid->end.x - grid->start.x) / SECTOR_DIMS[X_AXIS];
-	double y_inc = (grid->end.y - grid->start.y) / SECTOR_DIMS[Y_AXIS];
-	double z_inc = (grid->end.z - grid->start.z) / SECTOR_DIMS[Z_AXIS];
+	double x_inc = grid->size.x / SECTOR_DIMS[X_AXIS];
+	double y_inc = grid->size.y / SECTOR_DIMS[Y_AXIS];
+	double z_inc = grid->size.z / SECTOR_DIMS[Z_AXIS];
 	int count = 0;
 	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
 		for (j = 0; j < SECTOR_DIMS[Y_AXIS]; j++) {
 			for (k = 0; k < SECTOR_DIMS[Z_AXIS]; k++) {
 				struct sector_s *s = &grid->sectors[i][j][k];
-				s->start.x = grid->start.x + x_inc * i;
+				s->start.x = x_inc * i;
 				s->end.x = s->start.x + x_inc;
-				s->start.y = grid->start.y + y_inc * j;
+				s->start.y = y_inc * j;
 				s->end.y = s->start.y + y_inc;
-				s->start.z = grid->start.z + z_inc * k;
+				s->start.z = z_inc * k;
 				s->end.z = s->start.z + z_inc;
 				s->pos.x = i;
 				s->pos.y = j;
@@ -109,19 +107,16 @@ static void init_sectors(union vector_3i *divs) {
 }
 
 // Using hardcoded values for now
-void init_grid(union vector_3i *divs, union vector_3d *grid_start, union vector_3d *grid_end, double time_limit) {
+void init_grid(union vector_3d *grid_size, double time_limit) {
 	grid = calloc(1, sizeof(struct grid_s));
-	grid->start.x = grid_start->x;
-	grid->start.y = grid_start->y;
-	grid->start.z = grid_start->z;
-	grid->end.x = grid_end->x;
-	grid->end.y = grid_end->y;
-	grid->end.z = grid_end->z;
-	if (divs->x == 1 && divs->y == 1 && divs->z == 1) {
+	grid->size.x = grid_size->x;
+	grid->size.y = grid_size->y;
+	grid->size.z = grid_size->z;
+	if (SECTOR_DIMS[X_AXIS] == 1 && SECTOR_DIMS[Y_AXIS] == 1 && SECTOR_DIMS[Z_AXIS] == 1) {
 		grid->uses_sectors = false;
 	} else {
 		grid->uses_sectors = true;
-		init_sectors(divs);
+		init_sectors();
 	}
 	grid->elapsed_time = 0.0;
 	grid->time_limit = time_limit;

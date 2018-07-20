@@ -59,12 +59,9 @@ static void save_sphere_state_to_file(uint64_t iteration_num, double time_elapse
 // TODO: probably need an id for each sphere
 static void init_binary_file(char *fp) {
 	data_file = fopen(fp, "wb");
-	fwrite(&grid->start.x, sizeof(double), 1, data_file);
-	fwrite(&grid->end.x, sizeof(double), 1, data_file);
-	fwrite(&grid->start.y, sizeof(double), 1, data_file);
-	fwrite(&grid->end.y, sizeof(double), 1, data_file);
-	fwrite(&grid->start.z, sizeof(double), 1, data_file);
-	fwrite(&grid->end.z, sizeof(double), 1, data_file);
+	fwrite(&grid->size.x, sizeof(double), 1, data_file);
+	fwrite(&grid->size.y, sizeof(double), 1, data_file);
+	fwrite(&grid->size.z, sizeof(double), 1, data_file);
 	uint64_t temp = NUM_SPHERES;
 	fwrite(&temp, sizeof(uint64_t), 1, data_file);
 	int i;
@@ -75,8 +72,8 @@ static void init_binary_file(char *fp) {
 	save_sphere_initial_state_to_file();
 }
 
-void simulation_init(char *fp, union vector_3i *divs, union vector_3d *grid_start, union vector_3d *grid_end, double time_limit) {
-	init_grid(divs, grid_start, grid_end, time_limit);
+void simulation_init(char *fp, union vector_3d *grid_size, double time_limit) {
+	init_grid(grid_size, time_limit);
 	init_binary_file(fp);
 }
 

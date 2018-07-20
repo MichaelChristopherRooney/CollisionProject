@@ -54,8 +54,10 @@ double find_collision_time_spheres(const struct sphere_s *s1, const struct spher
 	return  dist_to_col / vel_vec_mag;
 }
 
-// Finds the time taken to cross the boundary on the specified axis in the grid.
+// Finds the time taken to cross the boundary on the specified axis in the grid or sector.
 // axis_vel and axis_pos are the velocity/position of the sphere on that axis.
+// If checking against the grid then bound_start will be 0.0, if checking against
+// a sector then it will be the sector's starting pos on the axis
 static double find_time_to_cross_boundary(const double bound_start, const double bound_end, const double axis_vel, const double axis_pos, const double radius) {
 	double dist = 0;
 	if (axis_vel > 0) {
@@ -101,7 +103,7 @@ double find_collision_time_grid(const struct sphere_s *s, enum axis *col_axis) {
 	enum axis a;
 	for (a = X_AXIS; a <= Z_AXIS; a++) {
 		if (s->vel.vals[a] != 0) {
-			double temp_time = find_time_to_cross_boundary(grid->start.vals[a], grid->end.vals[a], s->vel.vals[a], s->pos.vals[a], s->radius);
+			double temp_time = find_time_to_cross_boundary(0.0, grid->size.vals[a], s->vel.vals[a], s->pos.vals[a], s->radius);
 			if (temp_time < time) {
 				time = temp_time;
 				*col_axis = a;
