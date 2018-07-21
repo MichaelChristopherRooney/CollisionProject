@@ -30,8 +30,7 @@ static void load_spheres() {
 		result = fread(&in.mass, sizeof(double), 1, initial_state_fp);
 		result = fread(&in.radius, sizeof(double), 1, initial_state_fp);
 		if(does_sphere_belong_to_sector(&in, SECTOR)){
-			//printf("Rank %d claiming sphere at %f, %f, %f\n", RANK, in.pos.x, in.pos.y, in.pos.z);
-			// TODO: add sphere in a fast way
+			add_sphere_to_sector(SECTOR, &in);
 		}
 	}
 }
@@ -42,8 +41,8 @@ static void init_sector() {
 	double z_inc = grid->size.z / SECTOR_DIMS[Z_AXIS];
 	SECTOR = calloc(sizeof(struct sector_s), 1);
 	SECTOR->num_spheres = 0; 
-	SECTOR->max_spheres = 1000; // will be increased later if needed
-	SECTOR->spheres = calloc(SECTOR->max_spheres, sizeof(struct sphere_s *)); // realloc'd later if needed
+	SECTOR->max_spheres = 10; // will be increased later if needed
+	SECTOR->spheres = calloc(SECTOR->max_spheres, sizeof(struct sphere_s)); // realloc'd later if needed
 	SECTOR->pos.x = COORDS[X_AXIS];
 	SECTOR->pos.y = COORDS[Y_AXIS];
 	SECTOR->pos.z = COORDS[Z_AXIS];

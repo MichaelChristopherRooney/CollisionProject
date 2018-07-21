@@ -31,10 +31,10 @@ static void set_largest_radius_after_insertion(struct sector_s *sector, const st
 void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere) {
 	if (sector->num_spheres >= sector->max_spheres) {
 		sector->max_spheres = sector->max_spheres * 2;
-		sector->spheres = realloc(sector->spheres, sector->max_spheres * sizeof(struct sphere_s *));
+		sector->spheres = realloc(sector->spheres, sector->max_spheres * sizeof(struct sphere_s));
 	}
-	sector->spheres[sector->num_spheres] = sphere;
-	sector->spheres[sector->num_spheres]->sector_id = sector->num_spheres;
+	sector->spheres[sector->num_spheres] = *sphere;
+	sector->spheres[sector->num_spheres].sector_id = sector->num_spheres;
 	sector->num_spheres++;
 	set_largest_radius_after_insertion(sector, sphere);
 }
@@ -59,7 +59,7 @@ static void shift(struct sector_s *sector, const struct sphere_s *sphere) {
 	int64_t i;
 	for (i = sphere->sector_id; i < sector->num_spheres - 1; i++) {
 		sector->spheres[i] = sector->spheres[i + 1];
-		sector->spheres[i]->sector_id--;
+		sector->spheres[i].sector_id--;
 	}
 }
 
@@ -114,7 +114,7 @@ bool does_sphere_belong_to_sector(const struct sphere_s *sphere, const struct se
 static void find_partial_crossing_events_between_sphere_and_sector(const struct sphere_s *sphere_1, const struct sector_s *sector_2) {
 	int j;
 	for (j = 0; j < sector_2->num_spheres; j++) {
-		struct sphere_s *sphere_2 = sector_2->spheres[j];
+		struct sphere_s *sphere_2 = &sector_2->spheres[j];
 		double time = find_collision_time_spheres(sphere_1, sphere_2);
 		if (time < event_details.time) {
 			event_details.type = COL_TWO_SPHERES;
@@ -224,7 +224,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent(const st
 void find_partial_crossing_events_for_sector(const struct sector_s *sector) {
 	int i;
 	for (i = 0; i < sector->num_spheres; i++) {
-		const struct sphere_s *sphere = sector->spheres[i];
+		const struct sphere_s *sphere = &sector->spheres[i];
 		const union vector_3d new_pos = {
 			.x = sphere->pos.x + (sphere->vel.x * event_details.time),
 			.y = sphere->pos.y + (sphere->vel.y * event_details.time),
@@ -241,9 +241,9 @@ void find_partial_crossing_events_for_sector(const struct sector_s *sector) {
 static void find_collision_times_between_spheres_in_sector(const struct sector_s *sector) {
 	int i, j;
 	for (i = 0; i < sector->num_spheres - 1; i++) {
-		struct sphere_s *s1 = sector->spheres[i];
+		struct sphere_s *s1 = &sector->spheres[i];
 		for (j = i + 1; j < sector->num_spheres; j++) {
-			struct sphere_s *s2 = sector->spheres[j];
+			struct sphere_s *s2 = &sector->spheres[j];
 			double time = find_collision_time_spheres(s1, s2);
 			if (time < event_details.time) {
 				event_details.type = COL_TWO_SPHERES;
@@ -262,7 +262,7 @@ static void find_collision_times_grid_boundary_for_sector(const struct sector_s 
 	enum axis axis = COL_NONE;
 	int i;
 	for (i = 0; i < sector->num_spheres; i++) {
-		struct sphere_s *sphere = sector->spheres[i];
+		struct sphere_s *sphere = &sector->spheres[i];
 		double time = find_collision_time_grid(sphere, &axis);
 		if (time < event_details.time) {
 			event_details.type = COL_SPHERE_WITH_GRID;

@@ -13,7 +13,7 @@ enum direction {
 struct sector_s {
 	union vector_3d start;
 	union vector_3d end;
-	struct sphere_s **spheres;
+	struct sphere_s *spheres;
 	int64_t num_spheres;
 	int64_t max_spheres;
 	// Location in sector array
@@ -34,6 +34,6 @@ bool does_sphere_belong_to_sector(const struct sphere_s *sphere, const struct se
 void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere);
 void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *sphere);
 struct sector_s *get_adjacent_sector_non_diagonal(const struct sector_s *sector, const enum axis a, const enum direction dir);
-void add_sphere_to_correct_sector(const struct sphere_s *sphere);
+void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere);
 void find_partial_crossing_events_for_sector(const struct sector_s *sector);
 void find_event_times_for_sector(const struct sector_s *sector);
