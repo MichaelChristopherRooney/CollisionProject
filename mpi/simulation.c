@@ -57,17 +57,7 @@ static void save_sphere_state_to_file(uint64_t iteration_num, double time_elapse
 // The iteration number and the time elapsed are 0 as nothing has
 // happened yet.
 static void init_binary_file() {
-	data_file = fopen(output_file, "wb");
-	fwrite(&grid->size.x, sizeof(double), 1, data_file);
-	fwrite(&grid->size.y, sizeof(double), 1, data_file);
-	fwrite(&grid->size.z, sizeof(double), 1, data_file);
-	fwrite(&NUM_SPHERES, sizeof(int64_t), 1, data_file);
-	int64_t i;
-	for (i = 0; i < NUM_SPHERES; i++) {
-		fwrite(&spheres[i].radius, sizeof(double), 1, data_file);
-		fwrite(&spheres[i].mass, sizeof(double), 1, data_file);
-	}
-	save_sphere_initial_state_to_file();
+	printf("TODO: init binary file MPI\n");
 }
 
 // Writes the final state of the spheres.
@@ -142,13 +132,5 @@ void simulation_run() {
 }
 
 void simulation_cleanup() {
-	free(grid->sectors[0][0]);
-	int i;
-	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
-		free(grid->sectors[i]);
-	}
-	free(grid->sectors);
-	free(spheres);
-	fclose(data_file);
-	free(grid);
+	printf("TODO: cleanup in MPI version\n");
 }

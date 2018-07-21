@@ -86,11 +86,15 @@ void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *s
 // specified axis.
 // Ex: If x axis and positive direction returns sector to the right.
 struct sector_s *get_adjacent_sector_non_diagonal(const struct sector_s *sector, const enum axis a, const enum direction dir) {
+	printf("TODO: get adjacent sector non diagonal MPI\n");
+	return NULL;
+	/*
 	int x = sector->pos.x + SECTOR_MODIFIERS[dir][a][X_AXIS];
 	int y = sector->pos.y + SECTOR_MODIFIERS[dir][a][Y_AXIS];
 	int z = sector->pos.z + SECTOR_MODIFIERS[dir][a][Z_AXIS];
 	struct sector_s *adj = &grid->sectors[x][y][z];
 	return adj;
+	*/
 }
 
 // Helper for add_sphere_to_correct_sector function.
@@ -103,27 +107,6 @@ bool does_sphere_belong_to_sector(const struct sphere_s *sphere, const struct se
 		}
 	}
 	return true;
-}
-
-// Given a sphere adds it to the correct sector.
-// This should only be used when randomly generating spheres at startup.
-void add_sphere_to_correct_sector(const struct sphere_s *sphere) {
-	int x, y, z;
-	for (x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
-		for (y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
-			for (z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
-				bool res = does_sphere_belong_to_sector(sphere, &grid->sectors[x][y][z]);
-				if (res) {
-					add_sphere_to_sector(&grid->sectors[x][y][z], sphere);
-					return;
-				}
-			}
-		}
-	}
-	// Shouldn't reach here
-	printf("Error: sphere does not belong to any sector\n");
-	getchar();
-	exit(1);
 }
 
 // Given a sphere that is known to be heading towards the given sector
@@ -145,7 +128,8 @@ static void find_partial_crossing_events_between_sphere_and_sector(const struct 
 // Checks for partial crossings with sectors that are immediately adjacent to 
 // the left/right, top/bottom or front/back.
 static void find_partial_crossing_events_for_sector_directly_adjacent(const struct sphere_s *sphere, const struct sector_s *sector, const union vector_3d new_pos) {
-	enum axis a;
+	printf("TODO: find_partial_crossing_events_for_sector_directly_adjacent MPI\n");
+	/*enum axis a;
 	for (a = X_AXIS; a <= Z_AXIS; a++) { // right/up/forward on x/y/z axis
 		if (sphere->vel.vals[a] >= 0.0 && sector->pos.vals[a] != SECTOR_DIMS[a] - 1) {
 			int s_x = sector->pos.x + SECTOR_MODIFIERS[DIR_POSITIVE][a][X_AXIS];
@@ -167,7 +151,7 @@ static void find_partial_crossing_events_for_sector_directly_adjacent(const stru
 				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
 			}
 		}
-	}
+	}*/
 }
 
 // Checks for partial crossings with sectors that are diagonally adjacent along one axis.
@@ -175,7 +159,8 @@ static void find_partial_crossing_events_for_sector_directly_adjacent(const stru
 // Only one axis can change at a time.
 // TODO: make this more generic
 static void find_partial_crossing_events_for_sector_diagonally_adjacent(const struct sphere_s *sphere, const struct sector_s *sector, const union vector_3d new_pos) {
-	// right on x axis and up on y axis
+	printf("TODO: find_partial_crossing_events_for_sector_diagonally_adjacent MPI\n");
+	/*// right on x axis and up on y axis
 	if (sphere->vel.x >= 0.0 && sector->pos.x != SECTOR_DIMS[X_AXIS] - 1 && sphere->vel.y >= 0.0 && sector->pos.y != SECTOR_DIMS[Y_AXIS] - 1) {
 		struct sector_s *sector_2 = &grid->sectors[sector->pos.x + 1][sector->pos.y + 1][sector->pos.z];
 		if (new_pos.x >= sector_2->start.x - sphere->radius - sector_2->largest_radius && new_pos.y >= sector_2->start.y - sphere->radius - sector_2->largest_radius) {
@@ -230,13 +215,13 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent(const st
 		if (new_pos.y <= sector_2->start.y + sphere->radius + sector_2->largest_radius && new_pos.z <= sector_2->start.z + sphere->radius + sector_2->largest_radius) {
 			find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
 		}
-	}
+	}*/
 }
 
 // For each sphere check which sectors it is going towards.
 // If by the time of the current soonest event it is within a certain distance 
 // of any sector it is travelling towards we must check for partial crossings.
-static void find_partial_crossing_events_for_sector(const struct sector_s *sector) {
+void find_partial_crossing_events_for_sector(const struct sector_s *sector) {
 	int i;
 	for (i = 0; i < sector->num_spheres; i++) {
 		const struct sphere_s *sphere = sector->spheres[i];
@@ -248,18 +233,6 @@ static void find_partial_crossing_events_for_sector(const struct sector_s *secto
 		find_partial_crossing_events_for_sector_directly_adjacent(sphere, sector, new_pos);
 		find_partial_crossing_events_for_sector_diagonally_adjacent(sphere, sector, new_pos);
 		// TODO: 3d diagonal
-	}
-}
-
-// If needed find any sphere on sphere collisions that occur between spheres
-// that partially cross sector boundaries. 
-void find_partial_crossing_events_for_all_sectors() {
-	for (int x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
-		for (int y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
-			for (int z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
-				find_partial_crossing_events_for_sector(&grid->sectors[x][y][z]);
-			}
-		}
 	}
 }
 
@@ -313,21 +286,10 @@ static void find_collision_times_grid_boundary_for_sector(const struct sector_s 
 // The event will be either two spheres colliding, a sphere colliding with a grid
 // boundary, or a sphere passing into another sector.
 // Any partial crossings will be handled once this function has been called for each sector.
-static void find_event_times_for_sector(const struct sector_s *sector) {
+void find_event_times_for_sector(const struct sector_s *sector) {
 	if (sector->num_spheres == 0) {
 		return;
 	}
 	find_collision_times_between_spheres_in_sector(sector);
 	find_collision_times_grid_boundary_for_sector(sector);
-}
-
-// Finds event times for each sector, excluding partial crossings
-void find_event_times_for_all_sectors() {
-	for (int x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
-		for (int y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
-			for (int z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
-				find_event_times_for_sector(&grid->sectors[x][y][z]);
-			}
-		}
-	}
 }
