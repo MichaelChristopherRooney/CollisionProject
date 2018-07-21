@@ -15,6 +15,7 @@ static void create_sphere(double x, double y, double z, double x_vel, double y_v
 	fwrite(&z_vel, sizeof(double), 1, fp);
 	fwrite(&one, sizeof(double), 1, fp); // mass
 	fwrite(&one, sizeof(double), 1, fp); // radius
+	count++;
 }
 
 // Creates a number of spheres in a line
@@ -31,7 +32,6 @@ static void create_spheres(int num, double x_start, double y_start, double z_sta
 		x += x_inc;
 		y += y_inc;
 		z += z_inc;
-		count++;
 	}
 }
 
@@ -66,8 +66,40 @@ static void generate_4000(){
 	fclose(fp);
 }
 
+static void generate_one_axis_crossing_test(){
+	count = 0;
+	fp = fopen("one_axis.spheres", "wb");
+	double grid_size = 100.0;
+	fwrite(&grid_size, sizeof(double), 1, fp); // x
+	fwrite(&grid_size, sizeof(double), 1, fp); // y
+	grid_size = 50.0;
+	fwrite(&grid_size, sizeof(double), 1, fp); // z
+	int64_t num_spheres = 12;
+	fwrite(&num_spheres, sizeof(int64_t), 1, fp);
+	// stationary in [0][0][0], moving in [1][0][0]
+	create_sphere(49.5, 10.0, 10.0, 0.0, 0.0, 0.0);
+	create_sphere(60.5, 10.0, 10.0, -5.0, 0.0, 0.0);
+	// moving in [0][0][0], stationary in [1][0][0]
+	create_sphere(40.0, 20.0, 10.0, 3.0, 0.0, 0.0);
+	create_sphere(50.5, 20.0, 10.0, 0.0, 0.0, 0.0);
+	// stationary in [0][0][0], moving in [0][1][0]
+	create_sphere(10.0, 49.5, 10.0, 0.0, 0.0, 0.0);
+	create_sphere(10.0, 60.5, 10.0, 0.0, -4.0, 0.0);
+	// moving in [0][0][0], stationary in [0][1][0]
+	create_sphere(20.0, 40.0, 10.0, 0.0, 2.0, 0.0);
+	create_sphere(20.0, 50.5, 10.0, 0.0, 0.0, 0.0);
+	// moving in [0][0][0], stationary in [0][0][1]
+	create_sphere(10.0, 10.0, 23.0, 0.0, 0.0, 2.0);
+	create_sphere(10.0, 10.0, 25.5, 0.0, 0.0, 0.0);
+	// stationary in [0][0][0], moving in [0][0][1]
+	create_sphere(5.0, 10.0, 24.9, 0.0, 0.0, 0.0);
+	create_sphere(5.0, 10.0, 27, 0.0, 0.0, -2.0);
+	fclose(fp);
+}
+
 // This will generate some inital configs used by the collision simulator.
 int main(void){
 	generate_4000();
+	generate_one_axis_crossing_test();
 }
 

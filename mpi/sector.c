@@ -155,8 +155,7 @@ static void find_partial_crossing_events_for_sector_directly_adjacent(const stru
 }
 
 // Checks for partial crossings with sectors that are diagonally adjacent along one axis.
-// Ex: if sector is at [1][1][1], checks [1][1][2], [1][1][0], and so on.
-// Only one axis can change at a time.
+// Ex: if sector is at [1][1][1], checks [1][2][2], [1][2][0], and so on.
 // TODO: make this more generic
 static void find_partial_crossing_events_for_sector_diagonally_adjacent(const struct sphere_s *sphere, const struct sector_s *sector, const union vector_3d new_pos) {
 	printf("TODO: find_partial_crossing_events_for_sector_diagonally_adjacent MPI\n");

@@ -178,7 +178,7 @@ static void find_event_times_no_dd() {
 }
 
 double update_grid() {
-	//sanity_check();
+	sanity_check();
 	// First reset records.
 	event_details.time = DBL_MAX;
 	event_details.sphere_1 = NULL;
@@ -201,6 +201,6 @@ double update_grid() {
 	}
 	// Lastly move forward to the next event
 	update_spheres();
-	//sanity_check();
+	sanity_check();
 	return event_details.time;
 }
