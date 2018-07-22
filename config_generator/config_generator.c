@@ -105,7 +105,7 @@ static void generate_two_axis_crossing_test(){
 	fwrite(&grid_size, sizeof(double), 1, fp); // y
 	grid_size = 50.0;
 	fwrite(&grid_size, sizeof(double), 1, fp); // z
-	int64_t num_spheres = 14;
+	int64_t num_spheres = 18;
 	fwrite(&num_spheres, sizeof(int64_t), 1, fp);
 	create_sphere(40.0, 40.0, 10.0, 5.5, 5.5, 0.0);
 	create_sphere(60.0, 60.0, 10.0, -5.1, -5.1, 0.0);
@@ -121,7 +121,10 @@ static void generate_two_axis_crossing_test(){
 	create_sphere(5.0, 55.0, 30.0, 0.0, -2.1, -2.1);
 	create_sphere(10.0, 45.0, 20.0, 0.0, 2.2, 2.2);
 	create_sphere(10.0, 55.0, 30.0, 0.0, -2.1, -2.1);
-	
+	create_sphere(45.0, 45.0, 20.0, 1.2, 1.2, 1.2);
+	create_sphere(55.0, 55.0, 30.0, -1.1, -1.1, -1.1);
+	create_sphere(45.0, 45.0, 30.0, 4.2, 4.2, -4.2);
+	create_sphere(55.0, 55.0, 20.0, -4.1, -4.1, 4.1);
 }
 
 // This will generate some inital configs used by the collision simulator.
