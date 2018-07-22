@@ -14,6 +14,9 @@ struct grid_s {
 	union vector_3d size;
 	double time_limit;
 	double elapsed_time;
+	bool xy_check_needed;
+	bool xz_check_needed;
+	bool yz_check_needed;
 	int num_two_sphere_collisions;
 	int num_grid_collisions;
 	int num_sector_transfers;

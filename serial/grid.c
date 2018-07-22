@@ -81,6 +81,9 @@ void init_grid(double time_limit) {
 	if (SECTOR_DIMS[X_AXIS] == 1 && SECTOR_DIMS[Y_AXIS] == 1 && SECTOR_DIMS[Z_AXIS] == 1) {
 		grid->uses_sectors = false;
 	} else {
+		grid->xy_check_needed = SECTOR_DIMS[X_AXIS] > 1 && SECTOR_DIMS[Y_AXIS] > 1;
+		grid->xz_check_needed = SECTOR_DIMS[X_AXIS] > 1 && SECTOR_DIMS[Z_AXIS] > 1;
+		grid->yz_check_needed = SECTOR_DIMS[Y_AXIS] > 1 && SECTOR_DIMS[Z_AXIS] > 1;
 		grid->uses_sectors = true;
 		init_sectors();
 	}

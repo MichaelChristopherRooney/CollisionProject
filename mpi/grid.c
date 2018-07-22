@@ -67,6 +67,9 @@ void init_grid(double time_limit) {
 	int result = fread(&grid->size.x, sizeof(double), 1, initial_state_fp);
 	result = fread(&grid->size.y, sizeof(double), 1, initial_state_fp);
 	result = fread(&grid->size.z, sizeof(double), 1, initial_state_fp);
+	grid->xy_check_needed = SECTOR_DIMS[X_AXIS] > 1 && SECTOR_DIMS[Y_AXIS] > 1;
+	grid->xz_check_needed = SECTOR_DIMS[X_AXIS] > 1 && SECTOR_DIMS[Z_AXIS] > 1;
+	grid->yz_check_needed = SECTOR_DIMS[Y_AXIS] > 1 && SECTOR_DIMS[Z_AXIS] > 1;
 	init_sector();
 	load_spheres();
 	grid->elapsed_time = 0.0;
