@@ -32,7 +32,7 @@ static void load_spheres() {
 		struct sector_s *temp = find_sector_that_sphere_belongs_to(&in);
 		if(temp == SECTOR || temp->is_neighbour){
 			// want to copy it if it belongs to local node or a neighbour
-			add_sphere_to_sector(SECTOR, &in);
+			add_sphere_to_sector(temp, &in);
 		}
 	}
 }
@@ -142,6 +142,7 @@ void init_grid(double time_limit) {
 
 // This updates the positions and velocities of each sphere once the next
 // event and the time it occurs are known.
+// TODO: update this for the MPI version
 static void update_spheres() {
 	int i;
 	for (i = 0; i < NUM_SPHERES; i++) {
@@ -164,11 +165,29 @@ static void update_spheres() {
 // For debugging
 // Helps catch any issues with transfering spheres between sectors.
 static void sanity_check() {
-	printf("TODO: sanity check MPI\n");
+	//printf("%d with %ld spheres\n", RANK, SECTOR->num_spheres);
+	int i;
+	for(i = 0; i < SECTOR->num_spheres; i++){
+		struct sphere_s *sphere = &SECTOR->spheres[i];
+		int error = 0;
+		enum axis a;
+		for (a = X_AXIS; a <= Z_AXIS; a++) {
+			if (sphere->pos.vals[a] > SECTOR->end.vals[a]) {
+				error = 1;
+			}
+			if (sphere->pos.vals[a] < SECTOR->start.vals[a]) {
+				error = 1;
+			}
+		}
+		if (error) {
+			printf("Sector at %d, %d, %d incorrectly has sphere with pos %f, %f, %f\n", SECTOR->pos.x, SECTOR->pos.y, SECTOR->pos.z, sphere->pos.x, sphere->pos.y, sphere->pos.z);
+			exit(1);
+		}
+	}
 }
 
 double update_grid() {
-	//sanity_check();
+	sanity_check();
 	// First reset records.
 	event_details.time = DBL_MAX;
 	event_details.sphere_1 = NULL;
@@ -178,14 +197,18 @@ double update_grid() {
 	event_details.type = COL_NONE;
 	event_details.grid_axis = AXIS_NONE;
 	// Now find event + time of event
-	printf("TODO: find sector events MPI\n");
 	// Final event may take place after time limit, so cut it short
-	if (grid->time_limit - grid->elapsed_time < event_details.time) {
-		event_details.time = grid->time_limit - grid->elapsed_time;
-		event_details.type = COL_NONE;
+	find_event_times_for_sector(SECTOR);
+	if(event_details.time != DBL_MAX){
+		printf("Rank %d next time: %f\n", RANK, event_details.time);
 	}
+	// TODO: update this to use received time
+	//if (grid->time_limit - grid->elapsed_time < event_details.time) {
+	//	event_details.time = grid->time_limit - grid->elapsed_time;
+	//	event_details.type = COL_NONE;
+	//}
 	// Lastly move forward to the next event
-	update_spheres();
+	//update_spheres();
 	//sanity_check();
 	return event_details.time;
 }

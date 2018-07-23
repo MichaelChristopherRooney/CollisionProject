@@ -17,9 +17,10 @@ void simulation_cleanup();
 
 static void run() {
 	simulation_init(10.0);
-	/*
+	
 	clock_t start = clock();
 	simulation_run();
+	/*
 	clock_t end = clock();
 	float seconds = (float)(end - start) / CLOCKS_PER_SEC;
 	printf("Time taken in seconds: %f\n", seconds);
