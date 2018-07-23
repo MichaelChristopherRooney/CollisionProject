@@ -368,7 +368,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_ax
 static void find_partial_crossing_events_for_sector(const struct sector_s *sector) {
 	int i;
 	for (i = 0; i < sector->num_spheres; i++) {
-		const struct sphere_s *sphere = sector->spheres[i];
+		const struct sphere_s *sphere = &sector->spheres[i];
 		const union vector_3d new_pos = {
 			.x = sphere->pos.x + (sphere->vel.x * event_details.time),
 			.y = sphere->pos.y + (sphere->vel.y * event_details.time),

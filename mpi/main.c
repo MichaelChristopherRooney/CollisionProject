@@ -41,7 +41,7 @@ static void init(int argc, char *argv[]){
 
 int main(int argc, char *argv[]) {
 	init(argc, argv);
-	printf("Rank %d is at %d, %d, %d\n", RANK, COORDS[0], COORDS[1], COORDS[2]);
+	//printf("Rank %d is at %d, %d, %d\n", RANK, COORDS[0], COORDS[1], COORDS[2]);
 	run();
 	MPI_Comm_free(&GRID_COMM);
 	MPI_Finalize();	

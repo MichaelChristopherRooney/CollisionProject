@@ -12,6 +12,7 @@
 // Note that all values here MUST be positive. 
 struct grid_s {
 	union vector_3d size;
+	struct sector_s ***sectors;
 	double time_limit;
 	double elapsed_time;
 	bool xy_check_needed;

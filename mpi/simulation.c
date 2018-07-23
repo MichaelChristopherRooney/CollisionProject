@@ -57,7 +57,7 @@ static void save_sphere_state_to_file(uint64_t iteration_num, double time_elapse
 // The iteration number and the time elapsed are 0 as nothing has
 // happened yet.
 static void init_binary_file() {
-	printf("TODO: init binary file MPI\n");
+	//printf("TODO: init binary file MPI\n");
 }
 
 // Writes the final state of the spheres.

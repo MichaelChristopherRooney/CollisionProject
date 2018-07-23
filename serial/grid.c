@@ -31,12 +31,10 @@ static void load_spheres() {
 	}
 }
 
-// Note: size of grid in each dimension should be divisible by number of
-// sectors in that dimension.
-static void init_sectors() {
+static void alloc_sector_array(){
 	grid->sectors = calloc(SECTOR_DIMS[X_AXIS], sizeof(struct sector_s **));
 	struct sector_s *z_arr = calloc(SECTOR_DIMS[X_AXIS] * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS], sizeof(struct sector_s));
-	int i, j, k;
+	int i, j;
 	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
 		grid->sectors[i] = calloc(SECTOR_DIMS[Y_AXIS], sizeof(struct sector_s *));
 		for (j = 0; j < SECTOR_DIMS[Y_AXIS]; j++) {
@@ -44,10 +42,16 @@ static void init_sectors() {
 			grid->sectors[i][j] = &z_arr[idx];
 		}
 	}
+}
+
+// Note: size of grid in each dimension should be divisible by number of
+// sectors in that dimension.
+static void init_sectors() {
+	alloc_sector_array();
 	double x_inc = grid->size.x / SECTOR_DIMS[X_AXIS];
 	double y_inc = grid->size.y / SECTOR_DIMS[Y_AXIS];
 	double z_inc = grid->size.z / SECTOR_DIMS[Z_AXIS];
-	int count = 0;
+	int i, j, k;
 	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
 		for (j = 0; j < SECTOR_DIMS[Y_AXIS]; j++) {
 			for (k = 0; k < SECTOR_DIMS[Z_AXIS]; k++) {
@@ -64,7 +68,6 @@ static void init_sectors() {
 				s->num_spheres = 0;
 				s->max_spheres = 2000;
 				s->spheres = calloc(s->max_spheres, sizeof(struct sphere_s *));
-				count++;
 			}
 		}
 	}
