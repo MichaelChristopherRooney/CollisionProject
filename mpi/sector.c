@@ -109,6 +109,23 @@ bool does_sphere_belong_to_sector(const struct sphere_s *sphere, const struct se
 	return true;
 }
 
+struct sector_s *find_sector_that_sphere_belongs_to(struct sphere_s *sphere){
+	int x, y, z;
+	for (x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
+		for (y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
+			for (z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
+				bool res = does_sphere_belong_to_sector(sphere, &grid->sectors[x][y][z]);
+				if (res) {
+					return &grid->sectors[x][y][z];
+				}
+			}
+		}
+	}
+	// Shouldn't reach here
+	printf("Error: sphere does not belong to any sector\n");
+	exit(1);
+}
+
 // Given a sphere that is known to be heading towards the given sector
 // check if the sphere will collide with spheres in the sector.
 static void find_partial_crossing_events_between_sphere_and_sector(const struct sphere_s *sphere_1, const struct sector_s *sector_2) {

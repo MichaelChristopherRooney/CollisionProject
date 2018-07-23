@@ -29,7 +29,9 @@ static void load_spheres() {
 		result = fread(&in.vel.z, sizeof(double), 1, initial_state_fp);
 		result = fread(&in.mass, sizeof(double), 1, initial_state_fp);
 		result = fread(&in.radius, sizeof(double), 1, initial_state_fp);
-		if(does_sphere_belong_to_sector(&in, SECTOR)){
+		struct sector_s *temp = find_sector_that_sphere_belongs_to(&in);
+		if(temp == SECTOR || temp->is_neighbour){
+			// want to copy it if it belongs to local node or a neighbour
 			add_sphere_to_sector(SECTOR, &in);
 		}
 	}
@@ -117,7 +119,6 @@ static bool set_neighbours(){
 		}
 	}
 }
-
 
 // Loads the grid from the initial state file
 void init_grid(double time_limit) {
