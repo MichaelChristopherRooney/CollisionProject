@@ -121,10 +121,33 @@ static void generate_two_axis_crossing_test(){
 	create_sphere(5.0, 55.0, 30.0, 0.0, -2.1, -2.1);
 	create_sphere(10.0, 45.0, 20.0, 0.0, 2.2, 2.2);
 	create_sphere(10.0, 55.0, 30.0, 0.0, -2.1, -2.1);
-	create_sphere(45.0, 45.0, 20.0, 1.2, 1.2, 1.2);
-	create_sphere(55.0, 55.0, 30.0, -1.1, -1.1, -1.1);
-	create_sphere(45.0, 45.0, 30.0, 4.2, 4.2, -4.2);
-	create_sphere(55.0, 55.0, 20.0, -4.1, -4.1, 4.1);
+}
+
+static void generate_three_axis_crossing_test(){
+	count = 0;
+	fp = fopen("three_axis.spheres", "wb");
+	double grid_size = 90.0;
+	fwrite(&grid_size, sizeof(double), 1, fp); // x
+	fwrite(&grid_size, sizeof(double), 1, fp); // y
+	fwrite(&grid_size, sizeof(double), 1, fp); // z
+	int64_t num_spheres = 16;
+	fwrite(&num_spheres, sizeof(int64_t), 1, fp);
+	create_sphere(25.0, 65.0, 65.0, 2.2, -2.2, -2.2);
+	create_sphere(35.0, 55.0, 55.0, -2.3, 2.3, 2.3);
+	create_sphere(55.0, 55.0, 55.0, 2.2, 2.2, 2.2);
+	create_sphere(65.0, 65.0, 65.0, -2.3, -2.3, -2.3);
+	create_sphere(65.0, 65.0, 25.0, -2.2, -2.2, 2.2);
+	create_sphere(55.0, 55.0, 35.0, 2.3, 2.3, -2.3);
+	create_sphere(25.0, 65.0, 25.0, 2.2, -2.2, 2.2);
+	create_sphere(35.0, 55.0, 35.0, -2.3, 2.3, -2.3);
+	create_sphere(25.0, 25.0, 65.0, 2.2, 2.2, -2.2);
+	create_sphere(35.0, 35.0, 55.0, -2.3, -2.3, 2.3);
+	create_sphere(65.0, 25.0, 65.0, -2.2, 2.2, -2.2);
+	create_sphere(55.0, 35.0, 55.0, 2.3, -2.3, 2.3);
+	create_sphere(65.0, 25.0, 25.0, -2.2, 2.2, 2.2);
+	create_sphere(55.0, 35.0, 35.0, 2.3, -2.3, -2.3);
+	create_sphere(25.0, 25.0, 25.0, 2.2, 2.2, 2.2);
+	create_sphere(35.0, 35.0, 35.0, -2.3, -2.3, -2.3);
 }
 
 // This will generate some inital configs used by the collision simulator.
@@ -132,5 +155,6 @@ int main(void){
 	generate_4000();
 	generate_one_axis_crossing_test();
 	generate_two_axis_crossing_test();	
+	generate_three_axis_crossing_test();
 }
 

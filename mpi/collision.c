@@ -51,6 +51,13 @@ double find_collision_time_spheres(const struct sphere_s *s1, const struct spher
 	double d = sqrt((pos_vec_mag * pos_vec_mag) - (shortest_dist * shortest_dist));
 	double t = sqrt((r_total * r_total) - (shortest_dist * shortest_dist));
 	double dist_to_col = d - t;
+	// d should always be larger than t, but due to precision issues it may be
+	// very slightly smaller than t causing dist_to_col to be negative.
+	// This can occur when the shortest distance is 0.0.
+	// If this happens (d-t) should be 0.0, so just return 0.0
+	if (dist_to_col < 0.0) {
+		return 0.0;
+	}
 	return  dist_to_col / vel_vec_mag;
 }
 
