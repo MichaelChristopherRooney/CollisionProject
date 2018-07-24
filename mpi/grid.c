@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "collision.h"
+#include "event.h"
 #include "grid.h"
 #include "mpi_vars.h"
 #include "params.h"
@@ -136,6 +137,7 @@ void init_grid(double time_limit) {
 	init_my_sector();
 	set_neighbours();
 	load_spheres();
+	init_events();
 	grid->elapsed_time = 0.0;
 	grid->time_limit = time_limit;
 	grid->num_two_sphere_collisions = 0;
@@ -193,19 +195,14 @@ static void sanity_check() {
 double update_grid() {
 	sanity_check();
 	// First reset records.
-	event_details.time = DBL_MAX;
-	event_details.sphere_1 = NULL;
-	event_details.sphere_2 = NULL;
-	event_details.source_sector = NULL;
-	event_details.dest_sector = NULL;
-	event_details.type = COL_NONE;
-	event_details.grid_axis = AXIS_NONE;
+	reset_event_details();
 	// Now find event + time of event
 	// Final event may take place after time limit, so cut it short
 	find_event_times_for_sector(SECTOR);
 	if(event_details.time != DBL_MAX){
 		printf("Rank %d next time: %f\n", GRID_RANK, event_details.time);
 	}
+	reduce_events();
 	// TODO: update this to use received time
 	//if (grid->time_limit - grid->elapsed_time < event_details.time) {
 	//	event_details.time = grid->time_limit - grid->elapsed_time;

@@ -1,4 +1,8 @@
+#pragma once
+
 #include <mpi.h>
+
+#include "event.h"
 #include "sector.h"
 
 const int REORDER;
@@ -12,3 +16,4 @@ MPI_Comm GRID_COMM;
 int COORDS[3];
 
 struct sector_s *SECTOR;
+

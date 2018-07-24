@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "event.h"
 #include "grid.h"
 #include "mpi_vars.h"
 #include "sector.h"

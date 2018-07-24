@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "event.h"
 #include "grid.h"
 #include "params.h"
 #include "vector_3.h"
