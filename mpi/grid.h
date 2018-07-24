@@ -13,6 +13,8 @@
 struct grid_s {
 	union vector_3d size;
 	struct sector_s ***sectors;
+	// flat array that points to sectors[0][0][0], can be indexed by sector id or node rank
+	struct sector_s *sectors_flat;
 	double time_limit;
 	double elapsed_time;
 	bool xy_check_needed;

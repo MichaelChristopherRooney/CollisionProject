@@ -19,7 +19,7 @@ static void set_default_params(){
 
 static void check_slice_arg(int slice, char axis){
 	if(slice <= 0){
-		if(RANK == 0){
+		if(WORLD_RANK == 0){
 			printf("Error: %c axis needs at least 1 slice.\n", axis);
 		}
 		MPI_Finalize();
@@ -28,7 +28,7 @@ static void check_slice_arg(int slice, char axis){
 }
 
 static void print_config(){
-	if(RANK != 0){
+	if(WORLD_RANK != 0){
 		return;
 	}
 	printf("Number of x slices: %d\n", SECTOR_DIMS[0]);
@@ -53,21 +53,21 @@ static void validate_args(){
 	check_slice_arg(SECTOR_DIMS[Y_AXIS], 'y');
 	check_slice_arg(SECTOR_DIMS[Z_AXIS], 'z');
 	if(SECTOR_DIMS[X_AXIS] * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS] != NUM_NODES){
-		if(RANK == 0){
+		if(WORLD_RANK == 0){
 			printf("Error: number of sectors should match number of nodes\n");
 		}
 		MPI_Finalize();
 		exit(1);
 	}
 	if(output_file == NULL){
-		if(RANK == 0){
+		if(WORLD_RANK == 0){
 			printf("Error: output file (-o) cannot be null\n");
 		}
 		MPI_Finalize();
 		exit(1);
 	}
 	if(initial_state_file == NULL){
-		if(RANK == 0){
+		if(WORLD_RANK == 0){
 			printf("Error: initial state file (-i) cannot be null\n");
 		}
 		MPI_Finalize();
@@ -76,7 +76,7 @@ static void validate_args(){
 }
 	
 static void print_help(){
-	if(RANK == 0){
+	if(WORLD_RANK == 0){
 		printf("-x, -y, -z:\n");
 		printf("\tOptional.\n\tSets the number of slices in the specified axis.\n\tDefaults to 1.\n\tMust be at least 1.\n");
 		printf("-c:\n\tOptional.\n\tSets the compare file. This should be a final state file from a previous run.\n\tThe max error between this run and the compare file will be printed.\n");

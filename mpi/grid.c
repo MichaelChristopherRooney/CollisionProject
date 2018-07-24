@@ -42,7 +42,8 @@ static void init_my_sector() {
 	SECTOR->num_spheres = 0;
 	SECTOR->max_spheres = 2000;
 	SECTOR->spheres = calloc(SECTOR->max_spheres, sizeof(struct sphere_s));
-	/*printf("Rank %d handling sector with location:\n", RANK);
+	printf("Rank %d sector id %d\n", GRID_RANK, SECTOR->id);
+	/*printf("Rank %d handling sector with location:\n", GRID_RANK);
 	printf("x: %f to %f\n", SECTOR->start.x, SECTOR->end.x);
 	printf("y: %f to %f\n", SECTOR->start.y, SECTOR->end.y);
 	printf("z: %f to %f\n", SECTOR->start.z, SECTOR->end.z);
@@ -51,13 +52,13 @@ static void init_my_sector() {
 
 static void alloc_sector_array(){
 	grid->sectors = calloc(SECTOR_DIMS[X_AXIS], sizeof(struct sector_s **));
-	struct sector_s *z_arr = calloc(SECTOR_DIMS[X_AXIS] * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS], sizeof(struct sector_s));
+	grid->sectors_flat = calloc(SECTOR_DIMS[X_AXIS] * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS], sizeof(struct sector_s));
 	int i, j;
 	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
 		grid->sectors[i] = calloc(SECTOR_DIMS[Y_AXIS], sizeof(struct sector_s *));
 		for (j = 0; j < SECTOR_DIMS[Y_AXIS]; j++) {
 			int idx = (i * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS]) + (j * SECTOR_DIMS[Z_AXIS]);
-			grid->sectors[i][j] = &z_arr[idx];
+			grid->sectors[i][j] = &grid->sectors_flat[idx];
 		}
 	}
 }
@@ -70,6 +71,7 @@ static void init_sectors(){
 	double x_inc = grid->size.x / SECTOR_DIMS[X_AXIS];
 	double y_inc = grid->size.y / SECTOR_DIMS[Y_AXIS];
 	double z_inc = grid->size.z / SECTOR_DIMS[Z_AXIS];
+	int id = 0;
 	int i, j, k;
 	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
 		for (j = 0; j < SECTOR_DIMS[Y_AXIS]; j++) {
@@ -84,6 +86,8 @@ static void init_sectors(){
 				s->pos.x = i;
 				s->pos.y = j;
 				s->pos.z = k;
+				s->id = id;
+				id++;
 			}
 		}
 	}
@@ -165,7 +169,7 @@ static void update_spheres() {
 // For debugging
 // Helps catch any issues with transfering spheres between sectors.
 static void sanity_check() {
-	//printf("%d with %ld spheres\n", RANK, SECTOR->num_spheres);
+	//printf("%d with %ld spheres\n", GRID_RANK, SECTOR->num_spheres);
 	int i;
 	for(i = 0; i < SECTOR->num_spheres; i++){
 		struct sphere_s *sphere = &SECTOR->spheres[i];
@@ -200,7 +204,7 @@ double update_grid() {
 	// Final event may take place after time limit, so cut it short
 	find_event_times_for_sector(SECTOR);
 	if(event_details.time != DBL_MAX){
-		printf("Rank %d next time: %f\n", RANK, event_details.time);
+		printf("Rank %d next time: %f\n", GRID_RANK, event_details.time);
 	}
 	// TODO: update this to use received time
 	//if (grid->time_limit - grid->elapsed_time < event_details.time) {

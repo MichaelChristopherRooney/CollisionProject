@@ -22,6 +22,7 @@ struct sector_s {
 	bool largest_radius_shared; // If many spheres have the same radius as the largest radius
 	int64_t num_largest_radius_shared; // How many spheres shared the largest radius
 	bool is_neighbour; // used by the local node to track neighbours
+	int id;
 };
 
 // Can be indexed using axis enum

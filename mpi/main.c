@@ -33,11 +33,12 @@ static void run() {
 
 static void init(int argc, char *argv[]){
 	MPI_Init(&argc, &argv);
-	MPI_Comm_rank(MPI_COMM_WORLD, &RANK);
+	MPI_Comm_rank(MPI_COMM_WORLD, &WORLD_RANK);
 	MPI_Comm_size(MPI_COMM_WORLD, &NUM_NODES);
 	parse_args(argc, argv);
 	MPI_Cart_create(MPI_COMM_WORLD, NUM_DIMS, SECTOR_DIMS, PERIODS, REORDER, &GRID_COMM);
-	MPI_Cart_coords(GRID_COMM, RANK, NUM_DIMS, COORDS);
+	MPI_Comm_rank(GRID_COMM, &GRID_RANK);
+	MPI_Cart_coords(GRID_COMM, GRID_RANK, NUM_DIMS, COORDS);
 }
 
 int main(int argc, char *argv[]) {
