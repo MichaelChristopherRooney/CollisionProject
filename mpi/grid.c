@@ -105,6 +105,7 @@ static bool check_is_neighbour(struct sector_s *s){
 }
 
 static bool set_neighbours(){
+	NUM_NEIGHBOURS = 0;
 	int i, j, k;
 	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
 		for (j = 0; j < SECTOR_DIMS[Y_AXIS]; j++) {
@@ -120,7 +121,17 @@ static bool set_neighbours(){
 				s->num_spheres = 0;
 				s->max_spheres = 2000;
 				s->spheres = calloc(s->max_spheres, sizeof(struct sphere_s));
+				NEIGHBOUR_IDS[NUM_NEIGHBOURS] = s->id;
+				NUM_NEIGHBOURS++;
 			}
+		}
+	}
+	if(NUM_NEIGHBOURS < MAX_NEIGHBOURS){
+		NEIGHBOUR_IDS[NUM_NEIGHBOURS + 1] = -1;
+	}
+	if(GRID_RANK == 0){
+		for(i = 0; i < NUM_NEIGHBOURS; i++){
+			printf("has neighbour %d\n", NEIGHBOUR_IDS[i]);
 		}
 	}
 }
@@ -148,11 +159,19 @@ void init_grid(double time_limit) {
 
 // This updates the positions and velocities of each sphere once the next
 // event and the time it occurs are known.
+// First update own spheres, then update local copy of neighbour's spheres
 static void update_spheres() {
-	int i;
+	int i, j;
 	for (i = 0; i < SECTOR->num_spheres; i++) {
 		struct sphere_s *s = &(SECTOR->spheres[i]);
 		update_sphere_position(s, global_soonest_time);
+	}
+	for(i = 0; i < NUM_NEIGHBOURS; i++){
+		struct sector_s *sector = &grid->sectors_flat[NEIGHBOUR_IDS[i]];
+		for(j = 0; j < sector->num_spheres; j++){
+			struct sphere_s *s = &(sector->spheres[j]);
+			update_sphere_position(s, global_soonest_time);
+		}
 	}
 }
 

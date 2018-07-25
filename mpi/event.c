@@ -1,5 +1,6 @@
 #include <float.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "event.h"
 #include "mpi_vars.h"
@@ -97,9 +98,6 @@ void set_event_details(
 	const struct sphere_s *sphere_2, const enum axis grid_axis, const struct sector_s *source_sector,
 	const struct sector_s *dest_sector
 ){
-	if(GRID_RANK == 13){
-		printf("%d setting soonest time to %f\n", GRID_RANK, time);
-	}
 	event_details.time = time;
 	event_details.type = type;
 	event_details.sphere_1 = sphere_1;
