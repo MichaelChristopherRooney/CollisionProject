@@ -15,5 +15,7 @@ int NUM_NODES;
 MPI_Comm GRID_COMM;
 int COORDS[3];
 
+int GRID_RANK_NEXT_EVENT; // the node with the soonest event
+
 struct sector_s *SECTOR;
 

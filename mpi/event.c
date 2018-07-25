@@ -41,8 +41,26 @@ static void prepare_event_to_send(){
 	}
 }
 
+// TODO: use derived data type rather than sending MPI_CHAR * sizeof(...) number of bytes
 void reduce_events(){
 	prepare_event_to_send();
+	//printf("%d soonest time is %f\n", GRID_RANK, event_details.time);
+	MPI_Allgather(
+		&event_to_send, sizeof(struct transmit_event_s), MPI_CHAR,
+		event_buffer, sizeof(struct transmit_event_s), MPI_CHAR, GRID_COMM
+	);
+	double soonest_time = DBL_MAX;
+	int i;
+	for(i = 0; i < NUM_NODES; i++){
+		if(event_buffer[i].time < soonest_time){
+			GRID_RANK_NEXT_EVENT = i;
+			soonest_time = event_buffer[i].time;
+		}
+	}
+	global_soonest_time = soonest_time;
+	if(GRID_RANK == 0){
+		printf("Soonest time is %f from rank %d\n", global_soonest_time, GRID_RANK_NEXT_EVENT);
+	}
 }
 
 // Seems tricky to set the axis enum to a given size at compile time so 
@@ -72,5 +90,22 @@ void reset_event_details(){
 	event_details.dest_sector = NULL;
 	event_details.type = COL_NONE;
 	event_details.grid_axis = AXIS_NONE;
+}
+
+void set_event_details(
+	const double time, const enum collision_type type, const struct sphere_s *sphere_1, 
+	const struct sphere_s *sphere_2, const enum axis grid_axis, const struct sector_s *source_sector,
+	const struct sector_s *dest_sector
+){
+	if(GRID_RANK == 13){
+		printf("%d setting soonest time to %f\n", GRID_RANK, time);
+	}
+	event_details.time = time;
+	event_details.type = type;
+	event_details.sphere_1 = sphere_1;
+	event_details.sphere_2 = sphere_2;
+	event_details.grid_axis = grid_axis;
+	event_details.source_sector = source_sector;
+	event_details.dest_sector = dest_sector;
 }
 

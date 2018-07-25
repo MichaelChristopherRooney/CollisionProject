@@ -4,6 +4,7 @@
 
 #include "event.h"
 #include "grid.h"
+#include "mpi_vars.h"
 #include "params.h"
 #include "vector_3.h"
 
@@ -124,6 +125,8 @@ void simulation_init(double time_limit) {
 void simulation_run() {
 	int i = 1; // start at 1 as 0 is iteration num for the initial state
 	//while (grid->elapsed_time < grid->time_limit) {
+		grid->elapsed_time += update_grid();
+		MPI_Barrier(GRID_COMM);
 		grid->elapsed_time += update_grid();
 		//save_sphere_state_to_file(i, grid->elapsed_time);
 		//i++;

@@ -43,8 +43,8 @@ static void init_my_sector() {
 	SECTOR->num_spheres = 0;
 	SECTOR->max_spheres = 2000;
 	SECTOR->spheres = calloc(SECTOR->max_spheres, sizeof(struct sphere_s));
-	printf("Rank %d sector id %d\n", GRID_RANK, SECTOR->id);
-	/*printf("Rank %d handling sector with location:\n", GRID_RANK);
+	/*printf("Rank %d sector id %d\n", GRID_RANK, SECTOR->id);
+	printf("Rank %d handling sector with location:\n", GRID_RANK);
 	printf("x: %f to %f\n", SECTOR->start.x, SECTOR->end.x);
 	printf("y: %f to %f\n", SECTOR->start.y, SECTOR->end.y);
 	printf("z: %f to %f\n", SECTOR->start.z, SECTOR->end.z);
@@ -148,13 +148,15 @@ void init_grid(double time_limit) {
 
 // This updates the positions and velocities of each sphere once the next
 // event and the time it occurs are known.
-// TODO: update this for the MPI version
 static void update_spheres() {
 	int i;
-	for (i = 0; i < NUM_SPHERES; i++) {
-		struct sphere_s *s = &(spheres[i]);
-		update_sphere_position(s, event_details.time);
+	for (i = 0; i < SECTOR->num_spheres; i++) {
+		struct sphere_s *s = &(SECTOR->spheres[i]);
+		update_sphere_position(s, global_soonest_time);
 	}
+}
+
+static void apply_event(){
 	if (event_details.type == COL_SPHERE_WITH_GRID) {
 		event_details.sphere_1->vel.vals[event_details.grid_axis] *= -1.0;
 		grid->num_grid_collisions++;
@@ -167,6 +169,7 @@ static void update_spheres() {
 		grid->num_sector_transfers++;
 	}
 }
+
 
 // For debugging
 // Helps catch any issues with transfering spheres between sectors.
@@ -208,8 +211,13 @@ double update_grid() {
 	//	event_details.time = grid->time_limit - grid->elapsed_time;
 	//	event_details.type = COL_NONE;
 	//}
-	// Lastly move forward to the next event
-	//update_spheres();
+	//Lastly move forward to the next event
+	// TODO: update neighbour's spheres stored locally
+	// TODO: check if any spheres have moved into neighbours or for anything else that affects local node
+	update_spheres();
+	if(GRID_RANK == GRID_RANK_NEXT_EVENT){
+		apply_event();
+	}
 	//sanity_check();
-	return event_details.time;
+	return global_soonest_time;
 }

@@ -133,10 +133,7 @@ static void find_partial_crossing_events_between_sphere_and_sector(const struct 
 		struct sphere_s *sphere_2 = &sector_2->spheres[j];
 		double time = find_collision_time_spheres(sphere_1, sphere_2);
 		if (time < event_details.time) {
-			event_details.type = COL_TWO_SPHERES;
-			event_details.sphere_1 = sphere_1;
-			event_details.sphere_2 = sphere_2;
-			event_details.time = time;
+			set_event_details(time, COL_TWO_SPHERES, sphere_1, sphere_2, AXIS_NONE, NULL, NULL);
 		}
 	}
 }
@@ -402,10 +399,7 @@ static void find_collision_times_between_spheres_in_sector(const struct sector_s
 			struct sphere_s *s2 = &sector->spheres[j];
 			double time = find_collision_time_spheres(s1, s2);
 			if (time < event_details.time) {
-				event_details.type = COL_TWO_SPHERES;
-				event_details.sphere_1 = s1;
-				event_details.sphere_2 = s2;
-				event_details.time = time;
+				set_event_details(time, COL_TWO_SPHERES, s1, s2, AXIS_NONE, NULL, NULL);
 			}
 		}
 	}
@@ -421,19 +415,12 @@ static void find_collision_times_grid_boundary_for_sector(const struct sector_s 
 		struct sphere_s *sphere = &sector->spheres[i];
 		double time = find_collision_time_grid(sphere, &axis);
 		if (time < event_details.time) {
-			event_details.type = COL_SPHERE_WITH_GRID;
-			event_details.sphere_1 = sphere;
-			event_details.time = time;
-			event_details.grid_axis = axis;
+			set_event_details(time, COL_SPHERE_WITH_GRID, sphere, NULL, axis, NULL, NULL);
 		}
 		struct sector_s *temp_dest;
 		time = find_collision_time_sector(sector, sphere, &temp_dest);
 		if (time < event_details.time) {
-			event_details.type = COL_SPHERE_WITH_SECTOR;
-			event_details.sphere_1 = sphere;
-			event_details.time = time;
-			event_details.source_sector = sector;
-			event_details.dest_sector = temp_dest;
+			set_event_details(time, COL_SPHERE_WITH_SECTOR, sphere, NULL, AXIS_NONE, sector, temp_dest);
 		}
 	}
 }
