@@ -35,6 +35,21 @@ static void create_spheres(int num, double x_start, double y_start, double z_sta
 	}
 }
 
+// Simple test with one sphere going back and forth
+static void generate_transfer(){
+	count = 0;
+	srand(123);
+	fp = fopen("transfer.spheres", "wb");
+	double grid_size = 100.0;
+	fwrite(&grid_size, sizeof(double), 1, fp); // x
+	fwrite(&grid_size, sizeof(double), 1, fp); // y
+	fwrite(&grid_size, sizeof(double), 1, fp); // z
+	int64_t num_spheres = 1;
+	fwrite(&num_spheres, sizeof(int64_t), 1, fp);
+	create_sphere(40.0, 40.0, 10.0, 2.5, 0.0, 0.0);
+	fclose(fp);
+}
+
 // Generates 4000 spheres placed in lines in a 1000x1000x1000 grid.
 // Each sphere has a random velocity.
 static void generate_4000(){
@@ -156,5 +171,6 @@ int main(void){
 	generate_one_axis_crossing_test();
 	generate_two_axis_crossing_test();	
 	generate_three_axis_crossing_test();
+	generate_transfer();
 }
 

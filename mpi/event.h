@@ -19,7 +19,23 @@ struct event_s {
 
 struct event_s event_details; // tracks local next event
 
-double global_soonest_time; // soonest time as agreed on by all nodes
+// This is the event data that is sent/received to/from other nodes.
+// Instead of using pointers as above it uses sector ids and includes the full
+// sphere struct.
+// This is because pointers will no longer be valid once sent to another node.
+// The local event_details struct will have its data copied here for sending.
+struct transmit_event_s {
+	double time;
+	enum collision_type type;
+	struct sphere_s sphere_1;
+	struct sphere_s sphere_2;
+	enum axis grid_axis;
+	int source_sector_id;
+	int dest_sector_id;
+};
+
+struct transmit_event_s event_to_send;
+struct transmit_event_s *next_event; // agreed upon by all nodes
 
 void reduce_events();
 void init_events();

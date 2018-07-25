@@ -5,23 +5,6 @@
 #include "event.h"
 #include "mpi_vars.h"
 
-// This is the event data that is sent/received to/from other nodes.
-// Instead of using pointers as above it uses sector ids and includes the full
-// sphere struct.
-// This is because pointers will no longer be valid once sent to another node.
-// The local event_details struct will have its data copied here for sending.
-struct transmit_event_s {
-	double time;
-	enum collision_type type;
-	struct sphere_s sphere_1;
-	struct sphere_s sphere_2;
-	enum axis grid_axis;
-	int source_sector_id;
-	int dest_sector_id;
-};
-
-struct transmit_event_s event_to_send;
-
 struct transmit_event_s *event_buffer; // receive buffer 
 
 static void prepare_event_to_send(){
@@ -58,9 +41,9 @@ void reduce_events(){
 			soonest_time = event_buffer[i].time;
 		}
 	}
-	global_soonest_time = soonest_time;
+	next_event = &event_buffer[GRID_RANK_NEXT_EVENT];
 	if(GRID_RANK == 0){
-		printf("Soonest time is %f from rank %d\n", global_soonest_time, GRID_RANK_NEXT_EVENT);
+		printf("Soonest time is %f from rank %d\n", next_event->time, GRID_RANK_NEXT_EVENT);
 	}
 }
 

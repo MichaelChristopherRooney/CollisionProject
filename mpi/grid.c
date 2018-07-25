@@ -129,11 +129,6 @@ static bool set_neighbours(){
 	if(NUM_NEIGHBOURS < MAX_NEIGHBOURS){
 		NEIGHBOUR_IDS[NUM_NEIGHBOURS + 1] = -1;
 	}
-	if(GRID_RANK == 0){
-		for(i = 0; i < NUM_NEIGHBOURS; i++){
-			printf("has neighbour %d\n", NEIGHBOUR_IDS[i]);
-		}
-	}
 }
 
 // Loads the grid from the initial state file
@@ -164,36 +159,43 @@ static void update_spheres() {
 	int i, j;
 	for (i = 0; i < SECTOR->num_spheres; i++) {
 		struct sphere_s *s = &(SECTOR->spheres[i]);
-		update_sphere_position(s, global_soonest_time);
+		update_sphere_position(s, next_event->time);
 	}
 	for(i = 0; i < NUM_NEIGHBOURS; i++){
 		struct sector_s *sector = &grid->sectors_flat[NEIGHBOUR_IDS[i]];
 		for(j = 0; j < sector->num_spheres; j++){
 			struct sphere_s *s = &(sector->spheres[j]);
-			update_sphere_position(s, global_soonest_time);
+			update_sphere_position(s, next_event->time);
 		}
 	}
 }
 
 static void apply_event(){
-	if (event_details.type == COL_SPHERE_WITH_GRID) {
-		event_details.sphere_1->vel.vals[event_details.grid_axis] *= -1.0;
-		grid->num_grid_collisions++;
-	} else if (event_details.type == COL_TWO_SPHERES) {
-		apply_bounce_between_spheres(event_details.sphere_1, event_details.sphere_2);
-		grid->num_two_sphere_collisions++;
-	} else if (event_details.type == COL_SPHERE_WITH_SECTOR) {
-		remove_sphere_from_sector(event_details.source_sector, event_details.sphere_1);
-		add_sphere_to_sector(event_details.dest_sector, event_details.sphere_1);
-		grid->num_sector_transfers++;
+	if (next_event->type == COL_SPHERE_WITH_GRID) {
+		struct sector_s *source = &grid->sectors_flat[next_event->source_sector_id];
+		if(source->is_neighbour || source == SECTOR->id){
+			struct sphere_s *sphere = &source->spheres[next_event->sphere_1.sector_id];
+			sphere->vel.vals[event_details.grid_axis] *= -1.0;
+		}
+	} else if (next_event->type == COL_TWO_SPHERES) {
+		//apply_bounce_between_spheres(event_details.sphere_1, event_details.sphere_2);
+	} else if (next_event->type == COL_SPHERE_WITH_SECTOR) {
+		struct sphere_s *sphere = &next_event->sphere_1;
+		struct sector_s *source = &grid->sectors_flat[next_event->source_sector_id];
+		if(source->is_neighbour || SECTOR->id == next_event->source_sector_id){
+			remove_sphere_from_sector(source, sphere);
+		}
+		struct sector_s *dest = &grid->sectors_flat[next_event->dest_sector_id];
+		if(dest->is_neighbour || SECTOR->id == next_event->dest_sector_id){
+			update_sphere_position(sphere, next_event->time); // received sphere data has old pos
+			add_sphere_to_sector(dest, sphere);
+		}
 	}
 }
-
 
 // For debugging
 // Helps catch any issues with transfering spheres between sectors.
 static void sanity_check() {
-	//printf("%d with %ld spheres\n", GRID_RANK, SECTOR->num_spheres);
 	int i;
 	for(i = 0; i < SECTOR->num_spheres; i++){
 		struct sphere_s *sphere = &SECTOR->spheres[i];
@@ -215,15 +217,13 @@ static void sanity_check() {
 }
 
 double update_grid() {
+	//printf("%d: I have %ld spheres\n", GRID_RANK, SECTOR->num_spheres);
 	sanity_check();
 	// First reset records.
 	reset_event_details();
 	// Now find event + time of event
 	// Final event may take place after time limit, so cut it short
 	find_event_times_for_sector(SECTOR);
-	if(event_details.time != DBL_MAX){
-		printf("Rank %d next time: %f\n", GRID_RANK, event_details.time);
-	}
 	reduce_events();
 	// TODO: update this to use received time
 	//if (grid->time_limit - grid->elapsed_time < event_details.time) {
@@ -234,9 +234,8 @@ double update_grid() {
 	// TODO: update neighbour's spheres stored locally
 	// TODO: check if any spheres have moved into neighbours or for anything else that affects local node
 	update_spheres();
-	if(GRID_RANK == GRID_RANK_NEXT_EVENT){
-		apply_event();
-	}
-	//sanity_check();
-	return global_soonest_time;
+	apply_event();
+	//printf("%d: I have %ld spheres\n", GRID_RANK, SECTOR->num_spheres);
+	sanity_check();
+	return next_event->time;
 }
