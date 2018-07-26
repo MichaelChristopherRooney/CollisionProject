@@ -107,6 +107,9 @@ static void update_spheres() {
 		struct sphere_s *s = &(spheres[i]);
 		update_sphere_position(s, event_details.time);
 	}
+}
+
+static void apply_event(){
 	if (event_details.type == COL_SPHERE_WITH_GRID) {
 		event_details.sphere_1->vel.vals[event_details.grid_axis] *= -1.0;
 		grid->num_grid_collisions++;
@@ -200,13 +203,15 @@ double update_grid() {
 	} else { // no domain decomposition 
 		find_event_times_no_dd();
 	}
+	printf("Next time is %f\n", event_details.time);
 	// Final event may take place after time limit, so cut it short
 	if (grid->time_limit - grid->elapsed_time < event_details.time) {
 		event_details.time = grid->time_limit - grid->elapsed_time;
-		event_details.type = COL_NONE;
+		update_spheres();
+	} else {
+		update_spheres();
+		apply_event();
 	}
-	// Lastly move forward to the next event
-	update_spheres();
 	sanity_check();
 	return event_details.time;
 }

@@ -22,6 +22,8 @@ static void prepare_event_to_send(){
 	}
 	if(event_details.dest_sector != NULL){
 		event_to_send.dest_sector_id = event_details.dest_sector->id;
+	} else {
+		event_to_send.dest_sector_id = -1;
 	}
 }
 

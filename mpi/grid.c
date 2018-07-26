@@ -178,7 +178,12 @@ static void apply_event(){
 			sphere->vel.vals[event_details.grid_axis] *= -1.0;
 		}
 	} else if (next_event->type == COL_TWO_SPHERES) {
-		//apply_bounce_between_spheres(event_details.sphere_1, event_details.sphere_2);
+		struct sector_s *source = &grid->sectors_flat[next_event->source_sector_id];
+		if(source->is_neighbour || SECTOR->id == next_event->source_sector_id){
+			struct sphere_s *s1 = &source->spheres[next_event->sphere_1.sector_id];
+			struct sphere_s *s2 = &source->spheres[next_event->sphere_2.sector_id];
+			apply_bounce_between_spheres(s1, s2);
+		}
 	} else if (next_event->type == COL_SPHERE_WITH_SECTOR) {
 		struct sphere_s *sphere = &next_event->sphere_1;
 		struct sector_s *source = &grid->sectors_flat[next_event->source_sector_id];
@@ -189,6 +194,28 @@ static void apply_event(){
 		if(dest->is_neighbour || SECTOR->id == next_event->dest_sector_id){
 			update_sphere_position(sphere, next_event->time); // received sphere data has old pos
 			add_sphere_to_sector(dest, sphere);
+		}
+	} else if(next_event->type == COL_TWO_SPHERES_PARTIAL_CROSSING){
+		struct sphere_s *s1;
+		struct sphere_s *s2;
+		struct sector_s *source = &grid->sectors_flat[next_event->source_sector_id];
+		struct sector_s *dest = &grid->sectors_flat[next_event->dest_sector_id];
+		// If source and dest are neighbours to the local or are the local node then bounce both spheres.
+		// If one of them but not the other is a neighbour or the local node then bounce the relevant sphere
+		// using the copied data in next_event.
+		// This will overwrite the copy which is fine.
+		if((source->is_neighbour || SECTOR->id == next_event->source_sector_id) && (dest->is_neighbour || SECTOR->id == next_event->dest_sector_id)){
+			s1 = &source->spheres[next_event->sphere_1.sector_id];
+			s2 = &dest->spheres[next_event->sphere_2.sector_id];
+			apply_bounce_between_spheres(s1, s2);
+		} else if(source->is_neighbour || SECTOR->id == next_event->source_sector_id){
+			s1 = &source->spheres[next_event->sphere_1.sector_id];
+			s2 = &next_event->sphere_2;
+			apply_bounce_between_spheres(s1, s2);
+		} else if(dest->is_neighbour || SECTOR->id == next_event->dest_sector_id){
+			s1 = &next_event->sphere_1;
+			s2 = &dest->spheres[next_event->sphere_2.sector_id];
+			apply_bounce_between_spheres(s1, s2);
 		}
 	}
 }
@@ -225,16 +252,15 @@ double update_grid() {
 	// Final event may take place after time limit, so cut it short
 	find_event_times_for_sector(SECTOR);
 	reduce_events();
-	// TODO: update this to use received time
-	//if (grid->time_limit - grid->elapsed_time < event_details.time) {
-	//	event_details.time = grid->time_limit - grid->elapsed_time;
-	//	event_details.type = COL_NONE;
-	//}
+	if (grid->time_limit - grid->elapsed_time < next_event->time) {
+		next_event->time = grid->time_limit - grid->elapsed_time;
+		update_spheres();
+	} else {
+		update_spheres();
+		apply_event();
+	}
 	//Lastly move forward to the next event
-	// TODO: update neighbour's spheres stored locally
-	// TODO: check if any spheres have moved into neighbours or for anything else that affects local node
-	update_spheres();
-	apply_event();
+
 	//printf("%d: I have %ld spheres\n", GRID_RANK, SECTOR->num_spheres);
 	sanity_check();
 	return next_event->time;

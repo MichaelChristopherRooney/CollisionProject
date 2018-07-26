@@ -133,7 +133,7 @@ static void find_partial_crossing_events_between_sphere_and_sector(const struct 
 		struct sphere_s *sphere_2 = &sector_2->spheres[j];
 		double time = find_collision_time_spheres(sphere_1, sphere_2);
 		if (time < event_details.time) {
-			set_event_details(time, COL_TWO_SPHERES, sphere_1, sphere_2, AXIS_NONE, sector_1, sector_2);
+			set_event_details(time, COL_TWO_SPHERES_PARTIAL_CROSSING, sphere_1, sphere_2, AXIS_NONE, sector_1, sector_2);
 		}
 	}
 }
