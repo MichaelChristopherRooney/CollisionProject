@@ -27,3 +27,5 @@ struct sector_s *SECTOR; // sector the local node is handling
 int NEIGHBOUR_IDS[MAX_NEIGHBOURS];
 int NUM_NEIGHBOURS;
 
+MPI_File MPI_OUTPUT_FILE;
+MPI_File MPI_FINAL_FILE;

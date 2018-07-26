@@ -11,6 +11,70 @@
 
 static FILE *initial_state_fp;
 
+// Skips grid x/y/z size (doubles) in file
+static const int64_t base_offset = (sizeof(double) * 3) + sizeof(int64_t);
+
+// How much room each sphere takes up in the file.
+// 64 bit id + velocity and position for x/y/z as doubles.
+static const int64_t sphere_file_size = sizeof(int64_t) + (sizeof(double) * 6);
+
+// Iteration number, time and number of spheres in the iteration.
+static const iteration_header_size = sizeof(double) + sizeof(int64_t) + sizeof(int64_t);
+
+static int64_t radius_mass_block_size;
+
+static void write_num_spheres(){
+	if(GRID_RANK != 0){
+		return;
+	}
+	MPI_Status s;
+	MPI_File_write(MPI_OUTPUT_FILE, &NUM_SPHERES, 1, MPI_LONG_LONG, &s);
+	radius_mass_block_size = (NUM_SPHERES * (sizeof(double) * 2));
+}
+
+
+
+// File format looks like this:
+// Grid x, y, and z size
+// For each sphere: radius and mass
+// Iteration number (0 since initial state)
+// For each sphere: id, velocity for x, y and z, position for x, y and z
+// Because we are loading spheres and discarding them if they don't belong
+// to the local node we write this inital data here for spheres may be discarded.
+// Because the radius/mass are stored away from the rest of the inital data we
+// need to seek to the correct offset for each sphere.
+static void write_sphere_initial_state(const struct sphere_s *sphere){
+	if(GRID_RANK != 0){
+		return;
+	}
+	int64_t radius_mass_offset = base_offset + (sphere->id * (sizeof(double) * 2));
+	int64_t sphere_offset = base_offset + radius_mass_block_size + iteration_header_size + (sphere_file_size * sphere->id);
+	MPI_File_seek(MPI_OUTPUT_FILE, radius_mass_offset, MPI_SEEK_SET);
+	MPI_Status s;
+	MPI_File_write(MPI_OUTPUT_FILE, &sphere->radius, 1, MPI_DOUBLE, &s);
+	MPI_File_write(MPI_OUTPUT_FILE, &sphere->mass, 1, MPI_DOUBLE, &s);
+	MPI_File_seek(MPI_OUTPUT_FILE, sphere_offset, MPI_SEEK_SET);
+	MPI_File_write(MPI_OUTPUT_FILE, &sphere->id, 1, MPI_LONG_LONG, &s);
+	MPI_File_write(MPI_OUTPUT_FILE, &sphere->vel, 3, MPI_DOUBLE, &s);
+	MPI_File_write(MPI_OUTPUT_FILE, &sphere->pos, 3, MPI_DOUBLE, &s);
+}
+
+// After initial state has been writen go back and write initial iteration data.
+// This should have iteration number = 0, time = 0 and number of spheres = NUM_SPHERES.
+static void write_initial_iteration_stats(){
+	if(GRID_RANK != 0){
+		return;
+	}
+	MPI_File_seek(MPI_OUTPUT_FILE, base_offset + radius_mass_block_size, MPI_SEEK_SET);
+	int64_t i = 0;
+	double t = 0;
+	MPI_Status s;
+	MPI_File_write(MPI_OUTPUT_FILE, &i, 1, MPI_LONG_LONG, &s);
+	MPI_File_write(MPI_OUTPUT_FILE, &t, 1, MPI_DOUBLE, &s);
+	MPI_File_write(MPI_OUTPUT_FILE, &NUM_SPHERES, 1, MPI_LONG_LONG, &s);
+	MPI_File_seek(MPI_OUTPUT_FILE, 0, MPI_SEEK_END);
+}
+
 // Loads spheres from the specified inital state file
 // This file contains every sphere, and we need to check if the sphere belongs
 // to the sector the current MPI node is responsible for.
@@ -18,6 +82,7 @@ static void load_spheres() {
 	// result is just to shut up gcc's warnings
 	// TODO: get rid of this global and use grid->total_spheres where needed
 	int result = fread(&NUM_SPHERES, sizeof(int64_t), 1, initial_state_fp);
+	write_num_spheres();
 	struct sphere_s in;
 	int64_t i;
 	for(i = 0; i < NUM_SPHERES; i++){
@@ -30,12 +95,14 @@ static void load_spheres() {
 		result = fread(&in.vel.z, sizeof(double), 1, initial_state_fp);
 		result = fread(&in.mass, sizeof(double), 1, initial_state_fp);
 		result = fread(&in.radius, sizeof(double), 1, initial_state_fp);
+		write_sphere_initial_state(&in);
 		struct sector_s *temp = find_sector_that_sphere_belongs_to(&in);
 		if(temp == SECTOR || temp->is_neighbour){
 			// want to copy it if it belongs to local node or a neighbour
 			add_sphere_to_sector(temp, &in);
 		}
 	}
+	write_initial_iteration_stats();
 }
 
 static void init_my_sector() {
@@ -104,7 +171,7 @@ static bool check_is_neighbour(struct sector_s *s){
 	return x_dist <= 1 && y_dist <= 1 && z_dist <= 1;
 }
 
-static bool set_neighbours(){
+static void set_neighbours(){
 	NUM_NEIGHBOURS = 0;
 	int i, j, k;
 	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
@@ -131,6 +198,14 @@ static bool set_neighbours(){
 	}
 }
 
+static void write_grid_dimms(){
+	if(GRID_RANK != 0){
+		return;
+	}
+	MPI_Status s;
+	MPI_File_write(MPI_OUTPUT_FILE, &grid->size, 3, MPI_DOUBLE, &s);
+}
+
 // Loads the grid from the initial state file
 void init_grid(double time_limit) {
 	initial_state_fp = fopen(initial_state_file, "rb");
@@ -139,6 +214,7 @@ void init_grid(double time_limit) {
 	int result = fread(&grid->size.x, sizeof(double), 1, initial_state_fp);
 	result = fread(&grid->size.y, sizeof(double), 1, initial_state_fp);
 	result = fread(&grid->size.z, sizeof(double), 1, initial_state_fp);
+	write_grid_dimms();
 	init_sectors();
 	init_my_sector();
 	set_neighbours();
@@ -173,7 +249,7 @@ static void update_spheres() {
 static void apply_event(){
 	if (next_event->type == COL_SPHERE_WITH_GRID) {
 		struct sector_s *source = &grid->sectors_flat[next_event->source_sector_id];
-		if(source->is_neighbour || source == SECTOR->id){
+		if(source->is_neighbour || source->id == SECTOR->id){
 			struct sphere_s *sphere = &source->spheres[next_event->sphere_1.sector_id];
 			sphere->vel.vals[event_details.grid_axis] *= -1.0;
 		}
@@ -204,7 +280,7 @@ static void apply_event(){
 		// If one of them but not the other is a neighbour or the local node then bounce the relevant sphere
 		// using the copied data in next_event.
 		// This will overwrite the copy which is fine.
-		if((source->is_neighbour || SECTOR->id == next_event->source_sector_id) && (dest->is_neighbour || SECTOR->id == next_event->dest_sector_id)){
+		if((source->is_neighbour || SECTOR->id == next_event->source_sector_id) && (dest->is_neighbour || SECTOR->id == next_event->dest_sector_id)){			
 			s1 = &source->spheres[next_event->sphere_1.sector_id];
 			s2 = &dest->spheres[next_event->sphere_2.sector_id];
 			apply_bounce_between_spheres(s1, s2);

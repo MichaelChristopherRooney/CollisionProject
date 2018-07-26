@@ -54,12 +54,10 @@ static void save_sphere_state_to_file(uint64_t iteration_num, double time_elapse
 	}
 }
 
-// First write the grid's dimensions then the number of spheres.
-// Then write the initial state of the spheres.
-// The iteration number and the time elapsed are 0 as nothing has
-// happened yet.
+// Process with grid rank 0 will write the inital data as it scans data from the
+// input file.
 static void init_binary_file() {
-	//printf("TODO: init binary file MPI\n");
+	MPI_File_open(MPI_COMM_WORLD, output_file, MPI_MODE_RDWR | MPI_MODE_CREATE, MPI_INFO_NULL, &MPI_OUTPUT_FILE);
 }
 
 // Writes the final state of the spheres.
@@ -118,8 +116,8 @@ static void compare_results() {
 }
 
 void simulation_init(double time_limit) {
-	init_grid(time_limit);
 	init_binary_file();
+	init_grid(time_limit);
 }
 
 void simulation_run() {

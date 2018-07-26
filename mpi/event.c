@@ -45,7 +45,7 @@ void reduce_events(){
 	}
 	next_event = &event_buffer[GRID_RANK_NEXT_EVENT];
 	if(GRID_RANK == 0){
-		printf("Soonest time is %f from rank %d\n", next_event->time, GRID_RANK_NEXT_EVENT);
+		//printf("Soonest time is %f from rank %d\n", next_event->time, GRID_RANK_NEXT_EVENT);
 	}
 }
 
