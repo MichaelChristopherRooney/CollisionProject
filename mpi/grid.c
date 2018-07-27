@@ -23,13 +23,20 @@ static const iteration_header_size = sizeof(double) + sizeof(int64_t) + sizeof(i
 
 static int64_t radius_mass_block_size;
 
+static int iter_num;
+
+// Due to what seems like a bug with OpenMPI using MPI_SEEK_CUR sets the file
+// pointer to the offset rather than adding the offset to it.
+// To get around this the offset is tracked manually and MPI_SEEK_SET is used.
+static int64_t cur_file_offset = 0; 
+
 static void write_num_spheres(){
+	radius_mass_block_size = (NUM_SPHERES * (sizeof(double) * 2));
 	if(GRID_RANK != 0){
 		return;
 	}
 	MPI_Status s;
 	MPI_File_write(MPI_OUTPUT_FILE, &NUM_SPHERES, 1, MPI_LONG_LONG, &s);
-	radius_mass_block_size = (NUM_SPHERES * (sizeof(double) * 2));
 }
 
 
@@ -62,17 +69,17 @@ static void write_sphere_initial_state(const struct sphere_s *sphere){
 // After initial state has been writen go back and write initial iteration data.
 // This should have iteration number = 0, time = 0 and number of spheres = NUM_SPHERES.
 static void write_initial_iteration_stats(){
-	if(GRID_RANK != 0){
-		return;
+	if(GRID_RANK == 0){
+		MPI_File_seek(MPI_OUTPUT_FILE, base_offset + radius_mass_block_size, MPI_SEEK_SET);
+		int64_t i = 0;
+		double t = 0;
+		MPI_Status s;
+		MPI_File_write(MPI_OUTPUT_FILE, &i, 1, MPI_LONG_LONG, &s);
+		MPI_File_write(MPI_OUTPUT_FILE, &t, 1, MPI_DOUBLE, &s);
+		MPI_File_write(MPI_OUTPUT_FILE, &NUM_SPHERES, 1, MPI_LONG_LONG, &s);
 	}
-	MPI_File_seek(MPI_OUTPUT_FILE, base_offset + radius_mass_block_size, MPI_SEEK_SET);
-	int64_t i = 0;
-	double t = 0;
-	MPI_Status s;
-	MPI_File_write(MPI_OUTPUT_FILE, &i, 1, MPI_LONG_LONG, &s);
-	MPI_File_write(MPI_OUTPUT_FILE, &t, 1, MPI_DOUBLE, &s);
-	MPI_File_write(MPI_OUTPUT_FILE, &NUM_SPHERES, 1, MPI_LONG_LONG, &s);
-	MPI_File_seek(MPI_OUTPUT_FILE, 0, MPI_SEEK_END);
+	cur_file_offset = base_offset + radius_mass_block_size + iteration_header_size + (sphere_file_size * NUM_SPHERES);
+	MPI_File_seek(MPI_OUTPUT_FILE, cur_file_offset, MPI_SEEK_SET);
 }
 
 // Loads spheres from the specified inital state file
@@ -246,12 +253,48 @@ static void update_spheres() {
 	}
 }
 
+static void write_iteration_data(struct sphere_s *s1, struct sphere_s *s2){
+	MPI_Status s;
+	double t = grid->elapsed_time + next_event->time;
+	MPI_File_write(MPI_OUTPUT_FILE, &iter_num, 1, MPI_LONG_LONG, &s);
+	MPI_File_write(MPI_OUTPUT_FILE, &t, 1, MPI_DOUBLE, &s);
+	int64_t n;
+	if(s2 != NULL){
+		n = 2;
+	} else {
+		n = 1;
+	}
+	MPI_File_write(MPI_OUTPUT_FILE, &n, 1, MPI_LONG_LONG, &s);
+	MPI_File_write(MPI_OUTPUT_FILE, &s1->id, 1, MPI_LONG_LONG, &s);
+	MPI_File_write(MPI_OUTPUT_FILE, &s1->vel, 3, MPI_DOUBLE, &s);
+	MPI_File_write(MPI_OUTPUT_FILE, &s1->pos, 3, MPI_DOUBLE, &s);
+	cur_file_offset += iteration_header_size + sphere_file_size;
+	if(s2 != NULL){
+		MPI_File_write(MPI_OUTPUT_FILE, &s2->id, 1, MPI_LONG_LONG, &s);
+		MPI_File_write(MPI_OUTPUT_FILE, &s2->vel, 3, MPI_DOUBLE, &s);
+		MPI_File_write(MPI_OUTPUT_FILE, &s2->pos, 3, MPI_DOUBLE, &s);
+		cur_file_offset += sphere_file_size;
+	}
+}
+
+// Apply events and write changes to file.
+// In each case the source sector is responsible for writing data.
+// Each other sector must update their file pointer however.
+// TODO: clean this up
 static void apply_event(){
+	MPI_Status s;
 	if (next_event->type == COL_SPHERE_WITH_GRID) {
 		struct sector_s *source = &grid->sectors_flat[next_event->source_sector_id];
 		if(source->is_neighbour || source->id == SECTOR->id){
 			struct sphere_s *sphere = &source->spheres[next_event->sphere_1.sector_id];
 			sphere->vel.vals[event_details.grid_axis] *= -1.0;
+			if(source->id == SECTOR->id){
+				write_iteration_data(sphere, NULL);
+			}
+		}
+		if(source->id != SECTOR->id){
+			cur_file_offset += iteration_header_size + sphere_file_size;
+			MPI_File_seek(MPI_OUTPUT_FILE, cur_file_offset, MPI_SEEK_SET);
 		}
 	} else if (next_event->type == COL_TWO_SPHERES) {
 		struct sector_s *source = &grid->sectors_flat[next_event->source_sector_id];
@@ -259,6 +302,13 @@ static void apply_event(){
 			struct sphere_s *s1 = &source->spheres[next_event->sphere_1.sector_id];
 			struct sphere_s *s2 = &source->spheres[next_event->sphere_2.sector_id];
 			apply_bounce_between_spheres(s1, s2);
+			if(source->id == SECTOR->id){
+				write_iteration_data(s1, s2);
+			}
+		}
+		if(source->id != SECTOR->id){
+			cur_file_offset += iteration_header_size + (sphere_file_size * 2);
+			MPI_File_seek(MPI_OUTPUT_FILE, cur_file_offset, MPI_SEEK_SET);
 		}
 	} else if (next_event->type == COL_SPHERE_WITH_SECTOR) {
 		struct sphere_s *sphere = &next_event->sphere_1;
@@ -270,6 +320,13 @@ static void apply_event(){
 		if(dest->is_neighbour || SECTOR->id == next_event->dest_sector_id){
 			update_sphere_position(sphere, next_event->time); // received sphere data has old pos
 			add_sphere_to_sector(dest, sphere);
+			if(dest->id == SECTOR->id){
+				write_iteration_data(sphere, NULL);
+			}
+		}
+		if(dest->id != SECTOR->id){
+			cur_file_offset += iteration_header_size + sphere_file_size;
+			MPI_File_seek(MPI_OUTPUT_FILE, cur_file_offset, MPI_SEEK_SET);
 		}
 	} else if(next_event->type == COL_TWO_SPHERES_PARTIAL_CROSSING){
 		struct sphere_s *s1;
@@ -284,6 +341,9 @@ static void apply_event(){
 			s1 = &source->spheres[next_event->sphere_1.sector_id];
 			s2 = &dest->spheres[next_event->sphere_2.sector_id];
 			apply_bounce_between_spheres(s1, s2);
+			if(source->id == SECTOR->id){
+				write_iteration_data(s1, s2);
+			}
 		} else if(source->is_neighbour || SECTOR->id == next_event->source_sector_id){
 			s1 = &source->spheres[next_event->sphere_1.sector_id];
 			s2 = &next_event->sphere_2;
@@ -292,6 +352,10 @@ static void apply_event(){
 			s1 = &next_event->sphere_1;
 			s2 = &dest->spheres[next_event->sphere_2.sector_id];
 			apply_bounce_between_spheres(s1, s2);
+		}
+		if(source->id != SECTOR->id){
+			cur_file_offset += iteration_header_size + (sphere_file_size * 2);
+			MPI_File_seek(MPI_OUTPUT_FILE, cur_file_offset, MPI_SEEK_SET);
 		}
 	}
 }
@@ -319,7 +383,8 @@ static void sanity_check() {
 	}
 }
 
-double update_grid() {
+double update_grid(int i) {
+	iter_num = i;
 	//printf("%d: I have %ld spheres\n", GRID_RANK, SECTOR->num_spheres);
 	sanity_check();
 	// First reset records.
@@ -330,6 +395,7 @@ double update_grid() {
 	reduce_events();
 	if (grid->time_limit - grid->elapsed_time < next_event->time) {
 		next_event->time = grid->time_limit - grid->elapsed_time;
+		// TODO: properly save final state
 		update_spheres();
 	} else {
 		update_spheres();

@@ -46,7 +46,7 @@ static void generate_transfer(){
 	fwrite(&grid_size, sizeof(double), 1, fp); // z
 	int64_t num_spheres = 1;
 	fwrite(&num_spheres, sizeof(int64_t), 1, fp);
-	create_sphere(40.0, 40.0, 10.0, 2.5, 0.0, 0.0);
+	create_sphere(40.0, 40.0, 10.0, 5.0, 0.0, 0.0);
 	fclose(fp);
 }
 
