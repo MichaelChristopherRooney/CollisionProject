@@ -395,7 +395,12 @@ double update_grid(int i) {
 	reduce_events();
 	if (grid->time_limit - grid->elapsed_time < next_event->time) {
 		next_event->time = grid->time_limit - grid->elapsed_time;
-		// TODO: properly save final state
+		if(GRID_RANK == 0){
+			MPI_Status s;
+			MPI_File_write(MPI_OUTPUT_FILE, &grid->time_limit, 1, MPI_DOUBLE, &s);
+		}
+		MPI_Barrier(GRID_COMM);
+		MPI_File_close(&MPI_OUTPUT_FILE);
 		update_spheres();
 	} else {
 		update_spheres();

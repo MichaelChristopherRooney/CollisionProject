@@ -203,7 +203,6 @@ double update_grid() {
 	} else { // no domain decomposition 
 		find_event_times_no_dd();
 	}
-	printf("Next time is %f\n", event_details.time);
 	// Final event may take place after time limit, so cut it short
 	if (grid->time_limit - grid->elapsed_time < event_details.time) {
 		event_details.time = grid->time_limit - grid->elapsed_time;
