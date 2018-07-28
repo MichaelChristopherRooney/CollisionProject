@@ -6,6 +6,7 @@
 #include "grid.h"
 #include "mpi_vars.h"
 #include "params.h"
+#include "simulation.h"
 #include "vector_3.h"
 
 static FILE *data_file;
@@ -115,23 +116,47 @@ static void compare_results() {
 	printf("pos abs err: %.17g\n", max_pos_err);
 }
 
-void simulation_init(double time_limit) {
+void simulation_init(int argc, char *argv[], double time_limit) {
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &WORLD_RANK);
+	MPI_Comm_size(MPI_COMM_WORLD, &NUM_NODES);
+	parse_args(argc, argv);
+	MPI_Cart_create(MPI_COMM_WORLD, NUM_DIMS, SECTOR_DIMS, PERIODS, REORDER, &GRID_COMM);
+	MPI_Comm_rank(GRID_COMM, &GRID_RANK);
+	MPI_Cart_coords(GRID_COMM, GRID_RANK, NUM_DIMS, COORDS);
+	ITERATION_NUMBER = 0;
 	init_binary_file();
 	init_grid(time_limit);
 }
 
 void simulation_run() {
-	int i = 1; // start at 1 as 0 is iteration num for the initial state
+	ITERATION_NUMBER = 1; // start at 1 as 0 is iteration num for the initial state
 	while (grid->elapsed_time < grid->time_limit) {	
-		grid->elapsed_time += update_grid(i);
+		grid->elapsed_time += update_grid();
 		MPI_Barrier(GRID_COMM);
 		//save_sphere_state_to_file(i, grid->elapsed_time);
-		i++;
+		ITERATION_NUMBER++;
 	}
 	//write_final_state();
 	//compare_results();
 }
 
 void simulation_cleanup() {
-	printf("TODO: cleanup in MPI version\n");
+	free(SECTOR->spheres);
+	int i;
+	for(i = 0; i < grid->num_sectors; i++){
+		struct sector_s *s = &grid->sectors_flat[i];
+		if(s->is_neighbour){
+			free(s->spheres);
+		}
+	}
+	free(grid->sectors[0][0]);
+	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
+		free(grid->sectors[i]);
+	}
+	free(grid->sectors);
+	free(grid);
+	MPI_File_close(&MPI_OUTPUT_FILE);
+	MPI_Comm_free(&GRID_COMM);
 }
+

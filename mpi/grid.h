@@ -15,6 +15,7 @@ struct grid_s {
 	struct sector_s ***sectors;
 	// flat array that points to sectors[0][0][0], can be indexed by sector id or node rank
 	struct sector_s *sectors_flat;
+	int num_sectors;
 	double time_limit;
 	double elapsed_time;
 	bool xy_check_needed;
@@ -33,4 +34,4 @@ int64_t NUM_SPHERES;
 struct sphere_s *spheres;
 
 void init_grid(double time_limit);
-double update_grid(int i);
+double update_grid();

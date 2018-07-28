@@ -9,83 +9,10 @@
 #include "params.h"
 #include "vector_3.h"
 
-static FILE *initial_state_fp;
-
-// Skips grid x/y/z size (doubles) in file
-static const int64_t base_offset = (sizeof(double) * 3) + sizeof(int64_t);
-
-// How much room each sphere takes up in the file.
-// 64 bit id + velocity and position for x/y/z as doubles.
-static const int64_t sphere_file_size = sizeof(int64_t) + (sizeof(double) * 6);
-
-// Iteration number, time and number of spheres in the iteration.
-static const iteration_header_size = sizeof(double) + sizeof(int64_t) + sizeof(int64_t);
-
-static int64_t radius_mass_block_size;
-
-static int iter_num;
-
-// Due to what seems like a bug with OpenMPI using MPI_SEEK_CUR sets the file
-// pointer to the offset rather than adding the offset to it.
-// To get around this the offset is tracked manually and MPI_SEEK_SET is used.
-static int64_t cur_file_offset = 0; 
-
-static void write_num_spheres(){
-	radius_mass_block_size = (NUM_SPHERES * (sizeof(double) * 2));
-	if(GRID_RANK != 0){
-		return;
-	}
-	MPI_Status s;
-	MPI_File_write(MPI_OUTPUT_FILE, &NUM_SPHERES, 1, MPI_LONG_LONG, &s);
-}
-
-
-
-// File format looks like this:
-// Grid x, y, and z size
-// For each sphere: radius and mass
-// Iteration number (0 since initial state)
-// For each sphere: id, velocity for x, y and z, position for x, y and z
-// Because we are loading spheres and discarding them if they don't belong
-// to the local node we write this inital data here for spheres may be discarded.
-// Because the radius/mass are stored away from the rest of the inital data we
-// need to seek to the correct offset for each sphere.
-static void write_sphere_initial_state(const struct sphere_s *sphere){
-	if(GRID_RANK != 0){
-		return;
-	}
-	int64_t radius_mass_offset = base_offset + (sphere->id * (sizeof(double) * 2));
-	int64_t sphere_offset = base_offset + radius_mass_block_size + iteration_header_size + (sphere_file_size * sphere->id);
-	MPI_File_seek(MPI_OUTPUT_FILE, radius_mass_offset, MPI_SEEK_SET);
-	MPI_Status s;
-	MPI_File_write(MPI_OUTPUT_FILE, &sphere->radius, 1, MPI_DOUBLE, &s);
-	MPI_File_write(MPI_OUTPUT_FILE, &sphere->mass, 1, MPI_DOUBLE, &s);
-	MPI_File_seek(MPI_OUTPUT_FILE, sphere_offset, MPI_SEEK_SET);
-	MPI_File_write(MPI_OUTPUT_FILE, &sphere->id, 1, MPI_LONG_LONG, &s);
-	MPI_File_write(MPI_OUTPUT_FILE, &sphere->vel, 3, MPI_DOUBLE, &s);
-	MPI_File_write(MPI_OUTPUT_FILE, &sphere->pos, 3, MPI_DOUBLE, &s);
-}
-
-// After initial state has been writen go back and write initial iteration data.
-// This should have iteration number = 0, time = 0 and number of spheres = NUM_SPHERES.
-static void write_initial_iteration_stats(){
-	if(GRID_RANK == 0){
-		MPI_File_seek(MPI_OUTPUT_FILE, base_offset + radius_mass_block_size, MPI_SEEK_SET);
-		int64_t i = 0;
-		double t = 0;
-		MPI_Status s;
-		MPI_File_write(MPI_OUTPUT_FILE, &i, 1, MPI_LONG_LONG, &s);
-		MPI_File_write(MPI_OUTPUT_FILE, &t, 1, MPI_DOUBLE, &s);
-		MPI_File_write(MPI_OUTPUT_FILE, &NUM_SPHERES, 1, MPI_LONG_LONG, &s);
-	}
-	cur_file_offset = base_offset + radius_mass_block_size + iteration_header_size + (sphere_file_size * NUM_SPHERES);
-	MPI_File_seek(MPI_OUTPUT_FILE, cur_file_offset, MPI_SEEK_SET);
-}
-
 // Loads spheres from the specified inital state file
 // This file contains every sphere, and we need to check if the sphere belongs
 // to the sector the current MPI node is responsible for.
-static void load_spheres() {
+static void load_spheres(FILE *initial_state_fp) {
 	// result is just to shut up gcc's warnings
 	// TODO: get rid of this global and use grid->total_spheres where needed
 	int result = fread(&NUM_SPHERES, sizeof(int64_t), 1, initial_state_fp);
@@ -139,6 +66,7 @@ static void alloc_sector_array(){
 }
 
 static void init_sectors(){
+	grid->num_sectors = SECTOR_DIMS[X_AXIS] * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS];
 	grid->xy_check_needed = SECTOR_DIMS[X_AXIS] > 1 && SECTOR_DIMS[Y_AXIS] > 1;
 	grid->xz_check_needed = SECTOR_DIMS[X_AXIS] > 1 && SECTOR_DIMS[Z_AXIS] > 1;
 	grid->yz_check_needed = SECTOR_DIMS[Y_AXIS] > 1 && SECTOR_DIMS[Z_AXIS] > 1;
@@ -205,17 +133,9 @@ static void set_neighbours(){
 	}
 }
 
-static void write_grid_dimms(){
-	if(GRID_RANK != 0){
-		return;
-	}
-	MPI_Status s;
-	MPI_File_write(MPI_OUTPUT_FILE, &grid->size, 3, MPI_DOUBLE, &s);
-}
-
 // Loads the grid from the initial state file
 void init_grid(double time_limit) {
-	initial_state_fp = fopen(initial_state_file, "rb");
+	FILE *initial_state_fp = fopen(initial_state_file, "rb");
 	grid = calloc(1, sizeof(struct grid_s));
 	// result is just to shut up gcc's warnings
 	int result = fread(&grid->size.x, sizeof(double), 1, initial_state_fp);
@@ -225,7 +145,7 @@ void init_grid(double time_limit) {
 	init_sectors();
 	init_my_sector();
 	set_neighbours();
-	load_spheres();
+	load_spheres(initial_state_fp);
 	init_events();
 	grid->elapsed_time = 0.0;
 	grid->time_limit = time_limit;
@@ -253,30 +173,6 @@ static void update_spheres() {
 	}
 }
 
-static void write_iteration_data(struct sphere_s *s1, struct sphere_s *s2){
-	MPI_Status s;
-	double t = grid->elapsed_time + next_event->time;
-	MPI_File_write(MPI_OUTPUT_FILE, &iter_num, 1, MPI_LONG_LONG, &s);
-	MPI_File_write(MPI_OUTPUT_FILE, &t, 1, MPI_DOUBLE, &s);
-	int64_t n;
-	if(s2 != NULL){
-		n = 2;
-	} else {
-		n = 1;
-	}
-	MPI_File_write(MPI_OUTPUT_FILE, &n, 1, MPI_LONG_LONG, &s);
-	MPI_File_write(MPI_OUTPUT_FILE, &s1->id, 1, MPI_LONG_LONG, &s);
-	MPI_File_write(MPI_OUTPUT_FILE, &s1->vel, 3, MPI_DOUBLE, &s);
-	MPI_File_write(MPI_OUTPUT_FILE, &s1->pos, 3, MPI_DOUBLE, &s);
-	cur_file_offset += iteration_header_size + sphere_file_size;
-	if(s2 != NULL){
-		MPI_File_write(MPI_OUTPUT_FILE, &s2->id, 1, MPI_LONG_LONG, &s);
-		MPI_File_write(MPI_OUTPUT_FILE, &s2->vel, 3, MPI_DOUBLE, &s);
-		MPI_File_write(MPI_OUTPUT_FILE, &s2->pos, 3, MPI_DOUBLE, &s);
-		cur_file_offset += sphere_file_size;
-	}
-}
-
 // Apply events and write changes to file.
 // In each case the source sector is responsible for writing data.
 // Each other sector must update their file pointer however.
@@ -293,8 +189,7 @@ static void apply_event(){
 			}
 		}
 		if(source->id != SECTOR->id){
-			cur_file_offset += iteration_header_size + sphere_file_size;
-			MPI_File_seek(MPI_OUTPUT_FILE, cur_file_offset, MPI_SEEK_SET);
+			seek_one_sphere();
 		}
 	} else if (next_event->type == COL_TWO_SPHERES) {
 		struct sector_s *source = &grid->sectors_flat[next_event->source_sector_id];
@@ -307,8 +202,7 @@ static void apply_event(){
 			}
 		}
 		if(source->id != SECTOR->id){
-			cur_file_offset += iteration_header_size + (sphere_file_size * 2);
-			MPI_File_seek(MPI_OUTPUT_FILE, cur_file_offset, MPI_SEEK_SET);
+			seek_two_spheres();
 		}
 	} else if (next_event->type == COL_SPHERE_WITH_SECTOR) {
 		struct sphere_s *sphere = &next_event->sphere_1;
@@ -325,8 +219,7 @@ static void apply_event(){
 			}
 		}
 		if(dest->id != SECTOR->id){
-			cur_file_offset += iteration_header_size + sphere_file_size;
-			MPI_File_seek(MPI_OUTPUT_FILE, cur_file_offset, MPI_SEEK_SET);
+			seek_one_sphere();
 		}
 	} else if(next_event->type == COL_TWO_SPHERES_PARTIAL_CROSSING){
 		struct sphere_s *s1;
@@ -354,8 +247,7 @@ static void apply_event(){
 			apply_bounce_between_spheres(s1, s2);
 		}
 		if(source->id != SECTOR->id){
-			cur_file_offset += iteration_header_size + (sphere_file_size * 2);
-			MPI_File_seek(MPI_OUTPUT_FILE, cur_file_offset, MPI_SEEK_SET);
+			seek_two_spheres();
 		}
 	}
 }
@@ -383,14 +275,13 @@ static void sanity_check() {
 	}
 }
 
-double update_grid(int i) {
-	iter_num = i;
+double update_grid() {
 	//printf("%d: I have %ld spheres\n", GRID_RANK, SECTOR->num_spheres);
 	sanity_check();
 	// First reset records.
 	reset_event_details();
 	// Now find event + time of event
-	// Final event may take place after time limit, so cut it short
+	// Final event may take place after time limit, so cut it short if so
 	find_event_times_for_sector(SECTOR);
 	reduce_events();
 	if (grid->time_limit - grid->elapsed_time < next_event->time) {
@@ -399,9 +290,6 @@ double update_grid(int i) {
 			MPI_Status s;
 			MPI_File_write(MPI_OUTPUT_FILE, &grid->time_limit, 1, MPI_DOUBLE, &s);
 		}
-		MPI_Barrier(GRID_COMM);
-		MPI_File_close(&MPI_OUTPUT_FILE);
-		update_spheres();
 	} else {
 		update_spheres();
 		apply_event();
