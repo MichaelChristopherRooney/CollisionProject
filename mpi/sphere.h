@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdio.h>
 #include <stdint.h>
 
 #include "vector_3.h"
@@ -17,3 +18,5 @@ struct sphere_s {
 };
 
 void update_sphere_position(struct sphere_s *s, double t);
+void load_spheres(FILE *initial_state_fp);
+void apply_bounce_between_spheres(struct sphere_s *s1, struct sphere_s *s2);

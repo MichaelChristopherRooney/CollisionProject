@@ -1,5 +1,6 @@
 #pragma once
 
+#include "params.h"
 #include "sphere.h"
 
 // TODO: describe output file format
@@ -10,4 +11,5 @@ void write_num_spheres();
 void write_grid_dimms();
 void write_iteration_data(struct sphere_s *s1, struct sphere_s *s2);
 void seek_one_sphere();
-void seek_two_sphere();
+void seek_two_spheres();
+void init_output_file();

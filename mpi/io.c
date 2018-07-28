@@ -12,7 +12,7 @@ static const int64_t base_offset = (sizeof(double) * 3) + sizeof(int64_t);
 static const int64_t sphere_file_size = sizeof(int64_t) + (sizeof(double) * 6);
 
 // Iteration number, time and number of spheres in the iteration.
-static const iteration_header_size = sizeof(double) + sizeof(int64_t) + sizeof(int64_t);
+static const int64_t iteration_header_size = sizeof(double) + sizeof(int64_t) + sizeof(int64_t);
 
 // Due to what seems like a bug with OpenMPI using MPI_SEEK_CUR sets the file
 // pointer to the offset rather than adding the offset to it.
@@ -111,5 +111,11 @@ void seek_one_sphere(){
 void seek_two_spheres(){
 	cur_file_offset += iteration_header_size + (sphere_file_size * 2);
 	MPI_File_seek(MPI_OUTPUT_FILE, cur_file_offset, MPI_SEEK_SET);
+}
+
+// Process with grid rank 0 will write the inital data as it scans data from the
+// input file.
+void init_output_file() {
+	MPI_File_open(MPI_COMM_WORLD, output_file, MPI_MODE_RDWR | MPI_MODE_CREATE, MPI_INFO_NULL, &MPI_OUTPUT_FILE);
 }
 
