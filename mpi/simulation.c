@@ -48,26 +48,33 @@ static void compare_results() {
 	printf("pos abs err: %.17g\n", max_pos_err);
 }
 */
+
+
 void simulation_init(int argc, char *argv[], double time_limit) {
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &WORLD_RANK);
 	MPI_Comm_size(MPI_COMM_WORLD, &NUM_NODES);
 	parse_args(argc, argv);
-	MPI_Cart_create(MPI_COMM_WORLD, NUM_DIMS, SECTOR_DIMS, PERIODS, REORDER, &GRID_COMM);
+	MPI_Cart_create(MPI_COMM_WORLD, NUM_DIMS, sim_data.sector_dims, PERIODS, REORDER, &GRID_COMM);
 	MPI_Comm_rank(GRID_COMM, &GRID_RANK);
 	MPI_Cart_coords(GRID_COMM, GRID_RANK, NUM_DIMS, COORDS);
-	ITERATION_NUMBER = 0;
+	sim_data.iteration_number = 0;
 	init_output_file();
-	init_grid(time_limit);
+	init_grid();
+	sim_data.elapsed_time = 0.0;
+	sim_data.time_limit = time_limit;
+	sim_data.num_two_sphere_collisions = 0;
+	sim_data.num_grid_collisions = 0;
+	sim_data.num_sector_transfers = 0;
 }
 
 void simulation_run() {
-	ITERATION_NUMBER = 1; // start at 1 as 0 is iteration num for the initial state
-	while (grid->elapsed_time < grid->time_limit) {	
-		grid->elapsed_time += update_grid();
+	sim_data.iteration_number = 1; // start at 1 as 0 is iteration num for the initial state
+	while (sim_data.elapsed_time < sim_data.time_limit) {	
+		sim_data.elapsed_time += update_grid();
 		MPI_Barrier(GRID_COMM);
-		//save_sphere_state_to_file(i, grid->elapsed_time);
-		ITERATION_NUMBER++;
+		//save_sphere_state_to_file(i, sim_data.elapsed_time);
+		sim_data.iteration_number++;
 	}
 	//write_final_state();
 	//compare_results();
@@ -76,18 +83,17 @@ void simulation_run() {
 void simulation_cleanup() {
 	free(SECTOR->spheres);
 	int i;
-	for(i = 0; i < grid->num_sectors; i++){
-		struct sector_s *s = &grid->sectors_flat[i];
+	for(i = 0; i < sim_data.num_sectors; i++){
+		struct sector_s *s = &sim_data.sectors_flat[i];
 		if(s->is_neighbour){
 			free(s->spheres);
 		}
 	}
-	free(grid->sectors[0][0]);
-	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
-		free(grid->sectors[i]);
+	free(sim_data.sectors[0][0]);
+	for (i = 0; i < sim_data.sector_dims[X_AXIS]; i++) {
+		free(sim_data.sectors[i]);
 	}
-	free(grid->sectors);
-	free(grid);
+	free(sim_data.sectors);
 	MPI_File_close(&MPI_OUTPUT_FILE);
 	MPI_Comm_free(&GRID_COMM);
 }

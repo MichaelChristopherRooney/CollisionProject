@@ -47,7 +47,7 @@ void write_sphere_initial_state(const struct sphere_s *sphere){
 }
 
 // After initial state has been writen go back and write initial iteration data.
-// This should have iteration number = 0, time = 0 and number of spheres = NUM_SPHERES.
+// This should have iteration number = 0, time = 0 and number of spheres = total_num_spheres.
 void write_initial_iteration_stats(){
 	if(GRID_RANK == 0){
 		MPI_File_seek(MPI_OUTPUT_FILE, base_offset + radius_mass_block_size, MPI_SEEK_SET);
@@ -56,19 +56,19 @@ void write_initial_iteration_stats(){
 		MPI_Status s;
 		MPI_File_write(MPI_OUTPUT_FILE, &i, 1, MPI_LONG_LONG, &s);
 		MPI_File_write(MPI_OUTPUT_FILE, &t, 1, MPI_DOUBLE, &s);
-		MPI_File_write(MPI_OUTPUT_FILE, &NUM_SPHERES, 1, MPI_LONG_LONG, &s);
+		MPI_File_write(MPI_OUTPUT_FILE, &sim_data.total_num_spheres, 1, MPI_LONG_LONG, &s);
 	}
-	cur_file_offset = base_offset + radius_mass_block_size + iteration_header_size + (sphere_file_size * NUM_SPHERES);
+	cur_file_offset = base_offset + radius_mass_block_size + iteration_header_size + (sphere_file_size * sim_data.total_num_spheres);
 	MPI_File_seek(MPI_OUTPUT_FILE, cur_file_offset, MPI_SEEK_SET);
 }
 
 void write_num_spheres(){
-	radius_mass_block_size = (NUM_SPHERES * (sizeof(double) * 2));
+	radius_mass_block_size = (sim_data.total_num_spheres * (sizeof(double) * 2));
 	if(GRID_RANK != 0){
 		return;
 	}
 	MPI_Status s;
-	MPI_File_write(MPI_OUTPUT_FILE, &NUM_SPHERES, 1, MPI_LONG_LONG, &s);
+	MPI_File_write(MPI_OUTPUT_FILE, &sim_data.total_num_spheres, 1, MPI_LONG_LONG, &s);
 }
 
 void write_grid_dimms(){
@@ -76,13 +76,13 @@ void write_grid_dimms(){
 		return;
 	}
 	MPI_Status s;
-	MPI_File_write(MPI_OUTPUT_FILE, &grid->size, 3, MPI_DOUBLE, &s);
+	MPI_File_write(MPI_OUTPUT_FILE, &sim_data.grid_size, 3, MPI_DOUBLE, &s);
 }
 
 void write_iteration_data(struct sphere_s *s1, struct sphere_s *s2){
 	MPI_Status s;
-	double t = grid->elapsed_time + next_event->time;
-	MPI_File_write(MPI_OUTPUT_FILE, &ITERATION_NUMBER, 1, MPI_LONG_LONG, &s);
+	double t = sim_data.elapsed_time + next_event->time;
+	MPI_File_write(MPI_OUTPUT_FILE, &sim_data.iteration_number, 1, MPI_LONG_LONG, &s);
 	MPI_File_write(MPI_OUTPUT_FILE, &t, 1, MPI_DOUBLE, &s);
 	int64_t n;
 	if(s2 != NULL){

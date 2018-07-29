@@ -1,13 +1,8 @@
-#include <math.h>
 #include <mpi.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <time.h>
 
-#include "grid.h"
 #include "mpi_vars.h"
-#include "params.h"
 #include "simulation.h"
 
 int main(int argc, char *argv[]) {

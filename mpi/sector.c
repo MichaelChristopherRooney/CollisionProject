@@ -3,8 +3,8 @@
 #include <string.h>
 
 #include "event.h"
-#include "grid.h"
 #include "mpi_vars.h"
+#include "simulation.h"
 #include "sector.h"
 
 // Used when iterating over axes and nned to access sector adjacent on the current axis.
@@ -92,7 +92,7 @@ struct sector_s *get_adjacent_sector_non_diagonal(const struct sector_s *sector,
 	int x = sector->pos.x + SECTOR_MODIFIERS[dir][a][X_AXIS];
 	int y = sector->pos.y + SECTOR_MODIFIERS[dir][a][Y_AXIS];
 	int z = sector->pos.z + SECTOR_MODIFIERS[dir][a][Z_AXIS];
-	struct sector_s *adj = &grid->sectors[x][y][z];
+	struct sector_s *adj = &sim_data.sectors[x][y][z];
 	return adj;
 }
 
@@ -110,12 +110,12 @@ bool does_sphere_belong_to_sector(const struct sphere_s *sphere, const struct se
 
 struct sector_s *find_sector_that_sphere_belongs_to(struct sphere_s *sphere){
 	int x, y, z;
-	for (x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
-		for (y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
-			for (z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
-				bool res = does_sphere_belong_to_sector(sphere, &grid->sectors[x][y][z]);
+	for (x = 0; x < sim_data.sector_dims[X_AXIS]; x++) {
+		for (y = 0; y < sim_data.sector_dims[Y_AXIS]; y++) {
+			for (z = 0; z < sim_data.sector_dims[Z_AXIS]; z++) {
+				bool res = does_sphere_belong_to_sector(sphere, &sim_data.sectors[x][y][z]);
 				if (res) {
-					return &grid->sectors[x][y][z];
+					return &sim_data.sectors[x][y][z];
 				}
 			}
 		}
@@ -126,7 +126,7 @@ struct sector_s *find_sector_that_sphere_belongs_to(struct sphere_s *sphere){
 }
 
 static void init_my_sector() {
-	SECTOR = &grid->sectors[COORDS[X_AXIS]][COORDS[Y_AXIS]][COORDS[Z_AXIS]];
+	SECTOR = &sim_data.sectors[COORDS[X_AXIS]][COORDS[Y_AXIS]][COORDS[Z_AXIS]];
 	SECTOR->num_spheres = 0;
 	SECTOR->max_spheres = 2000;
 	SECTOR->spheres = calloc(SECTOR->max_spheres, sizeof(struct sphere_s));
@@ -150,10 +150,10 @@ static bool check_is_neighbour(struct sector_s *s){
 static void set_neighbours(){
 	NUM_NEIGHBOURS = 0;
 	int i, j, k;
-	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
-		for (j = 0; j < SECTOR_DIMS[Y_AXIS]; j++) {
-			for (k = 0; k < SECTOR_DIMS[Z_AXIS]; k++) {
-				struct sector_s *s = &grid->sectors[i][j][k];
+	for (i = 0; i < sim_data.sector_dims[X_AXIS]; i++) {
+		for (j = 0; j < sim_data.sector_dims[Y_AXIS]; j++) {
+			for (k = 0; k < sim_data.sector_dims[Z_AXIS]; k++) {
+				struct sector_s *s = &sim_data.sectors[i][j][k];
 				if(SECTOR == s){
 					continue; // skip local sector
 				}
@@ -175,33 +175,33 @@ static void set_neighbours(){
 }
 
 static void alloc_sector_array(){
-	grid->sectors = calloc(SECTOR_DIMS[X_AXIS], sizeof(struct sector_s **));
-	grid->sectors_flat = calloc(SECTOR_DIMS[X_AXIS] * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS], sizeof(struct sector_s));
+	sim_data.sectors = calloc(sim_data.sector_dims[X_AXIS], sizeof(struct sector_s **));
+	sim_data.sectors_flat = calloc(sim_data.sector_dims[X_AXIS] * sim_data.sector_dims[Y_AXIS] * sim_data.sector_dims[Z_AXIS], sizeof(struct sector_s));
 	int i, j;
-	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
-		grid->sectors[i] = calloc(SECTOR_DIMS[Y_AXIS], sizeof(struct sector_s *));
-		for (j = 0; j < SECTOR_DIMS[Y_AXIS]; j++) {
-			int idx = (i * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS]) + (j * SECTOR_DIMS[Z_AXIS]);
-			grid->sectors[i][j] = &grid->sectors_flat[idx];
+	for (i = 0; i < sim_data.sector_dims[X_AXIS]; i++) {
+		sim_data.sectors[i] = calloc(sim_data.sector_dims[Y_AXIS], sizeof(struct sector_s *));
+		for (j = 0; j < sim_data.sector_dims[Y_AXIS]; j++) {
+			int idx = (i * sim_data.sector_dims[Y_AXIS] * sim_data.sector_dims[Z_AXIS]) + (j * sim_data.sector_dims[Z_AXIS]);
+			sim_data.sectors[i][j] = &sim_data.sectors_flat[idx];
 		}
 	}
 }
 
 void init_sectors(){
-	grid->num_sectors = SECTOR_DIMS[X_AXIS] * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS];
-	grid->xy_check_needed = SECTOR_DIMS[X_AXIS] > 1 && SECTOR_DIMS[Y_AXIS] > 1;
-	grid->xz_check_needed = SECTOR_DIMS[X_AXIS] > 1 && SECTOR_DIMS[Z_AXIS] > 1;
-	grid->yz_check_needed = SECTOR_DIMS[Y_AXIS] > 1 && SECTOR_DIMS[Z_AXIS] > 1;
+	sim_data.num_sectors = sim_data.sector_dims[X_AXIS] * sim_data.sector_dims[Y_AXIS] * sim_data.sector_dims[Z_AXIS];
+	sim_data.xy_check_needed = sim_data.sector_dims[X_AXIS] > 1 && sim_data.sector_dims[Y_AXIS] > 1;
+	sim_data.xz_check_needed = sim_data.sector_dims[X_AXIS] > 1 && sim_data.sector_dims[Z_AXIS] > 1;
+	sim_data.yz_check_needed = sim_data.sector_dims[Y_AXIS] > 1 && sim_data.sector_dims[Z_AXIS] > 1;
 	alloc_sector_array();
-	double x_inc = grid->size.x / SECTOR_DIMS[X_AXIS];
-	double y_inc = grid->size.y / SECTOR_DIMS[Y_AXIS];
-	double z_inc = grid->size.z / SECTOR_DIMS[Z_AXIS];
+	double x_inc = sim_data.grid_size.x / sim_data.sector_dims[X_AXIS];
+	double y_inc = sim_data.grid_size.y / sim_data.sector_dims[Y_AXIS];
+	double z_inc = sim_data.grid_size.z / sim_data.sector_dims[Z_AXIS];
 	int id = 0;
 	int i, j, k;
-	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
-		for (j = 0; j < SECTOR_DIMS[Y_AXIS]; j++) {
-			for (k = 0; k < SECTOR_DIMS[Z_AXIS]; k++) {
-				struct sector_s *s = &grid->sectors[i][j][k];
+	for (i = 0; i < sim_data.sector_dims[X_AXIS]; i++) {
+		for (j = 0; j < sim_data.sector_dims[Y_AXIS]; j++) {
+			for (k = 0; k < sim_data.sector_dims[Z_AXIS]; k++) {
+				struct sector_s *s = &sim_data.sectors[i][j][k];
 				s->start.x = x_inc * i;
 				s->end.x = s->start.x + x_inc;
 				s->start.y = y_inc * j;

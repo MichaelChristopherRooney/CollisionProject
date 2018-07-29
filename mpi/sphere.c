@@ -1,7 +1,7 @@
-#include "grid.h"
 #include "io.h"
 #include "mpi_vars.h"
 #include "sector.h"
+#include "simulation.h"
 #include "sphere.h"
 
 // Updates the spheres position.
@@ -21,11 +21,11 @@ void update_sphere_position(struct sphere_s *s, double t) {
 void load_spheres(FILE *initial_state_fp) {
 	// result is just to shut up gcc's warnings
 	// TODO: get rid of this global and use grid->total_spheres where needed
-	int result = fread(&NUM_SPHERES, sizeof(int64_t), 1, initial_state_fp);
+	int result = fread(&sim_data.total_num_spheres, sizeof(int64_t), 1, initial_state_fp);
 	write_num_spheres();
 	struct sphere_s in;
 	int64_t i;
-	for(i = 0; i < NUM_SPHERES; i++){
+	for(i = 0; i < sim_data.total_num_spheres; i++){
 		result = fread(&in.id, sizeof(int64_t), 1, initial_state_fp);
 		result = fread(&in.pos.x, sizeof(double), 1, initial_state_fp);
 		result = fread(&in.pos.y, sizeof(double), 1, initial_state_fp);

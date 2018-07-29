@@ -8,25 +8,20 @@
 #include "io.h"
 #include "mpi_vars.h"
 #include "params.h"
+#include "simulation.h"
 #include "vector_3.h"
 
 // Loads the grid from the initial state file
-void init_grid(double time_limit) {
+void init_grid() {
 	FILE *initial_state_fp = fopen(initial_state_file, "rb");
-	grid = calloc(1, sizeof(struct grid_s));
 	// result is just to shut up gcc's warnings
-	int result = fread(&grid->size.x, sizeof(double), 1, initial_state_fp);
-	result = fread(&grid->size.y, sizeof(double), 1, initial_state_fp);
-	result = fread(&grid->size.z, sizeof(double), 1, initial_state_fp);
+	int result = fread(&sim_data.grid_size.x, sizeof(double), 1, initial_state_fp);
+	result = fread(&sim_data.grid_size.y, sizeof(double), 1, initial_state_fp);
+	result = fread(&sim_data.grid_size.z, sizeof(double), 1, initial_state_fp);
 	write_grid_dimms();
 	init_sectors();
 	load_spheres(initial_state_fp);
 	init_events();
-	grid->elapsed_time = 0.0;
-	grid->time_limit = time_limit;
-	grid->num_two_sphere_collisions = 0;
-	grid->num_grid_collisions = 0;
-	grid->num_sector_transfers = 0;
 	fclose(initial_state_fp);
 }
 
@@ -40,7 +35,7 @@ static void update_spheres() {
 		update_sphere_position(s, next_event->time);
 	}
 	for(i = 0; i < NUM_NEIGHBOURS; i++){
-		struct sector_s *sector = &grid->sectors_flat[NEIGHBOUR_IDS[i]];
+		struct sector_s *sector = &sim_data.sectors_flat[NEIGHBOUR_IDS[i]];
 		for(j = 0; j < sector->num_spheres; j++){
 			struct sphere_s *s = &(sector->spheres[j]);
 			update_sphere_position(s, next_event->time);
@@ -54,7 +49,7 @@ static void update_spheres() {
 // TODO: clean this up
 static void apply_event(){
 	if (next_event->type == COL_SPHERE_WITH_GRID) {
-		struct sector_s *source = &grid->sectors_flat[next_event->source_sector_id];
+		struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
 		if(source->is_neighbour || source->id == SECTOR->id){
 			struct sphere_s *sphere = &source->spheres[next_event->sphere_1.sector_id];
 			sphere->vel.vals[event_details.grid_axis] *= -1.0;
@@ -66,7 +61,7 @@ static void apply_event(){
 			seek_one_sphere();
 		}
 	} else if (next_event->type == COL_TWO_SPHERES) {
-		struct sector_s *source = &grid->sectors_flat[next_event->source_sector_id];
+		struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
 		if(source->is_neighbour || SECTOR->id == next_event->source_sector_id){
 			struct sphere_s *s1 = &source->spheres[next_event->sphere_1.sector_id];
 			struct sphere_s *s2 = &source->spheres[next_event->sphere_2.sector_id];
@@ -80,11 +75,11 @@ static void apply_event(){
 		}
 	} else if (next_event->type == COL_SPHERE_WITH_SECTOR) {
 		struct sphere_s *sphere = &next_event->sphere_1;
-		struct sector_s *source = &grid->sectors_flat[next_event->source_sector_id];
+		struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
 		if(source->is_neighbour || SECTOR->id == next_event->source_sector_id){
 			remove_sphere_from_sector(source, sphere);
 		}
-		struct sector_s *dest = &grid->sectors_flat[next_event->dest_sector_id];
+		struct sector_s *dest = &sim_data.sectors_flat[next_event->dest_sector_id];
 		if(dest->is_neighbour || SECTOR->id == next_event->dest_sector_id){
 			update_sphere_position(sphere, next_event->time); // received sphere data has old pos
 			add_sphere_to_sector(dest, sphere);
@@ -98,8 +93,8 @@ static void apply_event(){
 	} else if(next_event->type == COL_TWO_SPHERES_PARTIAL_CROSSING){
 		struct sphere_s *s1;
 		struct sphere_s *s2;
-		struct sector_s *source = &grid->sectors_flat[next_event->source_sector_id];
-		struct sector_s *dest = &grid->sectors_flat[next_event->dest_sector_id];
+		struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
+		struct sector_s *dest = &sim_data.sectors_flat[next_event->dest_sector_id];
 		// If source and dest are neighbours to the local or are the local node then bounce both spheres.
 		// If one of them but not the other is a neighbour or the local node then bounce the relevant sphere
 		// using the copied data in next_event.
@@ -158,18 +153,16 @@ double update_grid() {
 	// Final event may take place after time limit, so cut it short if so
 	find_event_times_for_sector(SECTOR);
 	reduce_events();
-	if (grid->time_limit - grid->elapsed_time < next_event->time) {
-		next_event->time = grid->time_limit - grid->elapsed_time;
+	if (sim_data.time_limit - sim_data.elapsed_time < next_event->time) {
+		next_event->time = sim_data.time_limit - sim_data.elapsed_time;
 		if(GRID_RANK == 0){
 			MPI_Status s;
-			MPI_File_write(MPI_OUTPUT_FILE, &grid->time_limit, 1, MPI_DOUBLE, &s);
+			MPI_File_write(MPI_OUTPUT_FILE, &sim_data.time_limit, 1, MPI_DOUBLE, &s);
 		}
 	} else {
 		update_spheres();
 		apply_event();
 	}
-	//Lastly move forward to the next event
-
 	//printf("%d: I have %ld spheres\n", GRID_RANK, SECTOR->num_spheres);
 	sanity_check();
 	return next_event->time;

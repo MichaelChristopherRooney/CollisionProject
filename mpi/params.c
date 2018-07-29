@@ -1,23 +1,25 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 
+#include "simulation.h"
 #include "mpi_vars.h"
 #include "params.h"
 #include "sector.h"
 
 static void set_default_params(){
-	SECTOR_DIMS[0] = 1;
-	SECTOR_DIMS[1] = 1;
-	SECTOR_DIMS[2] = 1;
+	sim_data.sector_dims[0] = 1;
+	sim_data.sector_dims[1] = 1;
+	sim_data.sector_dims[2] = 1;
 	initial_state_file = NULL;
 	final_state_file = NULL;
 	compare_file = NULL;
 	output_file = NULL;
 }
 
-static void check_slice_arg(int slice, char axis){
+static void check_dim_arg(int slice, char axis){
 	if(slice <= 0){
 		if(WORLD_RANK == 0){
 			printf("Error: %c axis needs at least 1 slice.\n", axis);
@@ -31,9 +33,9 @@ static void print_config(){
 	if(WORLD_RANK != 0){
 		return;
 	}
-	printf("Number of x slices: %d\n", SECTOR_DIMS[0]);
-	printf("Number of y slices: %d\n", SECTOR_DIMS[1]);
-	printf("Number of z slices: %d\n", SECTOR_DIMS[2]);
+	printf("Number of x slices: %d\n", sim_data.sector_dims[0]);
+	printf("Number of y slices: %d\n", sim_data.sector_dims[1]);
+	printf("Number of z slices: %d\n", sim_data.sector_dims[2]);
 	printf("Initial state file: %s\n", initial_state_file);
 	printf("Output file: %s\n", output_file);
 	if(final_state_file != NULL){
@@ -49,10 +51,10 @@ static void print_config(){
 }
 
 static void validate_args(){
-	check_slice_arg(SECTOR_DIMS[X_AXIS], 'x');
-	check_slice_arg(SECTOR_DIMS[Y_AXIS], 'y');
-	check_slice_arg(SECTOR_DIMS[Z_AXIS], 'z');
-	if(SECTOR_DIMS[X_AXIS] * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS] != NUM_NODES){
+	check_dim_arg(sim_data.sector_dims[X_AXIS], 'x');
+	check_dim_arg(sim_data.sector_dims[Y_AXIS], 'y');
+	check_dim_arg(sim_data.sector_dims[Z_AXIS], 'z');
+	if(sim_data.sector_dims[X_AXIS] * sim_data.sector_dims[Y_AXIS] * sim_data.sector_dims[Z_AXIS] != NUM_NODES){
 		if(WORLD_RANK == 0){
 			printf("Error: number of sectors should match number of nodes\n");
 		}
@@ -94,13 +96,13 @@ void parse_args(int argc, char *argv[]) {
 	while((c = getopt(argc, argv, "i:c:f:ho:x:y:z:")) != -1) {
 		switch(c) {
 		case 'x':
-			SECTOR_DIMS[X_AXIS] = atoi(optarg);
+			sim_data.sector_dims[X_AXIS] = atoi(optarg);
 			break;
 		case 'y':
-			SECTOR_DIMS[Y_AXIS] = atoi(optarg);
+			sim_data.sector_dims[Y_AXIS] = atoi(optarg);
 			break;
 		case 'z':
-			SECTOR_DIMS[Z_AXIS] = atoi(optarg);
+			sim_data.sector_dims[Z_AXIS] = atoi(optarg);
 			break;
 		case 'f':
 			final_state_file = optarg;
