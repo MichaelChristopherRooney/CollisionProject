@@ -75,10 +75,9 @@ void simulation_run() {
 	while (sim_data.elapsed_time < sim_data.time_limit) {	
 		sim_data.elapsed_time += update_grid();
 		MPI_Barrier(GRID_COMM);
-		//save_sphere_state_to_file(i, sim_data.elapsed_time);
 		sim_data.iteration_number++;
 	}
-	//write_final_state();
+	save_final_state_file();
 	//compare_results();
 }
 

@@ -13,3 +13,4 @@ void write_iteration_data(struct sphere_s *s1, struct sphere_s *s2);
 void seek_one_sphere();
 void seek_two_spheres();
 void init_output_file();
+void save_final_state_file();

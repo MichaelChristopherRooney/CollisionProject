@@ -174,6 +174,7 @@ double update_grid() {
 			MPI_Status s;
 			MPI_File_write(MPI_OUTPUT_FILE, &sim_data.time_limit, 1, MPI_DOUBLE, &s);
 		}
+		update_spheres();
 	} else {
 		update_spheres();
 		apply_event();

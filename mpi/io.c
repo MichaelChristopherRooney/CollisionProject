@@ -119,3 +119,27 @@ void init_output_file() {
 	MPI_File_open(MPI_COMM_WORLD, output_file, MPI_MODE_RDWR | MPI_MODE_CREATE, MPI_INFO_NULL, &MPI_OUTPUT_FILE);
 }
 
+static const int64_t final_file_sphere_size = sizeof(double) * 6;
+
+void save_final_state_file(){
+	if(final_state_file == NULL){
+		return;
+	}
+	MPI_Status stat;
+	MPI_File_open(MPI_COMM_WORLD, final_state_file, MPI_MODE_RDWR | MPI_MODE_CREATE, MPI_INFO_NULL, &MPI_FINAL_FILE);
+	if(GRID_RANK == 0){
+		MPI_File_write(MPI_FINAL_FILE, &sim_data.total_num_spheres, 1, MPI_LONG_LONG, &stat);
+	}
+	MPI_Barrier(GRID_COMM);
+	int i;
+	for(i = 0; i < SECTOR->num_spheres; i++){
+		struct sphere_s *s = &SECTOR->spheres[i];
+		int64_t offset = (final_file_sphere_size * s->id) + sizeof(int64_t);
+		MPI_File_seek(MPI_FINAL_FILE, offset, MPI_SEEK_SET);
+		MPI_File_write(MPI_FINAL_FILE, &s->vel, 3, MPI_DOUBLE, &stat);
+		MPI_File_write(MPI_FINAL_FILE, &s->pos, 3, MPI_DOUBLE, &stat);
+		
+	}
+}
+
+
