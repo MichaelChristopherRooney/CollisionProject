@@ -180,13 +180,18 @@ static void set_neighbours(){
 		s->num_spheres_ptr = malloc(sizeof(int64_t)); // todo: file backed memory
 		s->num_spheres = 0;
 		s->max_spheres = 2000;
-		s->spheres = calloc(s->max_spheres, sizeof(struct sphere_s));
 		if(strcmp(s->hostname, SECTOR->hostname) == 0){
 			s->is_local_neighbour = true;
 			s->size_fd = open(s->size_filename, O_CREAT | O_RDWR, S_IRWXU);
 			s->spheres_fd = open(s->spheres_filename, O_CREAT | O_RDWR, S_IRWXU);
+			s->spheres = mmap(NULL, s->max_spheres * sizeof(struct sphere_s), PROT_READ | PROT_WRITE, MAP_SHARED, s->spheres_fd, 0);
+			if(s->spheres == NULL || s->spheres == (void *) -1){
+				printf("%s\n", strerror(errno));
+			}
 			//printf("%d, %d: fd: %d, sphere filename: %s\n", GRID_RANK, i, s->spheres_fd, s->spheres_filename);
 			//printf("%d, %d: fd: %d, size filename: %s\n", GRID_RANK, i, s->size_fd, s->size_filename);
+		} else {
+			s->spheres = calloc(s->max_spheres, sizeof(struct sphere_s));
 		}
 		NEIGHBOUR_IDS[NUM_NEIGHBOURS] = s->id;
 		NUM_NEIGHBOURS++;
@@ -262,6 +267,7 @@ void init_sectors(){
 	alloc_sector_array();
 	init_sector_dims();
 	init_my_sector();
+	MPI_Barrier(GRID_COMM);
 	broadcast_hostnames();
 	set_neighbours();
 }

@@ -93,10 +93,12 @@ void simulation_cleanup() {
 			close(s->size_fd);
 			close(s->spheres_fd);
 		}
-		if(s->is_neighbour){
-			free(s->spheres);
-			close(s->size_fd);
+		if(s->is_local_neighbour){
+			munmap(s->spheres, s->max_spheres * sizeof(struct sphere_s));
+			//close(s->size_fd);
 			close(s->spheres_fd);
+		} else if(s->is_neighbour){
+			free(s->spheres);
 		}
 	}
 	free(sim_data.sectors[0][0]);

@@ -36,6 +36,9 @@ static void update_spheres() {
 	}
 	for(i = 0; i < NUM_NEIGHBOURS; i++){
 		struct sector_s *sector = &sim_data.sectors_flat[NEIGHBOUR_IDS[i]];
+		if(sector->is_local_neighbour){
+			continue;
+		}
 		for(j = 0; j < sector->num_spheres; j++){
 			struct sphere_s *s = &(sector->spheres[j]);
 			update_sphere_position(s, next_event->time);
@@ -50,7 +53,7 @@ static void update_spheres() {
 static void apply_event(){
 	if (next_event->type == COL_SPHERE_WITH_GRID) {
 		struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
-		if(source->is_neighbour || source->id == SECTOR->id){
+		if((source->is_neighbour && !source->is_local_neighbour) || source->id == SECTOR->id){
 			struct sphere_s *sphere = &source->spheres[next_event->sphere_1.sector_id];
 			sphere->vel.vals[event_details.grid_axis] *= -1.0;
 			if(source->id == SECTOR->id){
@@ -62,7 +65,7 @@ static void apply_event(){
 		}
 	} else if (next_event->type == COL_TWO_SPHERES) {
 		struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
-		if(source->is_neighbour || SECTOR->id == next_event->source_sector_id){
+		if((source->is_neighbour && !source->is_local_neighbour) || SECTOR->id == next_event->source_sector_id){
 			struct sphere_s *s1 = &source->spheres[next_event->sphere_1.sector_id];
 			struct sphere_s *s2 = &source->spheres[next_event->sphere_2.sector_id];
 			apply_bounce_between_spheres(s1, s2);
@@ -76,11 +79,15 @@ static void apply_event(){
 	} else if (next_event->type == COL_SPHERE_WITH_SECTOR) {
 		struct sphere_s *sphere = &next_event->sphere_1;
 		struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
-		if(source->is_neighbour || SECTOR->id == next_event->source_sector_id){
+		if(source->is_local_neighbour){
+			source->num_spheres--;
+		} else if(source->is_neighbour || SECTOR->id == next_event->source_sector_id){
 			remove_sphere_from_sector(source, sphere);
 		}
 		struct sector_s *dest = &sim_data.sectors_flat[next_event->dest_sector_id];
-		if(dest->is_neighbour || SECTOR->id == next_event->dest_sector_id){
+		if(dest->is_local_neighbour){
+			dest->num_spheres++;
+		} else if(dest->is_neighbour || SECTOR->id == next_event->dest_sector_id){
 			update_sphere_position(sphere, next_event->time); // received sphere data has old pos
 			add_sphere_to_sector(dest, sphere);
 			if(dest->id == SECTOR->id){
@@ -91,8 +98,8 @@ static void apply_event(){
 			seek_one_sphere();
 		}
 	} else if(next_event->type == COL_TWO_SPHERES_PARTIAL_CROSSING){
-		struct sphere_s *s1;
-		struct sphere_s *s2;
+		struct sphere_s *s1 = NULL;
+		struct sphere_s *s2 = NULL;
 		struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
 		struct sector_s *dest = &sim_data.sectors_flat[next_event->dest_sector_id];
 		// If source and dest are neighbours to the local or are the local node then bounce both spheres.
@@ -100,17 +107,25 @@ static void apply_event(){
 		// using the copied data in next_event.
 		// This will overwrite the copy which is fine.
 		if((source->is_neighbour || SECTOR->id == next_event->source_sector_id) && (dest->is_neighbour || SECTOR->id == next_event->dest_sector_id)){			
-			s1 = &source->spheres[next_event->sphere_1.sector_id];
-			s2 = &dest->spheres[next_event->sphere_2.sector_id];
+			if(source->is_local_neighbour){
+				s1 = &next_event->sphere_1; // dummy
+			} else {
+				s1 = &source->spheres[next_event->sphere_1.sector_id]; // local copy
+			}
+			if(dest->is_local_neighbour){
+				s2 = &next_event->sphere_2; // dummy
+			} else {
+				s2 = &dest->spheres[next_event->sphere_2.sector_id]; // local copy
+			}
 			apply_bounce_between_spheres(s1, s2);
 			if(source->id == SECTOR->id){
 				write_iteration_data(s1, s2);
 			}
-		} else if(source->is_neighbour || SECTOR->id == next_event->source_sector_id){
+		} else if((source->is_neighbour && !source->is_local_neighbour) || SECTOR->id == next_event->source_sector_id){
 			s1 = &source->spheres[next_event->sphere_1.sector_id];
 			s2 = &next_event->sphere_2;
 			apply_bounce_between_spheres(s1, s2);
-		} else if(dest->is_neighbour || SECTOR->id == next_event->dest_sector_id){
+		} else if((dest->is_neighbour && !dest->is_local_neighbour) || SECTOR->id == next_event->dest_sector_id){
 			s1 = &next_event->sphere_1;
 			s2 = &dest->spheres[next_event->sphere_2.sector_id];
 			apply_bounce_between_spheres(s1, s2);

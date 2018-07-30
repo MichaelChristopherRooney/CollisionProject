@@ -38,8 +38,12 @@ void load_spheres(FILE *initial_state_fp) {
 		write_sphere_initial_state(&in);
 		struct sector_s *temp = find_sector_that_sphere_belongs_to(&in);
 		if(temp == SECTOR || temp->is_neighbour){
-			// want to copy it if it belongs to local node or a neighbour
-			add_sphere_to_sector(temp, &in);
+			if(temp->is_local_neighbour){
+				temp->num_spheres++;
+			} else {
+				// want to copy it if it belongs to local node or a neighbour
+				add_sphere_to_sector(temp, &in);
+			}
 		}
 	}
 	write_initial_iteration_stats();
