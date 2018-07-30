@@ -1,6 +1,8 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
 #include "event.h"
 #include "grid.h"
@@ -81,12 +83,20 @@ void simulation_run() {
 }
 
 void simulation_cleanup() {
-	free(SECTOR->spheres);
 	int i;
 	for(i = 0; i < sim_data.num_sectors; i++){
 		struct sector_s *s = &sim_data.sectors_flat[i];
+		if(SECTOR == s){
+			munmap(s->spheres, s->max_spheres * sizeof(struct sphere_s));
+			unlink(s->spheres_filename);
+			unlink(s->size_filename);
+			close(s->size_fd);
+			close(s->spheres_fd);
+		}
 		if(s->is_neighbour){
 			free(s->spheres);
+			close(s->size_fd);
+			close(s->spheres_fd);
 		}
 	}
 	free(sim_data.sectors[0][0]);
