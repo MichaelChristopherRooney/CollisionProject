@@ -21,6 +21,8 @@ void init_grid() {
 	write_grid_dimms();
 	init_sectors();
 	load_spheres(initial_state_fp);
+	MPI_Barrier(MPI_COMM_WORLD); // barrier to ensure ftruncate has been called before next step
+	check_for_resizing_after_sphere_loading();
 	init_events();
 	fclose(initial_state_fp);
 }

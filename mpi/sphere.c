@@ -39,7 +39,10 @@ void load_spheres(FILE *initial_state_fp) {
 		struct sector_s *temp = find_sector_that_sphere_belongs_to(&in);
 		if(temp == SECTOR || temp->is_neighbour){
 			if(temp->is_local_neighbour){
-				temp->num_spheres++;
+				// sphere array will be resized later if needed
+				// for now make sure the largest radius is tracked though
+				temp->num_spheres++; // will check for resizing later
+				set_largest_radius(temp, &in);
 			} else {
 				// want to copy it if it belongs to local node or a neighbour
 				add_sphere_to_sector(temp, &in);

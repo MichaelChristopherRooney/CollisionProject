@@ -64,7 +64,7 @@ void simulation_init(int argc, char *argv[], double time_limit) {
 	init_output_file();
 	init_grid();
 	sim_data.elapsed_time = 0.0;
-	sim_data.time_limit = time_limit;
+	sim_data.time_limit = 1.6;
 	sim_data.num_two_sphere_collisions = 0;
 	sim_data.num_grid_collisions = 0;
 	sim_data.num_sector_transfers = 0;
@@ -88,11 +88,8 @@ void simulation_cleanup() {
 		if(SECTOR == s){
 			munmap(s->spheres, s->max_spheres * sizeof(struct sphere_s));
 			unlink(s->spheres_filename);
-			unlink(s->size_filename);
-			close(s->size_fd);
 			close(s->spheres_fd);
-		}
-		if(s->is_local_neighbour){
+		} else if(s->is_local_neighbour){
 			munmap(s->spheres, s->max_spheres * sizeof(struct sphere_s));
 			//close(s->size_fd);
 			close(s->spheres_fd);

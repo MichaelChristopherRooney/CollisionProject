@@ -1,17 +1,44 @@
+// Needs to be first due to include order
+#define _GNU_SOURCE 1
+#include <unistd.h>
+#include <sys/mman.h>
+
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
 
 #include "event.h"
 #include "mpi_vars.h"
 #include "simulation.h"
 #include "sector.h"
+
+// During sphere loading any local neighbours will resize their sphere array if
+// needed.
+// Here the local view of this shared memory if resized if needed.
+// By this point the process responible for the sector will have already called
+// ftruncate
+void check_for_resizing_after_sphere_loading(){
+	int i;
+	for(i = 0; i < NUM_NEIGHBOURS; i++){
+		int s_id = NEIGHBOUR_IDS[i];
+		struct sector_s *s = &sim_data.sectors_flat[s_id];
+		if(s->is_local_neighbour && s->num_spheres >= s->max_spheres){
+			while(s->max_spheres < s->num_spheres){
+				s->max_spheres *= 2;
+			}
+			int64_t old_size = SECTOR_DEFAULT_MAX_SPHERES * sizeof(struct sphere_s);
+			int64_t new_size = s->max_spheres  * sizeof(struct sphere_s);
+			s->spheres = mremap(s->spheres, old_size, new_size, MREMAP_MAYMOVE);
+			if(s->spheres == NULL || s->spheres == (void *) -1){
+				printf("%s\n", strerror(errno));
+			}
+		}
+	}
+}
 
 // Used when iterating over axes and nned to access sector adjacent on the current axis.
 const int SECTOR_MODIFIERS[2][3][3] = {
@@ -27,7 +54,7 @@ const int SECTOR_MODIFIERS[2][3][3] = {
 	}
 };
 
-static void set_largest_radius_after_insertion(struct sector_s *sector, const struct sphere_s *sphere) {
+void set_largest_radius(struct sector_s *sector, const struct sphere_s *sphere) {
 	if (sphere->radius == sector->largest_radius) {
 		sector->largest_radius_shared = true; // Quicker to just set it rather than check if already set
 		sector->num_largest_radius_shared++;
@@ -39,13 +66,22 @@ static void set_largest_radius_after_insertion(struct sector_s *sector, const st
 void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere) {
 	if (sector->num_spheres >= sector->max_spheres) {
 		printf("!!! need to resize\n");
+		int64_t old_size = sector->max_spheres * sizeof(struct sphere_s);
+		int64_t new_size = (sector->max_spheres * 2) * sizeof(struct sphere_s);
+		int res = ftruncate(SECTOR->spheres_fd, new_size);
+		if(res == -1){
+			printf("Error calling ftruncate: %s\n", strerror(errno));
+		}
+		sector->spheres = mremap(sector->spheres, old_size, new_size, MREMAP_MAYMOVE);
+		if(sector->spheres == NULL || sector->spheres == (void *) -1){
+			printf("%s\n", strerror(errno));
+		}
 		sector->max_spheres = sector->max_spheres * 2;
-		sector->spheres = realloc(sector->spheres, sector->max_spheres * sizeof(struct sphere_s));
 	}
 	sector->spheres[sector->num_spheres] = *sphere;
 	sector->spheres[sector->num_spheres].sector_id = sector->num_spheres;
 	sector->num_spheres++;
-	set_largest_radius_after_insertion(sector, sphere);
+	set_largest_radius(sector, sphere);
 }
 
 static void set_largest_radius_after_removal(struct sector_s *sector, const struct sphere_s *sphere) {
@@ -134,10 +170,7 @@ struct sector_s *find_sector_that_sphere_belongs_to(struct sphere_s *sphere){
 
 static void init_local_files_for_file_backed_memory(){
 	SECTOR->spheres_filename = calloc(SECTOR_MAX_FILENAME_LENGTH, sizeof(char));
-	SECTOR->size_filename = calloc(SECTOR_MAX_FILENAME_LENGTH, sizeof(char));
-	sprintf(SECTOR->size_filename, "%d-size.bin", SECTOR->id);
 	sprintf(SECTOR->spheres_filename, "%d-sphere.bin", SECTOR->id);
-	SECTOR->size_fd = open(SECTOR->size_filename, O_CREAT | O_RDWR, S_IRWXU);
 	SECTOR->spheres_fd = open(SECTOR->spheres_filename, O_CREAT | O_RDWR, S_IRWXU);
 	int res = ftruncate(SECTOR->spheres_fd, SECTOR_DEFAULT_MAX_SPHERES * sizeof(struct sphere_s));
 	if(res == -1){
@@ -186,7 +219,6 @@ static void set_sectors(){
 	char recv_hn[MAX_HOSTNAME_LENGTH];
 	char send_hn[MAX_HOSTNAME_LENGTH];
 	char spheres_fn_recv[SECTOR_MAX_FILENAME_LENGTH];
-	char size_fn_recv[SECTOR_MAX_FILENAME_LENGTH];
 	gethostname(send_hn, MAX_HOSTNAME_LENGTH);
 	for (i = 0; i < sim_data.sector_dims[X_AXIS]; i++) {
 		for (j = 0; j < sim_data.sector_dims[Y_AXIS]; j++) {
@@ -202,7 +234,6 @@ static void set_sectors(){
 				s->end.z = s->start.z + z_inc;
 				if(s == SECTOR){
 					MPI_Bcast(send_hn, MAX_HOSTNAME_LENGTH, MPI_CHAR, id, GRID_COMM);
-					MPI_Bcast(SECTOR->size_filename, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
 					MPI_Bcast(SECTOR->spheres_filename, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
 					SECTOR->spheres = mmap(NULL, SECTOR->max_spheres * sizeof(struct sphere_s), PROT_READ | PROT_WRITE, MAP_SHARED, SECTOR->spheres_fd, 0);
 					if(SECTOR->spheres == NULL || SECTOR->spheres == (void *) -1){
@@ -214,7 +245,6 @@ static void set_sectors(){
 					s->pos.y = j;
 					s->pos.z = k;
 					MPI_Bcast(recv_hn, MAX_HOSTNAME_LENGTH, MPI_CHAR, id, GRID_COMM);
-					MPI_Bcast(size_fn_recv, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
 					MPI_Bcast(spheres_fn_recv, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
 					if(check_is_neighbour(s)){
 						s->is_neighbour = true;
@@ -222,7 +252,6 @@ static void set_sectors(){
 						NUM_NEIGHBOURS++;
 						if(strcmp(recv_hn, send_hn) == 0){
 							s->is_local_neighbour = true;
-							s->size_fd = open(size_fn_recv, O_CREAT | O_RDWR, S_IRWXU);
 							s->spheres_fd = open(spheres_fn_recv, O_CREAT | O_RDWR, S_IRWXU);
 							s->spheres = mmap(NULL, s->max_spheres * sizeof(struct sphere_s), PROT_READ | PROT_WRITE, MAP_SHARED, s->spheres_fd, 0);
 							if(s->spheres == NULL || s->spheres == (void *) -1){
