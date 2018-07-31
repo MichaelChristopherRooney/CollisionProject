@@ -28,6 +28,9 @@ void init_grid() {
 // This updates the positions and velocities of each sphere once the next
 // event and the time it occurs are known.
 // First update own spheres, then update local copy of neighbour's spheres
+// Don't update neighbour's spheres if they are shared via shared memory.
+// Also update received copies of sphere(s) involved in next event.
+// As they are copies the same sphere is not updated twice.
 static void update_spheres() {
 	int i, j;
 	for (i = 0; i < SECTOR->num_spheres; i++) {
@@ -44,6 +47,8 @@ static void update_spheres() {
 			update_sphere_position(s, next_event->time);
 		}
 	}
+	update_sphere_position(&next_event->sphere_1, next_event->time);
+	update_sphere_position(&next_event->sphere_2, next_event->time);
 }
 
 // Apply events and write changes to file.

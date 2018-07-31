@@ -218,6 +218,8 @@ static void set_sectors(){
 					MPI_Bcast(spheres_fn_recv, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
 					if(check_is_neighbour(s)){
 						s->is_neighbour = true;
+						NEIGHBOUR_IDS[NUM_NEIGHBOURS] = s->id;
+						NUM_NEIGHBOURS++;
 						if(strcmp(recv_hn, send_hn) == 0){
 							s->is_local_neighbour = true;
 							s->size_fd = open(size_fn_recv, O_CREAT | O_RDWR, S_IRWXU);

@@ -381,11 +381,10 @@ static void find_partial_crossing_events_for_sector(const struct sector_s *secto
 	int i;
 	for (i = 0; i < sector->num_spheres; i++) {
 		const struct sphere_s *sphere = sector->spheres[i];
-		const union vector_3d new_pos = {
-			.x = sphere->pos.x + (sphere->vel.x * event_details.time),
-			.y = sphere->pos.y + (sphere->vel.y * event_details.time),
-			.z = sphere->pos.z + (sphere->vel.z * event_details.time)
-		};
+		union vector_3d new_pos;
+		new_pos.x = sphere->pos.x + (sphere->vel.x * event_details.time);
+		new_pos.y = sphere->pos.y + (sphere->vel.y * event_details.time);
+		new_pos.z = sphere->pos.z + (sphere->vel.z * event_details.time);
 		find_partial_crossing_events_for_sector_directly_adjacent(sphere, sector, new_pos);
 		find_partial_crossing_events_for_sector_diagonally_adjacent(sphere, sector, new_pos);
 		find_partial_crossing_events_for_sector_diagonally_adjacent_three_axes(sphere, sector, new_pos);

@@ -130,9 +130,10 @@ static void sanity_check() {
 	if (grid->uses_sectors == false) {
 		return;
 	}
-	for (int x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
-		for (int y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
-			for (int z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
+	int x, y, z;
+	for (x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
+		for (y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
+			for (z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
 				struct sector_s *s = &grid->sectors[x][y][z];
 				int i;
 				for (i = 0; i < s->num_spheres; i++) {
