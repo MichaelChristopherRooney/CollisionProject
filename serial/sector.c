@@ -395,9 +395,10 @@ static void find_partial_crossing_events_for_sector(const struct sector_s *secto
 // If needed find any sphere on sphere collisions that occur between spheres
 // that partially cross sector boundaries. 
 void find_partial_crossing_events_for_all_sectors() {
-	for (int x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
-		for (int y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
-			for (int z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
+	int x, y, z;
+	for (x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
+		for (y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
+			for (z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
 				find_partial_crossing_events_for_sector(&grid->sectors[x][y][z]);
 			}
 		}
@@ -464,9 +465,10 @@ static void find_event_times_for_sector(const struct sector_s *sector) {
 
 // Finds event times for each sector, excluding partial crossings
 void find_event_times_for_all_sectors() {
-	for (int x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
-		for (int y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
-			for (int z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
+	int x, y, z;
+	for (x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
+		for (y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
+			for (z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
 				find_event_times_for_sector(&grid->sectors[x][y][z]);
 			}
 		}

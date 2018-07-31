@@ -52,11 +52,10 @@ void load_spheres(FILE *initial_state_fp) {
 // For details on how this works see:
 // https://www.gamasutra.com/view/feature/131424/pool_hall_lessons_fast_accurate_.php?page=3
 void apply_bounce_between_spheres(struct sphere_s *s1, struct sphere_s *s2) {
-	union vector_3d rel_pos = { 
-		.x = s1->pos.x - s2->pos.x, 
-		.y = s1->pos.y - s2->pos.y, 
-		.z = s1->pos.z - s2->pos.z 
-	};
+	union vector_3d rel_pos;
+	rel_pos.x = s1->pos.x - s2->pos.x; 
+	rel_pos.y = s1->pos.y - s2->pos.y; 
+	rel_pos.z = s1->pos.z - s2->pos.z;
 	normalise_vector_3d(&rel_pos);
 	double dp1 = get_vector_3d_dot_product(&rel_pos, &s1->vel);
 	double dp2 = get_vector_3d_dot_product(&rel_pos, &s2->vel);

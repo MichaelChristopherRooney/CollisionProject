@@ -121,7 +121,6 @@ static void apply_event(){
 				write_iteration_data(s1, s2);
 			}
 		} else if((source->is_neighbour && !source->is_local_neighbour) || SECTOR->id == next_event->source_sector_id){
-		
 			s1 = &source->spheres[next_event->sphere_1.sector_id];
 			s2 = &next_event->sphere_2;
 			apply_bounce_between_spheres(s1, s2);

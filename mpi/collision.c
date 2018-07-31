@@ -28,16 +28,14 @@
 // Trigonometry is used to figure out where the spheres collide.
 // TODO: better comments on trig part
 static double find_collision_time_spheres(const struct sphere_s *s1, const struct sphere_s *s2) {
-	union vector_3d rel_vel = { 
-		.x = s1->vel.x - s2->vel.x, 
-		.y = s1->vel.y - s2->vel.y, 
-		.z = s1->vel.z - s2->vel.z 
-	};
-	union vector_3d rel_pos = { 
-		.x = s2->pos.x - s1->pos.x, 
-		.y = s2->pos.y - s1->pos.y, 
-		.z = s2->pos.z - s1->pos.z 
-	};
+	union vector_3d rel_vel;
+	rel_vel.x = s1->vel.x - s2->vel.x; 
+	rel_vel.y = s1->vel.y - s2->vel.y; 
+	rel_vel.z = s1->vel.z - s2->vel.z;
+	union vector_3d rel_pos;
+	rel_pos.x = s2->pos.x - s1->pos.x; 
+	rel_pos.y = s2->pos.y - s1->pos.y; 
+	rel_pos.z = s2->pos.z - s1->pos.z;
 	double dp = get_vector_3d_dot_product(&rel_vel, &rel_pos);
 	double vel_vec_mag = get_vector_3d_magnitude(&rel_vel);
 	double pos_vec_mag = get_vector_3d_magnitude(&rel_pos);
@@ -375,11 +373,10 @@ static void find_partial_crossing_events_for_sector(const struct sector_s *secto
 	int i;
 	for (i = 0; i < sector->num_spheres; i++) {
 		const struct sphere_s *sphere = &sector->spheres[i];
-		const union vector_3d new_pos = {
-			.x = sphere->pos.x + (sphere->vel.x * event_details.time),
-			.y = sphere->pos.y + (sphere->vel.y * event_details.time),
-			.z = sphere->pos.z + (sphere->vel.z * event_details.time)
-		};
+		union vector_3d new_pos;
+		new_pos.x = sphere->pos.x + (sphere->vel.x * event_details.time);
+		new_pos.y = sphere->pos.y + (sphere->vel.y * event_details.time);
+		new_pos.z = sphere->pos.z + (sphere->vel.z * event_details.time);
 		find_partial_crossing_events_for_sector_directly_adjacent(sphere, sector, new_pos);
 		find_partial_crossing_events_for_sector_diagonally_adjacent(sphere, sector, new_pos);
 		find_partial_crossing_events_for_sector_diagonally_adjacent_three_axes(sphere, sector, new_pos);

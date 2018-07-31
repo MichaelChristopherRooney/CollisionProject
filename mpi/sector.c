@@ -229,6 +229,7 @@ static void set_sectors(){
 						} else {
 							s->spheres = calloc(s->max_spheres, sizeof(struct sphere_s));
 						}
+					}
 				}
 				id++;	
 			}
