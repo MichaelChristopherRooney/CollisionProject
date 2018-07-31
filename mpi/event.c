@@ -44,6 +44,11 @@ void reduce_events(){
 		}
 	}
 	next_event = &event_buffer[GRID_RANK_NEXT_EVENT];
+	// move received spheres to their new position
+	// note: this only updates these received copies, any other local copies
+	// are not updated here, but will be updated later if needed
+	update_sphere_position(&next_event->sphere_1, next_event->time);
+	update_sphere_position(&next_event->sphere_2, next_event->time);
 	if(GRID_RANK == 0){
 		//printf("Soonest time is %f from rank %d\n", next_event->time, GRID_RANK_NEXT_EVENT);
 	}

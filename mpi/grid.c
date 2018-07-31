@@ -88,7 +88,6 @@ static void apply_event(){
 		if(dest->is_local_neighbour){
 			dest->num_spheres++;
 		} else if(dest->is_neighbour || SECTOR->id == next_event->dest_sector_id){
-			update_sphere_position(sphere, next_event->time); // received sphere data has old pos
 			add_sphere_to_sector(dest, sphere);
 			if(dest->id == SECTOR->id){
 				write_iteration_data(sphere, NULL);
@@ -106,7 +105,7 @@ static void apply_event(){
 		// If one of them but not the other is a neighbour or the local node then bounce the relevant sphere
 		// using the copied data in next_event.
 		// This will overwrite the copy which is fine.
-		if((source->is_neighbour || SECTOR->id == next_event->source_sector_id) && (dest->is_neighbour || SECTOR->id == next_event->dest_sector_id)){			
+		if((source->is_neighbour || SECTOR->id == next_event->source_sector_id) && (dest->is_neighbour || SECTOR->id == next_event->dest_sector_id)){		
 			if(source->is_local_neighbour){
 				s1 = &next_event->sphere_1; // dummy
 			} else {
@@ -122,6 +121,7 @@ static void apply_event(){
 				write_iteration_data(s1, s2);
 			}
 		} else if((source->is_neighbour && !source->is_local_neighbour) || SECTOR->id == next_event->source_sector_id){
+		
 			s1 = &source->spheres[next_event->sphere_1.sector_id];
 			s2 = &next_event->sphere_2;
 			apply_bounce_between_spheres(s1, s2);

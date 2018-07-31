@@ -167,10 +167,17 @@ static void alloc_sector_array(){
 	}
 }
 
-static void set_sectors(){
+static void set_local_sector(){
 	SECTOR = &sim_data.sectors[COORDS[X_AXIS]][COORDS[Y_AXIS]][COORDS[Z_AXIS]];
 	SECTOR->id = GRID_RANK;
+	SECTOR->pos.x = COORDS[X_AXIS];
+	SECTOR->pos.y = COORDS[Y_AXIS];
+	SECTOR->pos.z = COORDS[Z_AXIS];
 	init_local_files_for_file_backed_memory();
+}
+
+static void set_sectors(){
+	set_local_sector();
 	double x_inc = sim_data.grid_size.x / sim_data.sector_dims[X_AXIS];
 	double y_inc = sim_data.grid_size.y / sim_data.sector_dims[Y_AXIS];
 	double z_inc = sim_data.grid_size.z / sim_data.sector_dims[Z_AXIS];
@@ -193,10 +200,6 @@ static void set_sectors(){
 				s->end.y = s->start.y + y_inc;
 				s->start.z = z_inc * k;
 				s->end.z = s->start.z + z_inc;
-				s->pos.x = i;
-				s->pos.y = j;
-				s->pos.z = k;
-				s->id = id;
 				if(s == SECTOR){
 					MPI_Bcast(send_hn, MAX_HOSTNAME_LENGTH, MPI_CHAR, id, GRID_COMM);
 					MPI_Bcast(SECTOR->size_filename, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
@@ -206,6 +209,10 @@ static void set_sectors(){
 						printf("%s\n", strerror(errno));
 					}
 				} else {
+					s->id = id;
+					s->pos.x = i;
+					s->pos.y = j;
+					s->pos.z = k;
 					MPI_Bcast(recv_hn, MAX_HOSTNAME_LENGTH, MPI_CHAR, id, GRID_COMM);
 					MPI_Bcast(size_fn_recv, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
 					MPI_Bcast(spheres_fn_recv, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
@@ -222,7 +229,6 @@ static void set_sectors(){
 						} else {
 							s->spheres = calloc(s->max_spheres, sizeof(struct sphere_s));
 						}
-					}
 				}
 				id++;	
 			}
