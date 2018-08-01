@@ -64,7 +64,7 @@ void simulation_init(int argc, char *argv[], double time_limit) {
 	init_output_file();
 	init_grid();
 	sim_data.elapsed_time = 0.0;
-	sim_data.time_limit = 1.6;
+	sim_data.time_limit = time_limit;
 	sim_data.num_two_sphere_collisions = 0;
 	sim_data.num_grid_collisions = 0;
 	sim_data.num_sector_transfers = 0;

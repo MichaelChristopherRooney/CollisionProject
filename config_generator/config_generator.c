@@ -81,29 +81,29 @@ static void generate_4000(){
 	fclose(fp);
 }
 
-// Generates 80000 spheres placed in lines in a 1000x1000x1000 grid.
+// Generates 10000 spheres placed in lines in a 1000x1000x1000 grid.
 // Each sphere has a random velocity.
-static void generate_80000(){
+static void generate_10000(){
 	count = 0;
 	srand(123);
-	fp = fopen("80000.spheres", "wb");
+	fp = fopen("10000.spheres", "wb");
 	double grid_size = 1000.0;
 	fwrite(&grid_size, sizeof(double), 1, fp); // x
 	fwrite(&grid_size, sizeof(double), 1, fp); // y
 	fwrite(&grid_size, sizeof(double), 1, fp); // z
-	int64_t num_spheres = 80000;
+	int64_t num_spheres = 10000;
 	fwrite(&num_spheres, sizeof(int64_t), 1, fp);
 	int i, j;
 	double y, z;
 	z = 10.0;
-	for(i = 0; i < 8; i++){
+	for(i = 0; i < 10; i++){
 		y = 10.0;
 		for(j = 0; j < 20; j++){
-			create_spheres(250, 10.0, y, z, 3.5, 0.0, 0.0);
-			create_spheres(250, 10.0, 500.0 + y, z, 3.5, 0.0, 0.0);
-			y += 10;
+			create_spheres(250, 10.0, y, z, 3.95, 0.0, 0.0);
+			create_spheres(250, 10.0, 500.0 + y, z, 3.95, 0.0, 0.0);
+			y += 10.0;
 		}
-		z += 10;
+		z += 10.0;
 	}
 	fclose(fp);
 }
@@ -196,7 +196,7 @@ static void generate_three_axis_crossing_test(){
 // This will generate some inital configs used by the collision simulator.
 int main(void){
 	generate_4000();
-	generate_80000();
+	generate_10000();
 	generate_one_axis_crossing_test();
 	generate_two_axis_crossing_test();	
 	generate_three_axis_crossing_test();

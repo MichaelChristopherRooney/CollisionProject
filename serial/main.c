@@ -14,7 +14,7 @@ void simulation_run();
 void simulation_cleanup();
 
 static void run() {
-	simulation_init(1.6);
+	simulation_init(10.0);
 	clock_t start = clock();
 	simulation_run();
 	clock_t end = clock();
