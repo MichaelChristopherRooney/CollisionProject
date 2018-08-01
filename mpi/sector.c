@@ -171,6 +171,7 @@ struct sector_s *find_sector_that_sphere_belongs_to(struct sphere_s *sphere){
 static void init_local_files_for_file_backed_memory(){
 	SECTOR->spheres_filename = calloc(SECTOR_MAX_FILENAME_LENGTH, sizeof(char));
 	sprintf(SECTOR->spheres_filename, "%d-sphere.bin", SECTOR->id);
+	unlink(SECTOR->spheres_filename); // delete any old version left from prior runs.
 	SECTOR->spheres_fd = open(SECTOR->spheres_filename, O_CREAT | O_RDWR, S_IRWXU);
 	int res = ftruncate(SECTOR->spheres_fd, SECTOR_DEFAULT_MAX_SPHERES * sizeof(struct sphere_s));
 	if(res == -1){

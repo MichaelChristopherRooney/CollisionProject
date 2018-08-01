@@ -41,7 +41,7 @@ static void print_config(){
 	if(final_state_file != NULL){
 		printf("Final state file: %s\n", final_state_file);
 	} else {
-		printf("Finale state file not set.\n");
+		printf("Final state file not set.\n");
 	}
 	if(compare_file != NULL){
 		printf("Compare file set to: %s\n", compare_file);

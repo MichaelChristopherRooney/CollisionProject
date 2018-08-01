@@ -51,6 +51,18 @@ static void compare_results() {
 }
 */
 
+// Old output or final state files may be present if names are reused.
+// This has been causing issues so delete them here.
+// Note: files for file backed memory for each sector are deleted later.
+static void delete_old_files(){
+	if(GRID_RANK == 0){
+		if(final_state_file != NULL){
+			unlink(final_state_file);
+		}
+		unlink(output_file);
+	}
+	MPI_Barrier(GRID_COMM);
+}
 
 void simulation_init(int argc, char *argv[], double time_limit) {
 	MPI_Init(&argc, &argv);
@@ -61,6 +73,7 @@ void simulation_init(int argc, char *argv[], double time_limit) {
 	MPI_Comm_rank(GRID_COMM, &GRID_RANK);
 	MPI_Cart_coords(GRID_COMM, GRID_RANK, NUM_DIMS, COORDS);
 	sim_data.iteration_number = 0;
+	delete_old_files();
 	init_output_file();
 	init_grid();
 	sim_data.elapsed_time = 0.0;

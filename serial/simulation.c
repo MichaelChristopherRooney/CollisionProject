@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "grid.h"
 #include "params.h"
@@ -125,8 +126,18 @@ static void compare_results() {
 	printf("pos abs err: %.17g\n", max_pos_err);
 }
 
+// Old output or final state files may be present if names are reused.
+// This has been causing issues so delete them here.
+static void delete_old_files(){
+	if(final_state_file != NULL){
+		unlink(final_state_file);
+	}
+	unlink(output_file);
+}
+
 void simulation_init(double time_limit) {
 	init_grid(time_limit);
+	delete_old_files();
 	init_binary_file();
 }
 
