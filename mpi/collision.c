@@ -66,8 +66,8 @@ static double find_collision_time_spheres(const struct sphere_s *s1, const struc
 // If checking against the grid then bound_start will be 0.0, if checking against
 // a sector then it will be the sector's starting pos on the axis
 static double find_time_to_cross_boundary(const double bound_start, const double bound_end, const double axis_vel, const double axis_pos, const double radius) {
-	double dist = 0;
-	if (axis_vel > 0) {
+	double dist = 0.0;
+	if (axis_vel > 0.0) {
 		dist = bound_end - axis_pos - radius;
 	} else {
 		dist = bound_start - axis_pos + radius;
