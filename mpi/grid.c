@@ -84,16 +84,23 @@ static void apply_event(){
 			seek_two_spheres();
 		}
 	} else if (next_event->type == COL_SPHERE_WITH_SECTOR) {
+		// Only used if a local neighbour resizes and the local file backed memory needs to be remapped.
+		bool resize_needed = false; 
 		struct sphere_s *sphere = &next_event->sphere_1;
 		struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
 		if(source->is_local_neighbour){
 			source->num_spheres--;
+			set_largest_radius_after_removal(source, sphere);
 		} else if(source->is_neighbour || SECTOR->id == next_event->source_sector_id){
 			remove_sphere_from_sector(source, sphere);
 		}
 		struct sector_s *dest = &sim_data.sectors_flat[next_event->dest_sector_id];
 		if(dest->is_local_neighbour){
 			dest->num_spheres++;
+			set_largest_radius_after_insertion(dest, sphere);
+			if(dest->num_spheres >= dest->max_spheres){
+				resize_needed = true;
+			}
 		} else if(dest->is_neighbour || SECTOR->id == next_event->dest_sector_id){
 			add_sphere_to_sector(dest, sphere);
 			if(dest->id == SECTOR->id){
@@ -102,6 +109,12 @@ static void apply_event(){
 		}
 		if(dest->id != SECTOR->id){
 			seek_one_sphere();
+		}
+		MPI_Barrier(GRID_COMM); 
+		// If resize_needed is true then the above barrier ensures the
+		// process responsible for the sector has already called ftruncate.
+		if(resize_needed){
+			resize_sphere_array(dest);
 		}
 	} else if(next_event->type == COL_TWO_SPHERES_PARTIAL_CROSSING){
 		struct sphere_s *s1 = NULL;

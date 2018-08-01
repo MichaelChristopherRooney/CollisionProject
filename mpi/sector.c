@@ -19,8 +19,9 @@
 // During sphere loading any local neighbours will resize their sphere array if
 // needed.
 // Here the local view of this shared memory if resized if needed.
-// By this point the process responible for the sector will have already called
-// ftruncate
+// By this point the process responsible for the sector will have already called
+// ftruncate.
+// Note that neighbours with non-shared memory will have already been resized.
 void check_for_resizing_after_sphere_loading(){
 	int i;
 	for(i = 0; i < NUM_NEIGHBOURS; i++){
@@ -54,7 +55,7 @@ const int SECTOR_MODIFIERS[2][3][3] = {
 	}
 };
 
-void set_largest_radius(struct sector_s *sector, const struct sphere_s *sphere) {
+void set_largest_radius_after_insertion(struct sector_s *sector, const struct sphere_s *sphere) {
 	if (sphere->radius == sector->largest_radius) {
 		sector->largest_radius_shared = true; // Quicker to just set it rather than check if already set
 		sector->num_largest_radius_shared++;
@@ -63,28 +64,43 @@ void set_largest_radius(struct sector_s *sector, const struct sphere_s *sphere) 
 	}
 }
 
-void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere) {
-	if (sector->num_spheres >= sector->max_spheres) {
-		printf("!!! need to resize\n");
-		int64_t old_size = sector->max_spheres * sizeof(struct sphere_s);
-		int64_t new_size = (sector->max_spheres * 2) * sizeof(struct sphere_s);
-		int res = ftruncate(SECTOR->spheres_fd, new_size);
+// Note: if adding sphere to local neighbour then it should be ensured that
+// the process responsible for the sector has already called ftruncate
+void resize_sphere_array(struct sector_s *s){
+	int64_t old_size = s->max_spheres * sizeof(struct sphere_s);
+	int64_t new_size = (s->max_spheres * 2) * sizeof(struct sphere_s);
+	if(SECTOR->id == s->id){ // own sector
+		int res = ftruncate(s->spheres_fd, new_size);
 		if(res == -1){
 			printf("Error calling ftruncate: %s\n", strerror(errno));
 		}
-		sector->spheres = mremap(sector->spheres, old_size, new_size, MREMAP_MAYMOVE);
-		if(sector->spheres == NULL || sector->spheres == (void *) -1){
+		s->spheres = mremap(s->spheres, old_size, new_size, MREMAP_MAYMOVE);
+		if(s->spheres == NULL || s->spheres == (void *) -1){
 			printf("%s\n", strerror(errno));
 		}
-		sector->max_spheres = sector->max_spheres * 2;
+	} else if(s->is_local_neighbour){ // neighbour with shared memory
+		// neighbour should have already called ftruncate
+		s->spheres = mremap(s->spheres, old_size, new_size, MREMAP_MAYMOVE);
+		if(s->spheres == NULL || s->spheres == (void *) -1){
+			printf("%s\n", strerror(errno));
+		}
+	} else { // neighbour with non-shared memory
+		s->spheres = realloc(s->spheres, new_size);
+	}
+	s->max_spheres = s->max_spheres * 2;
+}
+
+void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere) {
+	if (sector->num_spheres >= sector->max_spheres) {
+		resize_sphere_array(sector);
 	}
 	sector->spheres[sector->num_spheres] = *sphere;
 	sector->spheres[sector->num_spheres].sector_id = sector->num_spheres;
 	sector->num_spheres++;
-	set_largest_radius(sector, sphere);
+	set_largest_radius_after_insertion(sector, sphere);
 }
 
-static void set_largest_radius_after_removal(struct sector_s *sector, const struct sphere_s *sphere) {
+void set_largest_radius_after_removal(struct sector_s *sector, const struct sphere_s *sphere) {
 	if (sphere->radius == sector->largest_radius && sector->largest_radius_shared == false && sector->num_spheres > 0) {
 		// TODO: search for new largest radius
 		printf("TODO: find new largest radius\n");

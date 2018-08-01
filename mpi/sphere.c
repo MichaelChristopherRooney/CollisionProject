@@ -42,7 +42,7 @@ void load_spheres(FILE *initial_state_fp) {
 				// sphere array will be resized later if needed
 				// for now make sure the largest radius is tracked though
 				temp->num_spheres++; // will check for resizing later
-				set_largest_radius(temp, &in);
+				set_largest_radius_after_insertion(temp, &in);
 			} else {
 				// want to copy it if it belongs to local node or a neighbour
 				add_sphere_to_sector(temp, &in);

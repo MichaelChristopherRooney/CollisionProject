@@ -42,8 +42,10 @@ struct sector_s {
 // Allows sectors to be found in a generic way. 
 const int SECTOR_MODIFIERS[2][3][3];
 
+void resize_sphere_array(struct sector_s *s);
 void check_for_resizing_after_sphere_loading();
-void set_largest_radius(struct sector_s *sector, const struct sphere_s *sphere);
+void set_largest_radius_after_insertion(struct sector_s *sector, const struct sphere_s *sphere);
+void set_largest_radius_after_removal(struct sector_s *sector, const struct sphere_s *sphere);
 bool does_sphere_belong_to_sector(const struct sphere_s *sphere, const struct sector_s *sector);
 struct sector_s *find_sector_that_sphere_belongs_to(struct sphere_s *sphere);
 void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere);
