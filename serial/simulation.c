@@ -5,6 +5,7 @@
 #include "grid.h"
 #include "io.h"
 #include "params.h"
+#include "simulation.h"
 #include "wrapper.h"
 #include "vector_3.h"
 
@@ -14,16 +15,16 @@ static void compare_results() {
 	}
 	FILE *fp = fopen(compare_file, "rb");
 	int64_t comp_num_spheres;
-	 fread_wrapper(&comp_num_spheres, sizeof(int64_t), 1, fp);
-	if(comp_num_spheres != NUM_SPHERES){
+	fread_wrapper(&comp_num_spheres, sizeof(int64_t), 1, fp);
+	if(comp_num_spheres != sim_data.total_num_spheres){
 		printf("Error: cannot compare files as number of spheres differs\n");
 		return;
 	}
 	double max_pos_err = 0.0;
 	double max_vel_err = 0.0;
 	int i;
-	for (i = 0; i < NUM_SPHERES; i++) {
-		struct sphere_s s = spheres[i];
+	for (i = 0; i < sim_data.total_num_spheres; i++) {
+		struct sphere_s s = sim_data.spheres[i];
 		union vector_3d vel_comp;
 		union vector_3d pos_comp;
 		fread_wrapper(&vel_comp, sizeof(union vector_3d), 1, fp);
@@ -50,13 +51,13 @@ void simulation_init(double time_limit) {
 
 void simulation_run() {
 	int i = 1; // start at 1 as 0 is iteration num for the initial state
-	while (grid->elapsed_time < grid->time_limit) {
-		grid->elapsed_time += update_grid();
-		if (grid->elapsed_time >= grid->time_limit) {
+	while (sim_data.elapsed_time < sim_data.time_limit) {
+		sim_data.elapsed_time += update_grid();
+		if (sim_data.elapsed_time >= sim_data.time_limit) {
 			write_final_time_to_file();
 			break;
 		}
-		save_sphere_state_to_file(i, grid->elapsed_time);
+		save_sphere_state_to_file(i, sim_data.elapsed_time);
 		i++;
 	}
 	write_final_state();
@@ -64,15 +65,14 @@ void simulation_run() {
 }
 
 void simulation_cleanup() {
-	if (grid->uses_sectors) {
-		free(grid->sectors[0][0]);
+	if (sim_data.num_sectors > 1) {
+		free(sim_data.sectors[0][0]);
 		int i;
 		for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
-			free(grid->sectors[i]);
+			free(sim_data.sectors[i]);
 		}
-		free(grid->sectors);
+		free(sim_data.sectors);
 	}
-	free(spheres);
+	free(sim_data.spheres);
 	close_data_file();
-	free(grid);
 }

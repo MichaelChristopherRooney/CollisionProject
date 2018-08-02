@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "event.h"
 #include "grid.h"
 #include "io.h"
 #include "params.h"
+#include "simulation.h"
 
 static FILE *data_file;
 
@@ -27,10 +29,10 @@ static void save_sphere_initial_state_to_file() {
 	double time_elapsed = 0.0;
 	fwrite(&iter_num, sizeof(uint64_t), 1, data_file);
 	fwrite(&time_elapsed, sizeof(double), 1, data_file);
-	fwrite(&NUM_SPHERES, sizeof(uint64_t), 1, data_file);
+	fwrite(&sim_data.total_num_spheres, sizeof(uint64_t), 1, data_file);
 	int i;
-	for (i = 0; i < NUM_SPHERES; i++) {
-		save_sphere_to_file(&spheres[i]);
+	for (i = 0; i < sim_data.total_num_spheres; i++) {
+		save_sphere_to_file(&sim_data.spheres[i]);
 	}
 }
 
@@ -57,14 +59,14 @@ void save_sphere_state_to_file(uint64_t iteration_num, double time_elapsed) {
 // happened yet.
 void init_binary_file() {
 	data_file = fopen(output_file, "wb");
-	fwrite(&grid->size.x, sizeof(double), 1, data_file);
-	fwrite(&grid->size.y, sizeof(double), 1, data_file);
-	fwrite(&grid->size.z, sizeof(double), 1, data_file);
-	fwrite(&NUM_SPHERES, sizeof(int64_t), 1, data_file);
+	fwrite(&sim_data.grid_size.x, sizeof(double), 1, data_file);
+	fwrite(&sim_data.grid_size.y, sizeof(double), 1, data_file);
+	fwrite(&sim_data.grid_size.z, sizeof(double), 1, data_file);
+	fwrite(&sim_data.total_num_spheres, sizeof(int64_t), 1, data_file);
 	int64_t i;
-	for (i = 0; i < NUM_SPHERES; i++) {
-		fwrite(&spheres[i].radius, sizeof(double), 1, data_file);
-		fwrite(&spheres[i].mass, sizeof(double), 1, data_file);
+	for (i = 0; i < sim_data.total_num_spheres; i++) {
+		fwrite(&sim_data.spheres[i].radius, sizeof(double), 1, data_file);
+		fwrite(&sim_data.spheres[i].mass, sizeof(double), 1, data_file);
 	}
 	save_sphere_initial_state_to_file();
 }
@@ -76,15 +78,15 @@ void write_final_state(){
 		return;
 	}
 	FILE *fp = fopen(final_state_file, "wb");
-	fwrite(&NUM_SPHERES, sizeof(int64_t), 1, fp);
+	fwrite(&sim_data.total_num_spheres, sizeof(int64_t), 1, fp);
 	int64_t i;
-	for (i = 0; i < NUM_SPHERES; i++) {
-		fwrite(&spheres[i].vel.x, sizeof(double), 1, fp);
-		fwrite(&spheres[i].vel.y, sizeof(double), 1, fp);
-		fwrite(&spheres[i].vel.z, sizeof(double), 1, fp);
-		fwrite(&spheres[i].pos.x, sizeof(double), 1, fp);
-		fwrite(&spheres[i].pos.y, sizeof(double), 1, fp);
-		fwrite(&spheres[i].pos.z, sizeof(double), 1, fp);
+	for (i = 0; i < sim_data.total_num_spheres; i++) {
+		fwrite(&sim_data.spheres[i].vel.x, sizeof(double), 1, fp);
+		fwrite(&sim_data.spheres[i].vel.y, sizeof(double), 1, fp);
+		fwrite(&sim_data.spheres[i].vel.z, sizeof(double), 1, fp);
+		fwrite(&sim_data.spheres[i].pos.x, sizeof(double), 1, fp);
+		fwrite(&sim_data.spheres[i].pos.y, sizeof(double), 1, fp);
+		fwrite(&sim_data.spheres[i].pos.z, sizeof(double), 1, fp);
 	}
 	fclose(fp);
 }
@@ -99,7 +101,7 @@ void delete_old_files(){
 }
 
 void write_final_time_to_file(){
-	fwrite(&grid->time_limit, sizeof(double), 1, data_file);
+	fwrite(&sim_data.time_limit, sizeof(double), 1, data_file);
 }
 
 void close_data_file(){
