@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 
-// Wrappers for various memory functions.
+// Wrappers for various syscalls.
 // Checks return value and prints any errors.
 
 void *mremap_wrapper(void *old_address, size_t old_size, size_t new_size, int flags);

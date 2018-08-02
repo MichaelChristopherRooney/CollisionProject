@@ -5,26 +5,26 @@
 #include "collision.h"
 #include "grid.h"
 #include "params.h"
+#include "wrapper.h"
 #include "vector_3.h"
 
 static FILE *initial_state_fp;
 
 // Loads spheres from the specified inital state file
 static void load_spheres() {
-	// result is just to shut up gcc's warnings
-	int result = fread(&NUM_SPHERES, sizeof(int64_t), 1, initial_state_fp);
+	fread_wrapper(&NUM_SPHERES, sizeof(int64_t), 1, initial_state_fp);
 	spheres = calloc(NUM_SPHERES, sizeof(struct sphere_s));
 	int64_t i;
 	for(i = 0; i < NUM_SPHERES; i++){
-		result = fread(&spheres[i].id, sizeof(int64_t), 1, initial_state_fp);
-		result = fread(&spheres[i].pos.x, sizeof(double), 1, initial_state_fp);
-		result = fread(&spheres[i].pos.y, sizeof(double), 1, initial_state_fp);
-		result = fread(&spheres[i].pos.z, sizeof(double), 1, initial_state_fp);
-		result = fread(&spheres[i].vel.x, sizeof(double), 1, initial_state_fp);
-		result = fread(&spheres[i].vel.y, sizeof(double), 1, initial_state_fp);
-		result = fread(&spheres[i].vel.z, sizeof(double), 1, initial_state_fp);
-		result = fread(&spheres[i].mass, sizeof(double), 1, initial_state_fp);
-		result = fread(&spheres[i].radius, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&spheres[i].id, sizeof(int64_t), 1, initial_state_fp);
+		fread_wrapper(&spheres[i].pos.x, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&spheres[i].pos.y, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&spheres[i].pos.z, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&spheres[i].vel.x, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&spheres[i].vel.y, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&spheres[i].vel.z, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&spheres[i].mass, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&spheres[i].radius, sizeof(double), 1, initial_state_fp);
 		if (grid->uses_sectors) {
 			add_sphere_to_correct_sector(&spheres[i]);
 		}
@@ -77,10 +77,9 @@ static void init_sectors() {
 void init_grid(double time_limit) {
 	initial_state_fp = fopen(initial_state_file, "rb");
 	grid = calloc(1, sizeof(struct grid_s));
-	// result is just to shut up gcc's warnings
-	int result = fread(&grid->size.x, sizeof(double), 1, initial_state_fp);
-	result = fread(&grid->size.y, sizeof(double), 1, initial_state_fp);
-	result = fread(&grid->size.z, sizeof(double), 1, initial_state_fp);
+	fread_wrapper(&grid->size.x, sizeof(double), 1, initial_state_fp);
+	fread_wrapper(&grid->size.y, sizeof(double), 1, initial_state_fp);
+	fread_wrapper(&grid->size.z, sizeof(double), 1, initial_state_fp);
 	if (SECTOR_DIMS[X_AXIS] == 1 && SECTOR_DIMS[Y_AXIS] == 1 && SECTOR_DIMS[Z_AXIS] == 1) {
 		grid->uses_sectors = false;
 	} else {
