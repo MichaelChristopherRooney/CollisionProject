@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#include "event.h"
 #include "simulation.h"
 #include "sphere.h"
 #include "wrapper.h"
@@ -33,5 +34,15 @@ void load_spheres(FILE *initial_state_fp) {
 		if (sim_data.num_sectors > 1) {
 			add_sphere_to_correct_sector(&sim_data.spheres[i]);
 		}
+	}
+}
+
+// This updates the positions and velocities of each sphere once the next
+// event and the time it occurs are known.
+void update_spheres() {
+	int i;
+	for (i = 0; i < sim_data.total_num_spheres; i++) {
+		struct sphere_s *s = &(sim_data.spheres[i]);
+		update_sphere_position(s, event_details.time);
 	}
 }

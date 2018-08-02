@@ -13,3 +13,6 @@ struct event_s {
 };
 
 struct event_s event_details;
+
+void apply_event();
+void reset_event();

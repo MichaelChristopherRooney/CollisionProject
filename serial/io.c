@@ -2,7 +2,6 @@
 #include <unistd.h>
 
 #include "event.h"
-#include "grid.h"
 #include "io.h"
 #include "params.h"
 #include "simulation.h"

@@ -19,4 +19,5 @@ struct sphere_s {
 
 void update_sphere_position(struct sphere_s *s, double t);
 void load_spheres(FILE *initial_state_fp);
+void update_spheres();
 

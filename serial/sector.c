@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "grid.h"
 #include "sector.h"
 #include "simulation.h"
 
@@ -109,9 +108,9 @@ static bool does_sphere_belong_to_sector(const struct sphere_s *sphere, const st
 // This should only be used when randomly generating spheres at startup.
 void add_sphere_to_correct_sector(const struct sphere_s *sphere) {
 	int x, y, z;
-	for (x = 0; x < SECTOR_DIMS[X_AXIS]; x++) {
-		for (y = 0; y < SECTOR_DIMS[Y_AXIS]; y++) {
-			for (z = 0; z < SECTOR_DIMS[Z_AXIS]; z++) {
+	for (x = 0; x < sim_data.sector_dims[X_AXIS]; x++) {
+		for (y = 0; y < sim_data.sector_dims[Y_AXIS]; y++) {
+			for (z = 0; z < sim_data.sector_dims[Z_AXIS]; z++) {
 				bool res = does_sphere_belong_to_sector(sphere, &sim_data.sectors[x][y][z]);
 				if (res) {
 					add_sphere_to_sector(&sim_data.sectors[x][y][z], sphere);
@@ -127,14 +126,14 @@ void add_sphere_to_correct_sector(const struct sphere_s *sphere) {
 }
 
 static void alloc_sector_array(){
-	sim_data.sectors = calloc(SECTOR_DIMS[X_AXIS], sizeof(struct sector_s **));
-	struct sector_s *z_arr = calloc(SECTOR_DIMS[X_AXIS] * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS], sizeof(struct sector_s));
+	sim_data.sectors = calloc(sim_data.sector_dims[X_AXIS], sizeof(struct sector_s **));
+	sim_data.sectors_flat = calloc(sim_data.sector_dims[X_AXIS] * sim_data.sector_dims[Y_AXIS] * sim_data.sector_dims[Z_AXIS], sizeof(struct sector_s));
 	int i, j;
-	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
-		sim_data.sectors[i] = calloc(SECTOR_DIMS[Y_AXIS], sizeof(struct sector_s *));
-		for (j = 0; j < SECTOR_DIMS[Y_AXIS]; j++) {
-			int idx = (i * SECTOR_DIMS[Y_AXIS] * SECTOR_DIMS[Z_AXIS]) + (j * SECTOR_DIMS[Z_AXIS]);
-			sim_data.sectors[i][j] = &z_arr[idx];
+	for (i = 0; i < sim_data.sector_dims[X_AXIS]; i++) {
+		sim_data.sectors[i] = calloc(sim_data.sector_dims[Y_AXIS], sizeof(struct sector_s *));
+		for (j = 0; j < sim_data.sector_dims[Y_AXIS]; j++) {
+			int idx = (i * sim_data.sector_dims[Y_AXIS] * sim_data.sector_dims[Z_AXIS]) + (j * sim_data.sector_dims[Z_AXIS]);
+			sim_data.sectors[i][j] = &sim_data.sectors_flat[idx];
 		}
 	}
 }
@@ -142,14 +141,21 @@ static void alloc_sector_array(){
 // Note: size of grid in each dimension should be divisible by number of
 // sectors in that dimension.
 void init_sectors() {
+	sim_data.num_sectors = sim_data.sector_dims[X_AXIS] * sim_data.sector_dims[Y_AXIS] * sim_data.sector_dims[Z_AXIS];
+	if(sim_data.num_sectors == 1){
+		return;
+	}
+	sim_data.xy_check_needed = sim_data.sector_dims[X_AXIS] > 1 && sim_data.sector_dims[Y_AXIS] > 1;
+	sim_data.xz_check_needed = sim_data.sector_dims[X_AXIS] > 1 && sim_data.sector_dims[Z_AXIS] > 1;
+	sim_data.yz_check_needed = sim_data.sector_dims[Y_AXIS] > 1 && sim_data.sector_dims[Z_AXIS] > 1;
 	alloc_sector_array();
-	double x_inc = sim_data.grid_size.x / SECTOR_DIMS[X_AXIS];
-	double y_inc = sim_data.grid_size.y / SECTOR_DIMS[Y_AXIS];
-	double z_inc = sim_data.grid_size.z / SECTOR_DIMS[Z_AXIS];
+	double x_inc = sim_data.grid_size.x / sim_data.sector_dims[X_AXIS];
+	double y_inc = sim_data.grid_size.y / sim_data.sector_dims[Y_AXIS];
+	double z_inc = sim_data.grid_size.z / sim_data.sector_dims[Z_AXIS];
 	int i, j, k;
-	for (i = 0; i < SECTOR_DIMS[X_AXIS]; i++) {
-		for (j = 0; j < SECTOR_DIMS[Y_AXIS]; j++) {
-			for (k = 0; k < SECTOR_DIMS[Z_AXIS]; k++) {
+	for (i = 0; i < sim_data.sector_dims[X_AXIS]; i++) {
+		for (j = 0; j < sim_data.sector_dims[Y_AXIS]; j++) {
+			for (k = 0; k < sim_data.sector_dims[Z_AXIS]; k++) {
 				struct sector_s *s = &sim_data.sectors[i][j][k];
 				s->start.x = x_inc * i;
 				s->end.x = s->start.x + x_inc;

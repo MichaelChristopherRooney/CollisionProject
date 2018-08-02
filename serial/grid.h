@@ -1,9 +1,5 @@
 #pragma once
 
-#include "collision.h"
-#include "sector.h"
-#include "sphere.h"
-#include "vector_3.h"
+#include <stdio.h>
 
-void init_grid(double time_limit);
-double update_grid();
+void init_grid(FILE *initial_state_fp);

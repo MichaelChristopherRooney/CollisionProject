@@ -4,11 +4,12 @@
 
 #include "params.h"
 #include "sector.h"
+#include "simulation.h"
 
 static void set_default_params(){
-	SECTOR_DIMS[0] = 1;
-	SECTOR_DIMS[1] = 1;
-	SECTOR_DIMS[2] = 1;
+	sim_data.sector_dims[0] = 1;
+	sim_data.sector_dims[1] = 1;
+	sim_data.sector_dims[2] = 1;
 	initial_state_file = NULL;
 	final_state_file = NULL;
 	compare_file = NULL;
@@ -23,9 +24,9 @@ static void check_slice_arg(int slice, char axis){
 }
 
 static void print_config(){
-	printf("Number of x slices: %d\n", SECTOR_DIMS[0]);
-	printf("Number of y slices: %d\n", SECTOR_DIMS[1]);
-	printf("Number of z slices: %d\n", SECTOR_DIMS[2]);
+	printf("Number of x slices: %d\n", sim_data.sector_dims[0]);
+	printf("Number of y slices: %d\n", sim_data.sector_dims[1]);
+	printf("Number of z slices: %d\n", sim_data.sector_dims[2]);
 	printf("Initial state file: %s\n", initial_state_file);
 	printf("Output file: %s\n", output_file);
 	if(final_state_file != NULL){
@@ -41,9 +42,9 @@ static void print_config(){
 }
 
 static void validate_args(){
-	check_slice_arg(SECTOR_DIMS[X_AXIS], 'x');
-	check_slice_arg(SECTOR_DIMS[Y_AXIS], 'y');
-	check_slice_arg(SECTOR_DIMS[Z_AXIS], 'z');
+	check_slice_arg(sim_data.sector_dims[X_AXIS], 'x');
+	check_slice_arg(sim_data.sector_dims[Y_AXIS], 'y');
+	check_slice_arg(sim_data.sector_dims[Z_AXIS], 'z');
 	if(output_file == NULL){
 		printf("Error: output file (-o) cannot be null\n");
 		exit(1);
@@ -70,13 +71,13 @@ void parse_args(int argc, char *argv[]) {
 	while((c = getopt(argc, argv, "i:c:f:ho:x:y:z:")) != -1) {
 		switch(c) {
 		case 'x':
-			SECTOR_DIMS[X_AXIS] = atoi(optarg);
+			sim_data.sector_dims[X_AXIS] = atoi(optarg);
 			break;
 		case 'y':
-			SECTOR_DIMS[Y_AXIS] = atoi(optarg);
+			sim_data.sector_dims[Y_AXIS] = atoi(optarg);
 			break;
 		case 'z':
-			SECTOR_DIMS[Z_AXIS] = atoi(optarg);
+			sim_data.sector_dims[Z_AXIS] = atoi(optarg);
 			break;
 		case 'f':
 			final_state_file = optarg;

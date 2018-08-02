@@ -18,3 +18,4 @@ double find_collision_time_sector(const struct sector_s *sector, const struct sp
 void apply_bounce_between_spheres(struct sphere_s *s1, struct sphere_s *s2);
 void find_partial_crossing_events_for_all_sectors();
 void find_event_times_for_all_sectors();
+void find_event_times_no_dd();

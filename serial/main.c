@@ -4,11 +4,8 @@
 #include <string.h>
 #include <time.h>
 
-#include "grid.h"
 #include "params.h"
-#include "sector.h"
 #include "simulation.h"
-#include "vector_3.h"
 
 static void run() {
 	simulation_init(10.0);
