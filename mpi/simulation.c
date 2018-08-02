@@ -51,6 +51,29 @@ static void compare_results() {
 }
 */
 
+// For debugging
+// Helps catch any issues with transfering spheres between sectors.
+void sanity_check() {
+	int i;
+	for(i = 0; i < SECTOR->num_spheres; i++){
+		struct sphere_s *sphere = &SECTOR->spheres[i];
+		int error = 0;
+		enum axis a;
+		for (a = X_AXIS; a <= Z_AXIS; a++) {
+			if (sphere->pos.vals[a] > SECTOR->end.vals[a]) {
+				error = 1;
+			}
+			if (sphere->pos.vals[a] < SECTOR->start.vals[a]) {
+				error = 1;
+			}
+		}
+		if (error) {
+			printf("Sector at %d, %d, %d incorrectly has sphere with pos %f, %f, %f\n", SECTOR->pos.x, SECTOR->pos.y, SECTOR->pos.z, sphere->pos.x, sphere->pos.y, sphere->pos.z);
+			exit(1);
+		}
+	}
+}
+
 // Old output or final state files may be present if names are reused.
 // This has been causing issues so delete them here.
 // Note: files for file backed memory for each sector are deleted later.
@@ -64,7 +87,13 @@ static void delete_old_files(){
 	MPI_Barrier(GRID_COMM);
 }
 
-void simulation_init(int argc, char *argv[], double time_limit) {
+static void init_stats(){
+	sim_data.num_two_sphere_collisions = 0;
+	sim_data.num_grid_collisions = 0;
+	sim_data.num_sector_transfers = 0;
+}
+
+static void parse_args_and_init_mpi(int argc, char *argv[]){
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &WORLD_RANK);
 	MPI_Comm_size(MPI_COMM_WORLD, &NUM_NODES);
@@ -72,21 +101,54 @@ void simulation_init(int argc, char *argv[], double time_limit) {
 	MPI_Cart_create(MPI_COMM_WORLD, NUM_DIMS, sim_data.sector_dims, PERIODS, REORDER, &GRID_COMM);
 	MPI_Comm_rank(GRID_COMM, &GRID_RANK);
 	MPI_Cart_coords(GRID_COMM, GRID_RANK, NUM_DIMS, COORDS);
+}
+
+void simulation_init(int argc, char *argv[], double time_limit) {
+	parse_args_and_init_mpi(argc, argv);
+	init_stats();
 	sim_data.iteration_number = 0;
-	delete_old_files();
-	init_output_file();
-	init_grid();
 	sim_data.elapsed_time = 0.0;
 	sim_data.time_limit = time_limit;
-	sim_data.num_two_sphere_collisions = 0;
-	sim_data.num_grid_collisions = 0;
-	sim_data.num_sector_transfers = 0;
+	delete_old_files();
+	init_output_file();
+	FILE *initial_state_fp = fopen(initial_state_file, "rb");
+	init_grid(initial_state_fp);
+	init_sectors();
+	load_spheres(initial_state_fp);
+	fclose(initial_state_fp);
+	MPI_Barrier(MPI_COMM_WORLD); // barrier to ensure ftruncate has been called before next step
+	check_for_resizing_after_sphere_loading();
+	init_events();
+
+}
+
+static void do_grid_iteration(){
+	sanity_check();
+	// First reset records.
+	reset_event_details();
+	// Now find event + time of event
+	// Final event may take place after time limit, so cut it short if so
+	find_event_times_for_sector(SECTOR);
+	reduce_events();
+	if (sim_data.time_limit - sim_data.elapsed_time < next_event->time) {
+		next_event->time = sim_data.time_limit - sim_data.elapsed_time;
+		if(GRID_RANK == 0){
+			MPI_Status s;
+			MPI_File_write(MPI_OUTPUT_FILE, &sim_data.time_limit, 1, MPI_DOUBLE, &s);
+		}
+		update_spheres();
+	} else {
+		update_spheres();
+		apply_event();
+	}
+	sanity_check();
+	sim_data.elapsed_time += next_event->time;
 }
 
 void simulation_run() {
 	sim_data.iteration_number = 1; // start at 1 as 0 is iteration num for the initial state
 	while (sim_data.elapsed_time < sim_data.time_limit) {	
-		sim_data.elapsed_time += update_grid();
+		do_grid_iteration();
 		MPI_Barrier(GRID_COMM);
 		sim_data.iteration_number++;
 	}

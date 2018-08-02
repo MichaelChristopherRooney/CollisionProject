@@ -10,7 +10,7 @@
 // of the simulation. 
 // Note: this is not intended to apply any collision effects, that happens
 // elsewhere.
-void update_sphere_position(struct sphere_s *s, double t) {
+void update_sphere_position(struct sphere_s *s, const double t) {
 	s->pos.x = s->pos.x + (s->vel.x * t);
 	s->pos.y = s->pos.y + (s->vel.y * t);
 	s->pos.z = s->pos.z + (s->vel.z * t);
@@ -72,4 +72,30 @@ void apply_bounce_between_spheres(struct sphere_s *s1, struct sphere_s *s2) {
 	s2->vel.x = s2->vel.x + (p * s1->mass * rel_pos.x);
 	s2->vel.y = s2->vel.y + (p * s1->mass * rel_pos.y);
 	s2->vel.z = s2->vel.z + (p * s1->mass * rel_pos.z);
+}
+
+// This updates the positions and velocities of each sphere once the next
+// event and the time it occurs are known.
+// First update own spheres, then update local copy of neighbour's spheres
+// Don't update neighbour's spheres if they are shared via shared memory.
+// Also update received copies of sphere(s) involved in next event.
+// As they are copies the same sphere is not updated twice.
+void update_spheres() {
+	int i, j;
+	for (i = 0; i < SECTOR->num_spheres; i++) {
+		struct sphere_s *s = &(SECTOR->spheres[i]);
+		update_sphere_position(s, next_event->time);
+	}
+	for(i = 0; i < NUM_NEIGHBOURS; i++){
+		struct sector_s *sector = &sim_data.sectors_flat[NEIGHBOUR_IDS[i]];
+		if(sector->is_local_neighbour){
+			continue;
+		}
+		for(j = 0; j < sector->num_spheres; j++){
+			struct sphere_s *s = &(sector->spheres[j]);
+			update_sphere_position(s, next_event->time);
+		}
+	}
+	update_sphere_position(&next_event->sphere_1, next_event->time);
+	update_sphere_position(&next_event->sphere_2, next_event->time);
 }

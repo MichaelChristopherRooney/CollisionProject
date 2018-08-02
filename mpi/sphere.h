@@ -17,6 +17,7 @@ struct sphere_s {
 	double mass;
 };
 
-void update_sphere_position(struct sphere_s *s, double t);
+void update_sphere_position(struct sphere_s *s, const double t);
 void load_spheres(FILE *initial_state_fp);
 void apply_bounce_between_spheres(struct sphere_s *s1, struct sphere_s *s2);
+void update_spheres();

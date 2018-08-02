@@ -45,4 +45,5 @@ void set_event_details(
 	const struct sphere_s *sphere_2, const enum axis grid_axis, const struct sector_s *source_sector,
 	const struct sector_s *dest_sector
 );
+void apply_event();
 
