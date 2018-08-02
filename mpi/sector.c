@@ -1,9 +1,5 @@
-// Needs to be first due to include order
-#define _GNU_SOURCE 1
-#include <unistd.h>
-#include <sys/mman.h>
+#include "wrapper.h" // first due to include order requirement
 
-#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,10 +29,7 @@ void check_for_resizing_after_sphere_loading(){
 			}
 			int64_t old_size = SECTOR_DEFAULT_MAX_SPHERES * sizeof(struct sphere_s);
 			int64_t new_size = s->max_spheres  * sizeof(struct sphere_s);
-			s->spheres = mremap(s->spheres, old_size, new_size, MREMAP_MAYMOVE);
-			if(s->spheres == NULL || s->spheres == (void *) -1){
-				printf("%s\n", strerror(errno));
-			}
+			s->spheres = mremap_wrapper(s->spheres, old_size, new_size, MREMAP_MAYMOVE);
 		}
 	}
 }
@@ -70,20 +63,11 @@ void resize_sphere_array(struct sector_s *s){
 	int64_t old_size = s->max_spheres * sizeof(struct sphere_s);
 	int64_t new_size = (s->max_spheres * 2) * sizeof(struct sphere_s);
 	if(SECTOR->id == s->id){ // own sector
-		int res = ftruncate(s->spheres_fd, new_size);
-		if(res == -1){
-			printf("Error calling ftruncate: %s\n", strerror(errno));
-		}
-		s->spheres = mremap(s->spheres, old_size, new_size, MREMAP_MAYMOVE);
-		if(s->spheres == NULL || s->spheres == (void *) -1){
-			printf("%s\n", strerror(errno));
-		}
+		ftruncate_wrapper(s->spheres_fd, new_size);
+		s->spheres = mremap_wrapper(s->spheres, old_size, new_size, MREMAP_MAYMOVE);
 	} else if(s->is_local_neighbour){ // neighbour with shared memory
 		// neighbour should have already called ftruncate
-		s->spheres = mremap(s->spheres, old_size, new_size, MREMAP_MAYMOVE);
-		if(s->spheres == NULL || s->spheres == (void *) -1){
-			printf("%s\n", strerror(errno));
-		}
+		s->spheres = mremap_wrapper(s->spheres, old_size, new_size, MREMAP_MAYMOVE);
 	} else { // neighbour with non-shared memory
 		s->spheres = realloc(s->spheres, new_size);
 	}
@@ -189,10 +173,7 @@ static void init_local_files_for_file_backed_memory(){
 	sprintf(SECTOR->spheres_filename, "%d-sphere.bin", SECTOR->id);
 	unlink(SECTOR->spheres_filename); // delete any old version left from prior runs.
 	SECTOR->spheres_fd = open(SECTOR->spheres_filename, O_CREAT | O_RDWR, S_IRWXU);
-	int res = ftruncate(SECTOR->spheres_fd, SECTOR_DEFAULT_MAX_SPHERES * sizeof(struct sphere_s));
-	if(res == -1){
-		printf("Error calling ftruncate: %s\n", strerror(errno));
-	}
+	ftruncate_wrapper(SECTOR->spheres_fd, SECTOR_DEFAULT_MAX_SPHERES * sizeof(struct sphere_s));
 }
 
 // Check if the passed sector is a neighbour to the local sector
@@ -252,10 +233,7 @@ static void set_sectors(){
 				if(s == SECTOR){
 					MPI_Bcast(send_hn, MAX_HOSTNAME_LENGTH, MPI_CHAR, id, GRID_COMM);
 					MPI_Bcast(SECTOR->spheres_filename, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
-					SECTOR->spheres = mmap(NULL, SECTOR->max_spheres * sizeof(struct sphere_s), PROT_READ | PROT_WRITE, MAP_SHARED, SECTOR->spheres_fd, 0);
-					if(SECTOR->spheres == NULL || SECTOR->spheres == (void *) -1){
-						printf("%s\n", strerror(errno));
-					}
+					SECTOR->spheres = mmap_wrapper(NULL, SECTOR->max_spheres * sizeof(struct sphere_s), PROT_READ | PROT_WRITE, MAP_SHARED, SECTOR->spheres_fd, 0);
 				} else {
 					s->id = id;
 					s->pos.x = i;
@@ -270,10 +248,7 @@ static void set_sectors(){
 						if(strcmp(recv_hn, send_hn) == 0){
 							s->is_local_neighbour = true;
 							s->spheres_fd = open(spheres_fn_recv, O_CREAT | O_RDWR, S_IRWXU);
-							s->spheres = mmap(NULL, s->max_spheres * sizeof(struct sphere_s), PROT_READ | PROT_WRITE, MAP_SHARED, s->spheres_fd, 0);
-							if(s->spheres == NULL || s->spheres == (void *) -1){
-								printf("%s\n", strerror(errno));
-							}
+							s->spheres = mmap_wrapper(NULL, s->max_spheres * sizeof(struct sphere_s), PROT_READ | PROT_WRITE, MAP_SHARED, s->spheres_fd, 0);
 						} else {
 							s->spheres = calloc(s->max_spheres, sizeof(struct sphere_s));
 						}

@@ -10,14 +10,14 @@
 #include "params.h"
 #include "simulation.h"
 #include "vector_3.h"
+#include "wrapper.h"
 
 // Loads the grid from the initial state file
 void init_grid() {
 	FILE *initial_state_fp = fopen(initial_state_file, "rb");
-	// result is just to shut up gcc's warnings
-	int result = fread(&sim_data.grid_size.x, sizeof(double), 1, initial_state_fp);
-	result = fread(&sim_data.grid_size.y, sizeof(double), 1, initial_state_fp);
-	result = fread(&sim_data.grid_size.z, sizeof(double), 1, initial_state_fp);
+	fread_wrapper(&sim_data.grid_size.x, sizeof(double), 1, initial_state_fp);
+	fread_wrapper(&sim_data.grid_size.y, sizeof(double), 1, initial_state_fp);
+	fread_wrapper(&sim_data.grid_size.z, sizeof(double), 1, initial_state_fp);
 	write_grid_dimms();
 	init_sectors();
 	load_spheres(initial_state_fp);

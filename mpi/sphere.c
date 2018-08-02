@@ -3,6 +3,7 @@
 #include "sector.h"
 #include "simulation.h"
 #include "sphere.h"
+#include "wrapper.h"
 
 // Updates the spheres position.
 // 't' is the time since the last position update, not the time since the start
@@ -21,20 +22,20 @@ void update_sphere_position(struct sphere_s *s, double t) {
 void load_spheres(FILE *initial_state_fp) {
 	// result is just to shut up gcc's warnings
 	// TODO: get rid of this global and use grid->total_spheres where needed
-	int result = fread(&sim_data.total_num_spheres, sizeof(int64_t), 1, initial_state_fp);
+	fread_wrapper(&sim_data.total_num_spheres, sizeof(int64_t), 1, initial_state_fp);
 	write_num_spheres();
 	struct sphere_s in;
 	int64_t i;
 	for(i = 0; i < sim_data.total_num_spheres; i++){
-		result = fread(&in.id, sizeof(int64_t), 1, initial_state_fp);
-		result = fread(&in.pos.x, sizeof(double), 1, initial_state_fp);
-		result = fread(&in.pos.y, sizeof(double), 1, initial_state_fp);
-		result = fread(&in.pos.z, sizeof(double), 1, initial_state_fp);
-		result = fread(&in.vel.x, sizeof(double), 1, initial_state_fp);
-		result = fread(&in.vel.y, sizeof(double), 1, initial_state_fp);
-		result = fread(&in.vel.z, sizeof(double), 1, initial_state_fp);
-		result = fread(&in.mass, sizeof(double), 1, initial_state_fp);
-		result = fread(&in.radius, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&in.id, sizeof(int64_t), 1, initial_state_fp);
+		fread_wrapper(&in.pos.x, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&in.pos.y, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&in.pos.z, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&in.vel.x, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&in.vel.y, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&in.vel.z, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&in.mass, sizeof(double), 1, initial_state_fp);
+		fread_wrapper(&in.radius, sizeof(double), 1, initial_state_fp);
 		write_sphere_initial_state(&in);
 		struct sector_s *temp = find_sector_that_sphere_belongs_to(&in);
 		if(temp == SECTOR || temp->is_neighbour){
