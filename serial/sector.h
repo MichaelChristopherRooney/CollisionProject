@@ -20,9 +20,11 @@ struct sector_s {
 	double largest_radius; // Radius of the largest sphere in the sector.
 	bool largest_radius_shared; // If many spheres have the same radius as the largest radius
 	int64_t num_largest_radius_shared; // How many spheres shared the largest radius
+	int id;
 	bool prior_time_valid; // If last known event time is valid for the next iteration.
-	struct event_s event_details;
 };
+
+struct event_s *sector_events;
 
 // Used when iterating over axes and nned to access sector adjacent on the current axis.
 // Allows sectors to be found in a generic way. 

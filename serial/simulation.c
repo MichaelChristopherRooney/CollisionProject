@@ -102,10 +102,10 @@ static void do_simulation_iteration(){
 	// Now find event + time of event
 	if (sim_data.num_sectors > 1) { // domain decomposition
 		find_event_times_for_all_sectors();
-		find_soonest_event_from_sectors();
 	} else { // no domain decomposition 
 		find_event_times_no_dd();
 	}
+	//printf("Next time is %f\n", event_details.time);
 	// Final event may take place after time limit, so cut it short
 	if (sim_data.time_limit - sim_data.elapsed_time < event_details.time) {
 		event_details.time = sim_data.time_limit - sim_data.elapsed_time;

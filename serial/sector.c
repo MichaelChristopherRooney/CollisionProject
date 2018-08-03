@@ -122,6 +122,10 @@ void add_sphere_to_correct_sector(struct sphere_s *sphere) {
 	exit(1);
 }
 
+static void alloc_sector_event_details_array(){
+	sector_events = calloc(sim_data.sector_dims[X_AXIS] * sim_data.sector_dims[Y_AXIS] * sim_data.sector_dims[Z_AXIS], sizeof(struct event_s));
+}
+
 static void alloc_sector_array(){
 	sim_data.sectors = calloc(sim_data.sector_dims[X_AXIS], sizeof(struct sector_s **));
 	sim_data.sectors_flat = calloc(sim_data.sector_dims[X_AXIS] * sim_data.sector_dims[Y_AXIS] * sim_data.sector_dims[Z_AXIS], sizeof(struct sector_s));
@@ -146,9 +150,11 @@ void init_sectors() {
 	sim_data.xz_check_needed = sim_data.sector_dims[X_AXIS] > 1 && sim_data.sector_dims[Z_AXIS] > 1;
 	sim_data.yz_check_needed = sim_data.sector_dims[Y_AXIS] > 1 && sim_data.sector_dims[Z_AXIS] > 1;
 	alloc_sector_array();
+	alloc_sector_event_details_array();
 	double x_inc = sim_data.grid_size.x / sim_data.sector_dims[X_AXIS];
 	double y_inc = sim_data.grid_size.y / sim_data.sector_dims[Y_AXIS];
 	double z_inc = sim_data.grid_size.z / sim_data.sector_dims[Z_AXIS];
+	int id = 0;
 	int i, j, k;
 	for (i = 0; i < sim_data.sector_dims[X_AXIS]; i++) {
 		for (j = 0; j < sim_data.sector_dims[Y_AXIS]; j++) {
@@ -163,10 +169,12 @@ void init_sectors() {
 				s->pos.x = i;
 				s->pos.y = j;
 				s->pos.z = k;
+				s->id = id;
 				s->prior_time_valid = false;
 				s->num_spheres = 0;
 				s->max_spheres = 2000;
 				s->spheres = calloc(s->max_spheres, sizeof(struct sphere_s *));
+				id++;
 			}
 		}
 	}

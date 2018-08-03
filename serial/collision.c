@@ -445,11 +445,20 @@ static void find_event_times_for_sector(struct sector_s *sector) {
 	find_collision_times_grid_boundary_for_sector(sector);
 }
 
+// If needed find any sphere on sphere collisions that occur between spheres
+// that partially cross sector boundaries. 
+void find_partial_crossing_events_for_all_sectors() {
+	int i;
+	for(i = 0; i < sim_data.num_sectors; i++){
+		find_partial_crossing_events_for_sector(&sim_data.sectors_flat[i]);
+	}
+}
+
 // Finds event times for each sector, excluding partial crossings
 void find_event_times_for_all_sectors() {
 	int i;
 	for(i = 0; i < sim_data.num_sectors; i++){
-		reset_sector_event(&sim_data.sectors_flat[i]);
+		reset_sector_event(i);
 		find_event_times_for_sector(&sim_data.sectors_flat[i]);
 		find_partial_crossing_events_for_sector(&sim_data.sectors_flat[i]);
 	}
