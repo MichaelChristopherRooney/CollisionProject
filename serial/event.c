@@ -34,10 +34,20 @@ void reset_event(){
 	event_details.grid_axis = AXIS_NONE;
 }
 
-void set_event_details(
-	const double time, const enum event_type type, const struct sphere_s *sphere_1, 
-	const struct sphere_s *sphere_2, const enum axis grid_axis, const struct sector_s *source_sector,
-	const struct sector_s *dest_sector
+void reset_sector_event(struct sector_s *s){
+	s->event_details.time = DBL_MAX;
+	s->event_details.sphere_1 = NULL;
+	s->event_details.sphere_2 = NULL;
+	s->event_details.source_sector = NULL;
+	s->event_details.dest_sector = NULL;
+	s->event_details.type = COL_NONE;
+	s->event_details.grid_axis = AXIS_NONE;
+}
+
+static void set_event_details_normal(
+	const double time, const enum event_type type, struct sphere_s *sphere_1, 
+	struct sphere_s *sphere_2, const enum axis grid_axis, struct sector_s *source_sector,
+	struct sector_s *dest_sector
 ){
 	event_details.time = time;
 	event_details.type = type;
@@ -46,5 +56,59 @@ void set_event_details(
 	event_details.grid_axis = grid_axis;
 	event_details.source_sector = source_sector;
 	event_details.dest_sector = dest_sector;
+}
+
+static void set_sector_event_details(
+	const double time, const enum event_type type, struct sphere_s *sphere_1, 
+	struct sphere_s *sphere_2, const enum axis grid_axis, struct sector_s *source_sector,
+	struct sector_s *dest_sector
+){
+	source_sector->event_details.time = time;
+	source_sector->event_details.type = type;
+	source_sector->event_details.sphere_1 = sphere_1;
+	source_sector->event_details.sphere_2 = sphere_2;
+	source_sector->event_details.grid_axis = grid_axis;
+	source_sector->event_details.source_sector = source_sector;
+	source_sector->event_details.dest_sector = dest_sector;
+}
+
+static void set_event_details_from_sector(struct sector_s *s){
+	event_details.time = s->event_details.time;
+	event_details.type = s->event_details.type;
+	event_details.sphere_1 = s->event_details.sphere_1;
+	event_details.sphere_2 = s->event_details.sphere_2;
+	event_details.grid_axis = s->event_details.grid_axis;
+	event_details.source_sector = s->event_details.source_sector;
+	event_details.dest_sector = s->event_details.dest_sector;
+}
+
+void find_soonest_event_from_sectors(){
+	int soonest = -1;
+	double t = DBL_MAX;
+	int i;
+	for(i = 0; i < sim_data.num_sectors; i++){
+		if(sim_data.sectors_flat[i].event_details.time < t){
+			t = sim_data.sectors_flat[i].event_details.time;
+			soonest = i;
+		}
+	}
+	set_event_details_from_sector(&sim_data.sectors_flat[soonest]);
+}
+
+// If domain decomposition is used then set the sector's next event.
+// Once all sectors have been checked the actual next event will be determined
+// by comparing each sector's own event.
+// If no domain decomposition then just set the event normally.
+void set_event_details(
+	const double time, const enum event_type type, struct sphere_s *sphere_1, 
+	struct sphere_s *sphere_2, const enum axis grid_axis, struct sector_s *source_sector,
+	struct sector_s *dest_sector
+){
+	if(sim_data.num_sectors > 1 && time < source_sector->event_details.time){
+		set_sector_event_details(time, type, sphere_1, sphere_2, grid_axis, source_sector, dest_sector);
+	} else if(sim_data.num_sectors == 1 && time < event_details.time){
+		set_event_details_normal(time, type, sphere_1, sphere_2, grid_axis, NULL, NULL);
+	}
+
 }
 

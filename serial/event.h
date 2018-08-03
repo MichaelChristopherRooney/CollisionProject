@@ -18,9 +18,11 @@ struct event_s event_details;
 
 void apply_event();
 void reset_event();
+void reset_sector_event(struct sector_s *s);
+void find_soonest_event_from_sectors();
 void set_event_details(
-	const double time, const enum event_type type, const struct sphere_s *sphere_1, 
-	const struct sphere_s *sphere_2, const enum axis grid_axis, const struct sector_s *source_sector,
-	const struct sector_s *dest_sector
+	const double time, const enum event_type type, struct sphere_s *sphere_1, 
+	struct sphere_s *sphere_2, const enum axis grid_axis, struct sector_s *source_sector,
+	struct sector_s *dest_sector
 );
 

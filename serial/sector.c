@@ -4,8 +4,9 @@
 
 #include "sector.h"
 #include "simulation.h"
+#include "sphere.h"
 
-// Used when iterating over axes and nned to access sector adjacent on the current axis.
+// Used when iterating over axes and need to access sector adjacent on the current axis.
 const int SECTOR_MODIFIERS[2][3][3] = {
 	{
 		{ 1, 0, 0 }, // x
@@ -28,7 +29,7 @@ static void set_largest_radius_after_insertion(struct sector_s *sector, const st
 	}
 }
 
-void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere) {
+void add_sphere_to_sector(struct sector_s *sector, struct sphere_s *sphere) {
 	if (sector->num_spheres >= sector->max_spheres) {
 		sector->max_spheres = sector->max_spheres * 2;
 		sector->spheres = realloc(sector->spheres, sector->max_spheres * sizeof(struct sphere_s *));
@@ -106,7 +107,7 @@ static bool does_sphere_belong_to_sector(const struct sphere_s *sphere, const st
 
 // Given a sphere adds it to the correct sector.
 // This should only be used when randomly generating spheres at startup.
-void add_sphere_to_correct_sector(const struct sphere_s *sphere) {
+void add_sphere_to_correct_sector(struct sphere_s *sphere) {
 	int i;
 	for(i = 0; i < sim_data.num_sectors; i++){
 		bool res = does_sphere_belong_to_sector(sphere, &sim_data.sectors_flat[i]);

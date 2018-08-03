@@ -102,7 +102,7 @@ static void do_simulation_iteration(){
 	// Now find event + time of event
 	if (sim_data.num_sectors > 1) { // domain decomposition
 		find_event_times_for_all_sectors();
-		find_partial_crossing_events_for_all_sectors();
+		find_soonest_event_from_sectors();
 	} else { // no domain decomposition 
 		find_event_times_no_dd();
 	}
