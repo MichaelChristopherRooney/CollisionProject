@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "collision.h"
 #include "event.h"
 #include "grid.h"
 #include "io.h"

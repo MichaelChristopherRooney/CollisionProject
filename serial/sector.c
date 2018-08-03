@@ -162,6 +162,7 @@ void init_sectors() {
 				s->pos.x = i;
 				s->pos.y = j;
 				s->pos.z = k;
+				s->prior_time_valid = false;
 				s->num_spheres = 0;
 				s->max_spheres = 2000;
 				s->spheres = calloc(s->max_spheres, sizeof(struct sphere_s *));

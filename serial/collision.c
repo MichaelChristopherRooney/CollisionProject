@@ -433,13 +433,13 @@ static void find_collision_times_between_spheres_in_sector(const struct sector_s
 // Can optimise further so that grid boundaries are not checked if another
 // sector will be entered first.
 static void find_collision_times_grid_boundary_for_sector(const struct sector_s *sector) {
-	enum axis axis = COL_NONE;
+	enum axis a = AXIS_NONE;
 	int i;
 	for (i = 0; i < sector->num_spheres; i++) {
 		struct sphere_s *sphere = sector->spheres[i];
-		double time = find_collision_time_grid(sphere, &axis);
+		double time = find_collision_time_grid(sphere, &a);
 		if (time < event_details.time) {
-			set_event_details(time, COL_SPHERE_WITH_GRID, sphere, NULL, axis, sector, NULL);
+			set_event_details(time, COL_SPHERE_WITH_GRID, sphere, NULL, a, sector, NULL);
 		}
 		struct sector_s *temp_dest = NULL;
 		time = find_collision_time_sector(sector, sphere, &temp_dest);

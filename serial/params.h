@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 
 char *initial_state_file;

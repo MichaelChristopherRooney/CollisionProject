@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 
+#include "event.h"
 #include "sphere.h"
 #include "vector_3.h"
 
@@ -16,11 +17,12 @@ struct sector_s {
 	struct sphere_s **spheres;
 	int64_t num_spheres;
 	int64_t max_spheres;
-	// Location in sector array
-	union vector_3i pos;
+	union vector_3i pos; // Location in sector array
 	double largest_radius; // Radius of the largest sphere in the sector.
 	bool largest_radius_shared; // If many spheres have the same radius as the largest radius
 	int64_t num_largest_radius_shared; // How many spheres shared the largest radius
+	bool prior_time_valid; // If last known event time is valid for the next iteration.
+	struct event_s event_details;
 };
 
 // Used when iterating over axes and nned to access sector adjacent on the current axis.

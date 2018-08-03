@@ -1,6 +1,7 @@
 #include <float.h>
 #include <stdlib.h>
 
+#include "collision.h"
 #include "event.h"
 #include "sector.h"
 #include "simulation.h"
@@ -34,7 +35,7 @@ void reset_event(){
 }
 
 void set_event_details(
-	const double time, const enum collision_type type, const struct sphere_s *sphere_1, 
+	const double time, const enum event_type type, const struct sphere_s *sphere_1, 
 	const struct sphere_s *sphere_2, const enum axis grid_axis, const struct sector_s *source_sector,
 	const struct sector_s *dest_sector
 ){
@@ -46,3 +47,4 @@ void set_event_details(
 	event_details.source_sector = source_sector;
 	event_details.dest_sector = dest_sector;
 }
+
