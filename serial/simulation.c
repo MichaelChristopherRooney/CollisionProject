@@ -45,9 +45,10 @@ static void compare_results() {
 }
 
 static void init_stats(){
-	sim_data.num_two_sphere_collisions = 0;
-	sim_data.num_grid_collisions = 0;
-	sim_data.num_sector_transfers = 0;
+	stats.num_two_sphere_collisions = 0;
+	stats.num_grid_collisions = 0;
+	stats.num_sector_transfers = 0;
+	stats.num_partial_crossings = 0;
 }
 
 void simulation_init(double time_limit) {

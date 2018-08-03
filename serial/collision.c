@@ -143,16 +143,13 @@ void apply_bounce_between_spheres(struct sphere_s *s1, struct sphere_s *s2) {
 
 // Given a sphere that is known to be heading towards the given sector
 // check if the sphere will collide with spheres in the sector.
-static void find_partial_crossing_events_between_sphere_and_sector(const struct sphere_s *sphere_1, const struct sector_s *sector_2) {
+static void find_partial_crossing_events_between_sphere_and_sector(const struct sector_s *sector_1, const struct sphere_s *sphere_1, const struct sector_s *sector_2) {
 	int j;
 	for (j = 0; j < sector_2->num_spheres; j++) {
 		struct sphere_s *sphere_2 = sector_2->spheres[j];
 		double time = find_collision_time_spheres(sphere_1, sphere_2);
 		if (time < event_details.time) {
-			event_details.type = COL_TWO_SPHERES;
-			event_details.sphere_1 = sphere_1;
-			event_details.sphere_2 = sphere_2;
-			event_details.time = time;
+			set_event_details(time, COL_TWO_SPHERES_PARTIAL_CROSSING, sphere_1, sphere_2, AXIS_NONE, sector_1, sector_2);
 		}
 	}
 }
@@ -168,7 +165,7 @@ static void find_partial_crossing_events_for_sector_directly_adjacent(const stru
 			int s_z = sector->pos.z + SECTOR_MODIFIERS[DIR_POSITIVE][a][Z_AXIS];
 			struct sector_s *sector_2 = &sim_data.sectors[s_x][s_y][s_z];
 			if (new_pos.vals[a] >= sector_2->start.vals[a] - sphere->radius - sector_2->largest_radius) {
-				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+				find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 			}
 		}
 	}
@@ -179,7 +176,7 @@ static void find_partial_crossing_events_for_sector_directly_adjacent(const stru
 			int s_z = sector->pos.z + SECTOR_MODIFIERS[DIR_NEGATIVE][a][Z_AXIS];
 			struct sector_s *sector_2 = &sim_data.sectors[s_x][s_y][s_z];
 			if (new_pos.vals[a] <= sector_2->end.vals[a] + sphere->radius + sector_2->largest_radius) {
-				find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+				find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 			}
 		}
 	}
@@ -193,7 +190,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_pos_pos(
 		int z = sector->pos.z + SECTOR_MODIFIERS[DIR_POSITIVE][a1][Z_AXIS] + SECTOR_MODIFIERS[DIR_POSITIVE][a2][Z_AXIS];
 		struct sector_s *sector_2 = &sim_data.sectors[x][y][z];
 		if (new_pos.vals[a1] >= sector_2->start.vals[a1] - sphere->radius - sector_2->largest_radius && new_pos.vals[a2] >= sector_2->start.vals[a2] - sphere->radius - sector_2->largest_radius) {
-			find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 		}
 	}
 }
@@ -206,7 +203,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_pos_neg(
 		int z = sector->pos.z + SECTOR_MODIFIERS[DIR_POSITIVE][a1][Z_AXIS] + SECTOR_MODIFIERS[DIR_NEGATIVE][a2][Z_AXIS];
 		struct sector_s *sector_2 = &sim_data.sectors[x][y][z];
 		if (new_pos.vals[a1] >= sector_2->start.vals[a1] - sphere->radius - sector_2->largest_radius && new_pos.vals[a2] <= sector_2->end.vals[a2] + sphere->radius + sector_2->largest_radius) {
-			find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 		}
 	}
 }
@@ -219,7 +216,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_neg_pos(
 		int z = sector->pos.z + SECTOR_MODIFIERS[DIR_NEGATIVE][a1][Z_AXIS] + SECTOR_MODIFIERS[DIR_POSITIVE][a2][Z_AXIS];
 		struct sector_s *sector_2 = &sim_data.sectors[x][y][z];
 		if (new_pos.vals[a1] <= sector_2->end.vals[a1] + sphere->radius + sector_2->largest_radius && new_pos.vals[a2] >= sector_2->start.vals[a2] - sphere->radius - sector_2->largest_radius) {
-			find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 		}
 	}
 }
@@ -232,7 +229,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_neg_neg(
 		int z = sector->pos.z + SECTOR_MODIFIERS[DIR_NEGATIVE][a1][Z_AXIS] + SECTOR_MODIFIERS[DIR_NEGATIVE][a2][Z_AXIS];
 		struct sector_s *sector_2 = &sim_data.sectors[x][y][z];
 		if (new_pos.vals[a1] <= sector_2->end.vals[a1] + sphere->radius + sector_2->largest_radius && new_pos.vals[a2] >= sector_2->end.vals[a2] + sphere->radius + sector_2->largest_radius) {
-			find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 		}
 	}
 }
@@ -280,7 +277,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_ax
 			&& new_pos.y >= sector_2->start.y - sphere->radius - sector_2->largest_radius
 			&& new_pos.z >= sector_2->start.z - sphere->radius - sector_2->largest_radius;
 		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 		}
 	}
 	// all negative
@@ -295,7 +292,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_ax
 			&& new_pos.y <= sector_2->end.y + sphere->radius + sector_2->largest_radius
 			&& new_pos.z <= sector_2->end.z + sphere->radius + sector_2->largest_radius;
 		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 		}
 	}
 	// x positive, y positive, z negative
@@ -310,7 +307,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_ax
 			&& new_pos.y >= sector_2->start.y - sphere->radius - sector_2->largest_radius
 			&& new_pos.z <= sector_2->end.z + sphere->radius + sector_2->largest_radius;
 		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 		}
 	}
 	// x positive, y negative, z positive
@@ -325,7 +322,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_ax
 			&& new_pos.y <= sector_2->end.y + sphere->radius + sector_2->largest_radius
 			&& new_pos.z >= sector_2->start.z - sphere->radius - sector_2->largest_radius;
 		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 		}
 	}
 	// x positive, y negative, z negative
@@ -340,7 +337,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_ax
 			&& new_pos.y <= sector_2->end.y + sphere->radius + sector_2->largest_radius
 			&& new_pos.z <= sector_2->end.z + sphere->radius + sector_2->largest_radius;
 		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 		}
 	}
 	// x negative, y positive, z positive
@@ -355,7 +352,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_ax
 			&& new_pos.y >= sector_2->start.y - sphere->radius - sector_2->largest_radius
 			&& new_pos.z >= sector_2->start.z - sphere->radius - sector_2->largest_radius;
 		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 		}
 	}
 	// x negative, y positive, z negative
@@ -370,7 +367,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_ax
 			&& new_pos.y >= sector_2->start.y - sphere->radius - sector_2->largest_radius
 			&& new_pos.z <= sector_2->end.z + sphere->radius + sector_2->largest_radius;
 		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 		}
 	}
 	// x negative, y negative, z positive
@@ -385,7 +382,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_ax
 			&& new_pos.y <= sector_2->end.y + sphere->radius + sector_2->largest_radius
 			&& new_pos.z >= sector_2->start.z - sphere->radius - sector_2->largest_radius;
 		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sphere, sector_2);
+			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 		}
 	}
 }
@@ -410,13 +407,9 @@ static void find_partial_crossing_events_for_sector(const struct sector_s *secto
 // If needed find any sphere on sphere collisions that occur between spheres
 // that partially cross sector boundaries. 
 void find_partial_crossing_events_for_all_sectors() {
-	int x, y, z;
-	for (x = 0; x < sim_data.sector_dims[X_AXIS]; x++) {
-		for (y = 0; y < sim_data.sector_dims[Y_AXIS]; y++) {
-			for (z = 0; z < sim_data.sector_dims[Z_AXIS]; z++) {
-				find_partial_crossing_events_for_sector(&sim_data.sectors[x][y][z]);
-			}
-		}
+	int i;
+	for(i = 0; i < sim_data.num_sectors; i++){
+		find_partial_crossing_events_for_sector(&sim_data.sectors_flat[i]);
 	}
 }
 
@@ -430,10 +423,7 @@ static void find_collision_times_between_spheres_in_sector(const struct sector_s
 			struct sphere_s *s2 = sector->spheres[j];
 			double time = find_collision_time_spheres(s1, s2);
 			if (time < event_details.time) {
-				event_details.type = COL_TWO_SPHERES;
-				event_details.sphere_1 = s1;
-				event_details.sphere_2 = s2;
-				event_details.time = time;
+				set_event_details(time, COL_TWO_SPHERES, s1, s2, AXIS_NONE, sector, NULL);
 			}
 		}
 	}
@@ -449,19 +439,12 @@ static void find_collision_times_grid_boundary_for_sector(const struct sector_s 
 		struct sphere_s *sphere = sector->spheres[i];
 		double time = find_collision_time_grid(sphere, &axis);
 		if (time < event_details.time) {
-			event_details.type = COL_SPHERE_WITH_GRID;
-			event_details.sphere_1 = sphere;
-			event_details.time = time;
-			event_details.grid_axis = axis;
+			set_event_details(time, COL_SPHERE_WITH_GRID, sphere, NULL, axis, sector, NULL);
 		}
 		struct sector_s *temp_dest = NULL;
 		time = find_collision_time_sector(sector, sphere, &temp_dest);
 		if (time < event_details.time) {
-			event_details.type = COL_SPHERE_WITH_SECTOR;
-			event_details.sphere_1 = sphere;
-			event_details.time = time;
-			event_details.source_sector = sector;
-			event_details.dest_sector = temp_dest;
+			set_event_details(time, COL_SPHERE_WITH_SECTOR, sphere, NULL, AXIS_NONE, sector, temp_dest);
 		}
 	}
 }
@@ -480,13 +463,9 @@ static void find_event_times_for_sector(const struct sector_s *sector) {
 
 // Finds event times for each sector, excluding partial crossings
 void find_event_times_for_all_sectors() {
-	int x, y, z;
-	for (x = 0; x < sim_data.sector_dims[X_AXIS]; x++) {
-		for (y = 0; y < sim_data.sector_dims[Y_AXIS]; y++) {
-			for (z = 0; z < sim_data.sector_dims[Z_AXIS]; z++) {
-				find_event_times_for_sector(&sim_data.sectors[x][y][z]);
-			}
-		}
+	int i;
+	for(i = 0; i < sim_data.num_sectors; i++){
+		find_event_times_for_sector(&sim_data.sectors_flat[i]);
 	}
 }
 
@@ -498,21 +477,13 @@ void find_event_times_no_dd() {
 		enum axis a;
 		double time = find_collision_time_grid(s1, &a);
 		if (time < event_details.time) {
-			event_details.type = COL_SPHERE_WITH_GRID;
-			event_details.grid_axis = a;
-			event_details.time = time;
-			event_details.sphere_1 = s1;
-			event_details.sphere_2 = NULL;
+			set_event_details(time, COL_SPHERE_WITH_GRID, s1, NULL, a, NULL, NULL);
 		}
 		for (j = i + 1; j < sim_data.total_num_spheres; j++) {
 			struct sphere_s *s2 = &(sim_data.spheres[j]);
 			time = find_collision_time_spheres(s1, s2);
 			if (time < event_details.time) {
-				event_details.type = COL_TWO_SPHERES;
-				event_details.grid_axis = AXIS_NONE;
-				event_details.time = time;
-				event_details.sphere_1 = s1;
-				event_details.sphere_2 = s2;
+				set_event_details(time, COL_TWO_SPHERES, s1, s2, AXIS_NONE, NULL, NULL);
 			}
 		}
 	}

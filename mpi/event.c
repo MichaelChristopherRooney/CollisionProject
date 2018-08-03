@@ -209,12 +209,16 @@ static void apply_partial_crossing_event(){
 void apply_event(){
 	if (next_event->type == COL_SPHERE_WITH_GRID) {
 		apply_sphere_with_grid_event();
+		stats.num_grid_collisions++;
 	} else if (next_event->type == COL_TWO_SPHERES) {
 		apply_sphere_on_sphere_event();
+		stats.num_two_sphere_collisions++;
 	} else if (next_event->type == COL_SPHERE_WITH_SECTOR) {
 		apply_sphere_transfer_event();
+		stats.num_sector_transfers++;
 	} else if(next_event->type == COL_TWO_SPHERES_PARTIAL_CROSSING){
 		apply_partial_crossing_event();
+		stats.num_partial_crossings++;
 	}
 }
 

@@ -88,9 +88,10 @@ static void delete_old_files(){
 }
 
 static void init_stats(){
-	sim_data.num_two_sphere_collisions = 0;
-	sim_data.num_grid_collisions = 0;
-	sim_data.num_sector_transfers = 0;
+	stats.num_two_sphere_collisions = 0;
+	stats.num_grid_collisions = 0;
+	stats.num_sector_transfers = 0;
+	stats.num_partial_crossings = 0;
 }
 
 static void parse_args_and_init_mpi(int argc, char *argv[]){
@@ -145,6 +146,16 @@ static void do_grid_iteration(){
 	sim_data.elapsed_time += next_event->time;
 }
 
+static void print_stats(){
+	if(GRID_RANK != 0){
+		return;
+	}
+	printf("Number of sphere on sphere collisions: %d\n", stats.num_two_sphere_collisions);
+	printf("Number of collisions with grid boundary: %d\n", stats.num_grid_collisions);
+	printf("Number of transfers between sectors: %d\n", stats.num_sector_transfers);
+	printf("Number of partial crossings: %d\n", stats.num_partial_crossings);
+}
+
 void simulation_run() {
 	sim_data.iteration_number = 1; // start at 1 as 0 is iteration num for the initial state
 	while (sim_data.elapsed_time < sim_data.time_limit) {	
@@ -153,6 +164,7 @@ void simulation_run() {
 		sim_data.iteration_number++;
 	}
 	save_final_state_file();
+	print_stats();
 	//compare_results();
 }
 

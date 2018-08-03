@@ -16,15 +16,21 @@ struct simulation_s {
 	bool xy_check_needed;
 	bool xz_check_needed;
 	bool yz_check_needed;
-	int num_two_sphere_collisions;
-	int num_grid_collisions;
-	int num_sector_transfers;
 	int64_t total_num_spheres;
 	int iteration_number;
 	struct sphere_s *spheres;
 };
 
 struct simulation_s sim_data;
+
+struct stats_s {
+	int num_two_sphere_collisions;
+	int num_grid_collisions;
+	int num_sector_transfers;
+	int num_partial_crossings;
+};
+
+struct stats_s stats;
 
 void simulation_init(double time_limit);
 void simulation_run();

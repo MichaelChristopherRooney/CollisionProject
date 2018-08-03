@@ -16,3 +16,8 @@ struct event_s event_details;
 
 void apply_event();
 void reset_event();
+void set_event_details(
+	const double time, const enum collision_type type, const struct sphere_s *sphere_1, 
+	const struct sphere_s *sphere_2, const enum axis grid_axis, const struct sector_s *source_sector,
+	const struct sector_s *dest_sector
+);

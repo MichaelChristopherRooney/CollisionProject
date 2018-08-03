@@ -107,16 +107,12 @@ static bool does_sphere_belong_to_sector(const struct sphere_s *sphere, const st
 // Given a sphere adds it to the correct sector.
 // This should only be used when randomly generating spheres at startup.
 void add_sphere_to_correct_sector(const struct sphere_s *sphere) {
-	int x, y, z;
-	for (x = 0; x < sim_data.sector_dims[X_AXIS]; x++) {
-		for (y = 0; y < sim_data.sector_dims[Y_AXIS]; y++) {
-			for (z = 0; z < sim_data.sector_dims[Z_AXIS]; z++) {
-				bool res = does_sphere_belong_to_sector(sphere, &sim_data.sectors[x][y][z]);
-				if (res) {
-					add_sphere_to_sector(&sim_data.sectors[x][y][z], sphere);
-					return;
-				}
-			}
+	int i;
+	for(i = 0; i < sim_data.num_sectors; i++){
+		bool res = does_sphere_belong_to_sector(sphere, &sim_data.sectors_flat[i]);
+		if (res) {
+			add_sphere_to_sector(&sim_data.sectors_flat[i], sphere);
+			return;
 		}
 	}
 	// Shouldn't reach here
