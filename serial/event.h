@@ -16,9 +16,11 @@ struct event_s {
 
 struct event_s event_details;
 
-void apply_event();
+void apply_event_dd();
+void apply_event_no_dd();
 void reset_event();
 void reset_sector_event(int i);
+void set_event_details_from_sector(int id);
 void set_event_details(
 	const double time, const enum event_type type, struct sphere_s *sphere_1, 
 	struct sphere_s *sphere_2, const enum axis grid_axis, struct sector_s *source_sector,
