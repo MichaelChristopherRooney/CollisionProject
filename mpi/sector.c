@@ -131,7 +131,6 @@ void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *s
 // specified axis.
 // Ex: If x axis and positive direction returns sector to the right.
 struct sector_s *get_adjacent_sector_non_diagonal(const struct sector_s *sector, const enum axis a, const enum direction dir) {
-
 	int x = sector->pos.x + SECTOR_MODIFIERS[dir][a][X_AXIS];
 	int y = sector->pos.y + SECTOR_MODIFIERS[dir][a][Y_AXIS];
 	int z = sector->pos.z + SECTOR_MODIFIERS[dir][a][Z_AXIS];
@@ -204,6 +203,7 @@ static void set_local_sector(){
 	SECTOR->pos.x = COORDS[X_AXIS];
 	SECTOR->pos.y = COORDS[Y_AXIS];
 	SECTOR->pos.z = COORDS[Z_AXIS];
+	PRIOR_TIME_VALID = false;
 	init_local_files_for_file_backed_memory();
 }
 

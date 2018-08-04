@@ -107,6 +107,11 @@ static void apply_sphere_with_grid_event(){
 	if(source->id != SECTOR->id){
 		seek_one_sphere();
 	}
+	if(source->id == SECTOR->id){
+		PRIOR_TIME_VALID = false;
+	} else {
+		PRIOR_TIME_VALID = true;
+	}
 }
 
 // Sphere on sphere collisions.
@@ -123,6 +128,11 @@ static void apply_sphere_on_sphere_event(){
 	}
 	if(source->id != SECTOR->id){
 		seek_two_spheres();
+	}
+	if(source->id == SECTOR->id){
+		PRIOR_TIME_VALID = false;
+	} else {
+		PRIOR_TIME_VALID = true;
 	}
 }
 
@@ -160,6 +170,11 @@ static void apply_sphere_transfer_event(){
 	// process responsible for the sector has already called ftruncate.
 	if(resize_needed){
 		resize_sphere_array(dest);
+	}
+	if(source->id == SECTOR->id || dest->id == SECTOR->id){
+		PRIOR_TIME_VALID = false;
+	} else {
+		PRIOR_TIME_VALID = true;
 	}
 }
 
@@ -199,6 +214,11 @@ static void apply_partial_crossing_event(){
 	}
 	if(source->id != SECTOR->id){
 		seek_two_spheres();
+	}
+	if(source->id == SECTOR->id || dest->id == SECTOR->id){
+		PRIOR_TIME_VALID = false;
+	} else {
+		PRIOR_TIME_VALID = true;
 	}
 }
 

@@ -54,16 +54,17 @@ static void compare_results() {
 // For debugging
 // Helps catch any issues with transfering spheres between sectors.
 void sanity_check() {
+	static const double eps = 10E-12;
 	int i;
 	for(i = 0; i < SECTOR->num_spheres; i++){
 		struct sphere_s *sphere = &SECTOR->spheres[i];
 		int error = 0;
 		enum axis a;
 		for (a = X_AXIS; a <= Z_AXIS; a++) {
-			if (sphere->pos.vals[a] > SECTOR->end.vals[a]) {
+			if (sphere->pos.vals[a] - SECTOR->end.vals[a] > eps) {
 				error = 1;
 			}
-			if (sphere->pos.vals[a] < SECTOR->start.vals[a]) {
+			if (SECTOR->start.vals[a] - sphere->pos.vals[a] > eps ) {
 				error = 1;
 			}
 		}
@@ -125,8 +126,6 @@ void simulation_init(int argc, char *argv[], double time_limit) {
 
 static void do_grid_iteration(){
 	sanity_check();
-	// First reset records.
-	reset_event_details();
 	// Now find event + time of event
 	// Final event may take place after time limit, so cut it short if so
 	find_event_times_for_sector(SECTOR);

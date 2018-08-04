@@ -4,6 +4,7 @@
 #include "collision.h"
 #include "event.h"
 #include "grid.h"
+#include "mpi_vars.h"
 #include "simulation.h"
 #include "vector_3.h"
 
@@ -427,7 +428,12 @@ void find_event_times_for_sector(const struct sector_s *sector) {
 	if (sector->num_spheres == 0) {
 		return;
 	}
-	find_collision_times_between_spheres_in_sector(sector);
-	find_collision_times_grid_boundary_for_sector(sector);
+	if(PRIOR_TIME_VALID == true){
+		event_details.time -= next_event->time; // next_event is still set from the prior iteration 
+	} else {
+		reset_event_details();
+		find_collision_times_between_spheres_in_sector(sector);
+		find_collision_times_grid_boundary_for_sector(sector);
+	}
 	find_partial_crossing_events_for_sector(sector);
 }

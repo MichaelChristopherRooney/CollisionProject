@@ -454,7 +454,6 @@ void find_event_times_for_all_sectors() {
 			reset_sector_event(s->id);
 			find_event_times_for_sector(s);
 		} else {
-			//printf("My time is still valid: %d\n", s->id);
 			set_event_details_from_sector(s->id);
 		}
 		find_partial_crossing_events_for_sector(s);

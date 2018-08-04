@@ -37,23 +37,19 @@ static void set_valid_time_for_all_but_source_and_dest(){
 
 void apply_event_dd(){
 	if (event_details.type == COL_SPHERE_WITH_GRID) {
-		//printf("a\n");
 		event_details.sphere_1->vel.vals[event_details.grid_axis] *= -1.0;
 		stats.num_grid_collisions++;
 		set_valid_time_for_all_but_source();
 	} else if (event_details.type == COL_TWO_SPHERES) {
-		//printf("b\n");
 		apply_bounce_between_spheres(event_details.sphere_1, event_details.sphere_2);
 		stats.num_two_sphere_collisions++;
 		set_valid_time_for_all_but_source();
 	} else if (event_details.type == COL_SPHERE_WITH_SECTOR) {
-		//printf("Transfering sphere %d from %d to %d\n", event_details.sphere_1->id, event_details.source_sector->id, event_details.dest_sector->id);
 		remove_sphere_from_sector(event_details.source_sector, event_details.sphere_1);
 		add_sphere_to_sector(event_details.dest_sector, event_details.sphere_1);
 		stats.num_sector_transfers++;
 		set_valid_time_for_all_but_source_and_dest();
 	} else if(event_details.type == COL_TWO_SPHERES_PARTIAL_CROSSING){
-		//printf("d\n");
 		apply_bounce_between_spheres(event_details.sphere_1, event_details.sphere_2);
 		stats.num_partial_crossings++;
 		set_valid_time_for_all_but_source_and_dest();
