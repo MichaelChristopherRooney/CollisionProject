@@ -17,6 +17,7 @@ static void set_default_params(){
 	final_state_file = NULL;
 	compare_file = NULL;
 	output_file = NULL;
+	ALL_HELP = false;
 }
 
 static void check_dim_arg(int slice, char axis){
@@ -47,6 +48,11 @@ static void print_config(){
 		printf("Compare file set to: %s\n", compare_file);
 	} else {
 		printf("Compare file not set\n");
+	}
+	if(ALL_HELP){
+		printf("ALL_HELP is set.\nAll nodes will find events for sectors without valid prior times\n");
+	} else {
+		printf("ALL_HELP is NOT set.\nOnly neighbour nodes will find events for sectors without valid prior times\n");
 	}
 }
 
@@ -93,8 +99,11 @@ static void print_help(){
 void parse_args(int argc, char *argv[]) {
 	set_default_params();
 	int c;
-	while((c = getopt(argc, argv, "i:c:f:ho:x:y:z:")) != -1) {
+	while((c = getopt(argc, argv, "ai:c:f:ho:x:y:z:")) != -1) {
 		switch(c) {
+		case 'a':
+			ALL_HELP = true;
+			break;
 		case 'x':
 			sim_data.sector_dims[X_AXIS] = atoi(optarg);
 			break;

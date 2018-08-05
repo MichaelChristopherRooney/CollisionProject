@@ -97,15 +97,18 @@ void set_event_details(
 // Sphere bounces off grid boundary.
 static void apply_sphere_with_grid_event(){
 	struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
-	if((source->is_neighbour && !source->is_local_neighbour) || source->id == SECTOR->id){
-		struct sphere_s *sphere = &source->spheres[next_event->sphere_1.sector_id];
+	struct sphere_s *sphere = NULL;
+	if(ALL_HELP && !source->is_local_neighbour){
+		sphere = &source->spheres[next_event->sphere_1.sector_id];
 		sphere->vel.vals[event_details.grid_axis] *= -1.0;
-		if(source->id == SECTOR->id){
-			write_iteration_data(sphere, NULL);
-		}
+	} else if((source->is_neighbour && !source->is_local_neighbour) || source->id == SECTOR->id){
+		sphere = &source->spheres[next_event->sphere_1.sector_id];
+		sphere->vel.vals[event_details.grid_axis] *= -1.0;
 	}
 	if(source->id != SECTOR->id){
 		seek_one_sphere();
+	} else {
+		write_iteration_data(sphere, NULL);
 	}
 	if(source->id == SECTOR->id){
 		PRIOR_TIME_VALID = false;
@@ -118,16 +121,21 @@ static void apply_sphere_with_grid_event(){
 // Both spheres within the same sector.
 static void apply_sphere_on_sphere_event(){
 	struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
-	if((source->is_neighbour && !source->is_local_neighbour) || SECTOR->id == next_event->source_sector_id){
-		struct sphere_s *s1 = &source->spheres[next_event->sphere_1.sector_id];
-		struct sphere_s *s2 = &source->spheres[next_event->sphere_2.sector_id];
+	struct sphere_s *s1 = NULL;
+	struct sphere_s *s2 = NULL;
+	if(ALL_HELP && !source->is_local_neighbour){
+		s1 = &source->spheres[next_event->sphere_1.sector_id];
+		s2 = &source->spheres[next_event->sphere_2.sector_id];
 		apply_bounce_between_spheres(s1, s2);
-		if(source->id == SECTOR->id){
-			write_iteration_data(s1, s2);
-		}
+	} else if((source->is_neighbour && !source->is_local_neighbour) || SECTOR->id == next_event->source_sector_id){
+		s1 = &source->spheres[next_event->sphere_1.sector_id];
+		s2 = &source->spheres[next_event->sphere_2.sector_id];
+		apply_bounce_between_spheres(s1, s2);
 	}
 	if(source->id != SECTOR->id){
 		seek_two_spheres();
+	} else {
+		write_iteration_data(s1, s2);
 	}
 	if(source->id == SECTOR->id){
 		PRIOR_TIME_VALID = false;
@@ -136,20 +144,61 @@ static void apply_sphere_on_sphere_event(){
 	}
 }
 
-
 // Sphere moves from one sector to another
-static void apply_sphere_transfer_event(){
+// All nodes except local neighbours should update their copy of the sphere.
+static void apply_sphere_transfer_event_all_help(){
 	// Only used if a local neighbour resizes and the local file backed memory needs to be remapped.
 	bool resize_needed = false; 
 	struct sphere_s *sphere = &next_event->sphere_1;
 	struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
+	struct sector_s *dest = &sim_data.sectors_flat[next_event->dest_sector_id];
+	if(source->is_local_neighbour){
+		source->num_spheres--;
+		set_largest_radius_after_removal(source, sphere);
+	} else {
+		remove_sphere_from_sector(source, sphere);
+	}
+	if(dest->is_local_neighbour){
+		dest->num_spheres++;
+		set_largest_radius_after_insertion(dest, sphere);
+		if(dest->num_spheres >= dest->max_spheres){
+			resize_needed = true;
+		}
+	} else {
+		add_sphere_to_sector(dest, sphere);
+	}
+	if(dest->id != SECTOR->id){
+		seek_one_sphere();
+	} else {
+		write_iteration_data(sphere, NULL);
+	}
+	MPI_Barrier(GRID_COMM); 
+	// If resize_needed is true then the above barrier ensures the
+	// process responsible for the sector has already called ftruncate.
+	if(resize_needed){
+		resize_sphere_array(dest);
+	}
+	if(source->id == SECTOR->id || dest->id == SECTOR->id){
+		PRIOR_TIME_VALID = false;
+	} else {
+		PRIOR_TIME_VALID = true;
+	}
+}
+
+// Sphere moves from one sector to another
+// Only non local neighbours should update their copy of the sphere.
+static void apply_sphere_transfer_event_neighbours_help(){
+	// Only used if a local neighbour resizes and the local file backed memory needs to be remapped.
+	bool resize_needed = false; 
+	struct sphere_s *sphere = &next_event->sphere_1;
+	struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
+	struct sector_s *dest = &sim_data.sectors_flat[next_event->dest_sector_id];
 	if(source->is_local_neighbour){
 		source->num_spheres--;
 		set_largest_radius_after_removal(source, sphere);
 	} else if(source->is_neighbour || SECTOR->id == next_event->source_sector_id){
 		remove_sphere_from_sector(source, sphere);
 	}
-	struct sector_s *dest = &sim_data.sectors_flat[next_event->dest_sector_id];
 	if(dest->is_local_neighbour){
 		dest->num_spheres++;
 		set_largest_radius_after_insertion(dest, sphere);
@@ -158,12 +207,11 @@ static void apply_sphere_transfer_event(){
 		}
 	} else if(dest->is_neighbour || SECTOR->id == next_event->dest_sector_id){
 		add_sphere_to_sector(dest, sphere);
-		if(dest->id == SECTOR->id){
-			write_iteration_data(sphere, NULL);
-		}
 	}
 	if(dest->id != SECTOR->id){
 		seek_one_sphere();
+	} else {
+		write_iteration_data(sphere, NULL);
 	}
 	MPI_Barrier(GRID_COMM); 
 	// If resize_needed is true then the above barrier ensures the
@@ -179,7 +227,38 @@ static void apply_sphere_transfer_event(){
 }
 
 // Sphere colliding with sphere in another sector.
-static void apply_partial_crossing_event(){
+// All nodes except local neighbours should update their copy of the sphere.
+static void apply_partial_crossing_event_all_help(){
+	struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
+	struct sector_s *dest = &sim_data.sectors_flat[next_event->dest_sector_id];
+	struct sphere_s *s1 = NULL;
+	struct sphere_s *s2 = NULL;
+	if(source->is_local_neighbour){
+		s1 = &next_event->sphere_1; // dummy
+	} else {
+		s1 = &source->spheres[next_event->sphere_1.sector_id]; // local copy
+	}
+	if(dest->is_local_neighbour){
+		s2 = &next_event->sphere_2; // dummy
+	} else {
+		s2 = &dest->spheres[next_event->sphere_2.sector_id]; // local copy
+	}
+	apply_bounce_between_spheres(s1, s2);
+	if(source->id != SECTOR->id){
+		seek_two_spheres();
+	} else {
+		write_iteration_data(s1, s2);
+	}
+	if(source->id == SECTOR->id || dest->id == SECTOR->id){
+		PRIOR_TIME_VALID = false;
+	} else {
+		PRIOR_TIME_VALID = true;
+	}
+}
+
+// Sphere colliding with sphere in another sector.
+// Only non local neighbours should update their copy of the sphere.
+static void apply_partial_crossing_event_neighbours_help(){
 	struct sphere_s *s1 = NULL;
 	struct sphere_s *s2 = NULL;
 	struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
@@ -203,11 +282,11 @@ static void apply_partial_crossing_event(){
 		if(source->id == SECTOR->id){
 			write_iteration_data(s1, s2);
 		}
-	} else if((source->is_neighbour && !source->is_local_neighbour) || SECTOR->id == next_event->source_sector_id){
+	} else if(source->is_neighbour && !source->is_local_neighbour){
 		s1 = &source->spheres[next_event->sphere_1.sector_id];
 		s2 = &next_event->sphere_2;
 		apply_bounce_between_spheres(s1, s2);
-	} else if((dest->is_neighbour && !dest->is_local_neighbour) || SECTOR->id == next_event->dest_sector_id){
+	} else if(dest->is_neighbour && !dest->is_local_neighbour){
 		s1 = &next_event->sphere_1;
 		s2 = &dest->spheres[next_event->sphere_2.sector_id];
 		apply_bounce_between_spheres(s1, s2);
@@ -234,10 +313,19 @@ void apply_event(){
 		apply_sphere_on_sphere_event();
 		stats.num_two_sphere_collisions++;
 	} else if (next_event->type == COL_SPHERE_WITH_SECTOR) {
-		apply_sphere_transfer_event();
+		if(ALL_HELP){
+			apply_sphere_transfer_event_all_help();
+		} else {
+			apply_sphere_transfer_event_neighbours_help();
+		}
+		
 		stats.num_sector_transfers++;
 	} else if(next_event->type == COL_TWO_SPHERES_PARTIAL_CROSSING){
-		apply_partial_crossing_event();
+		if(ALL_HELP){
+			apply_partial_crossing_event_all_help();
+		} else {
+			apply_partial_crossing_event_neighbours_help();
+		}
 		stats.num_partial_crossings++;
 	}
 }

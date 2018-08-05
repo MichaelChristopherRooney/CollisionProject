@@ -38,16 +38,13 @@ void load_spheres(FILE *initial_state_fp) {
 		fread_wrapper(&in.radius, sizeof(double), 1, initial_state_fp);
 		write_sphere_initial_state(&in);
 		struct sector_s *temp = find_sector_that_sphere_belongs_to(&in);
-		if(temp == SECTOR || temp->is_neighbour){
-			if(temp->is_local_neighbour){
-				// sphere array will be resized later if needed
-				// for now make sure the largest radius is tracked though
-				temp->num_spheres++; // will check for resizing later
-				set_largest_radius_after_insertion(temp, &in);
-			} else {
-				// want to copy it if it belongs to local node or a neighbour
-				add_sphere_to_sector(temp, &in);
-			}
+		if(temp->is_local_neighbour){
+			// sphere array will be resized later if needed
+			// for now make sure the largest radius is tracked though
+			temp->num_spheres++; // will check for resizing later
+			set_largest_radius_after_insertion(temp, &in);
+		} else if(ALL_HELP || temp == SECTOR || temp->is_neighbour){
+			add_sphere_to_sector(temp, &in);		
 		}
 	}
 	write_initial_iteration_stats();
@@ -74,18 +71,8 @@ void apply_bounce_between_spheres(struct sphere_s *s1, struct sphere_s *s2) {
 	s2->vel.z = s2->vel.z + (p * s1->mass * rel_pos.z);
 }
 
-// This updates the positions and velocities of each sphere once the next
-// event and the time it occurs are known.
-// First update own spheres, then update local copy of neighbour's spheres
-// Don't update neighbour's spheres if they are shared via shared memory.
-// Also update received copies of sphere(s) involved in next event.
-// As they are copies the same sphere is not updated twice.
-void update_spheres() {
+static void update_neighbour_spheres(){
 	int i, j;
-	for (i = 0; i < SECTOR->num_spheres; i++) {
-		struct sphere_s *s = &(SECTOR->spheres[i]);
-		update_sphere_position(s, next_event->time);
-	}
 	for(i = 0; i < NUM_NEIGHBOURS; i++){
 		struct sector_s *sector = &sim_data.sectors_flat[NEIGHBOUR_IDS[i]];
 		if(sector->is_local_neighbour){
@@ -95,6 +82,45 @@ void update_spheres() {
 			struct sphere_s *s = &(sector->spheres[j]);
 			update_sphere_position(s, next_event->time);
 		}
+	}
+}
+
+static void update_my_spheres(){
+	int i;
+	for (i = 0; i < SECTOR->num_spheres; i++) {
+		struct sphere_s *s = &(SECTOR->spheres[i]);
+		update_sphere_position(s, next_event->time);
+	}
+}
+
+// Updates spheres belonging to sectors that aren't local neighbours, 
+// including the local sector.
+// Used when ALL_HELP is true
+static void update_all_spheres(){
+	int i, j;
+	for(i = 0; i < sim_data.num_sectors; i++){
+		struct sector_s *sector = &sim_data.sectors_flat[i];
+		if(sector->is_local_neighbour){
+			continue;
+		}
+		for(j = 0; j < sector->num_spheres; j++){
+			struct sphere_s *s = &(sector->spheres[j]);
+			update_sphere_position(s, next_event->time);
+		}
+	}
+}
+// This updates the positions and velocities of each sphere once the next
+// event and the time it occurs are known.
+// If ALL_HELP is enabled then update all spheres except those that belong to 
+// local neighbours.
+// Otherwise update own spheres and those of non-local neighbours
+// Finally update dummy copies of spheres involved in the event.
+void update_spheres() {
+	if(ALL_HELP){
+		update_all_spheres();
+	} else {
+		update_my_spheres();
+		update_neighbour_spheres();
 	}
 	update_sphere_position(&next_event->sphere_1, next_event->time);
 	update_sphere_position(&next_event->sphere_2, next_event->time);

@@ -17,6 +17,8 @@ int COORDS[3];
 
 int GRID_RANK_NEXT_EVENT; // the node with the soonest event
 
+bool ALL_HELP;
+
 struct sector_s *SECTOR; // sector the local node is handling
 bool PRIOR_TIME_VALID; // If the local sector's event time from the prior iteration is valid
 
