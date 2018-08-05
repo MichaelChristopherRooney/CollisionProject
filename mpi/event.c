@@ -1,6 +1,7 @@
 #include <float.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "event.h"
 #include "io.h"
@@ -65,6 +66,8 @@ static MPI_Datatype get_axis_enum_size(){
 
 void init_events(){
 	event_buffer = malloc(NUM_NODES * sizeof(struct transmit_event_s));
+	prior_time_valid_buffer = malloc(NUM_NODES * sizeof(bool));
+	num_invalid = NUM_NODES;
 	MPI_Datatype enum_type = get_axis_enum_size();
 	// TODO: sphere struct as MPI datatype
 	// TODO: transmit_event_s as MPI datatype
@@ -112,8 +115,6 @@ static void apply_sphere_with_grid_event(){
 	}
 	if(source->id == SECTOR->id){
 		PRIOR_TIME_VALID = false;
-	} else {
-		PRIOR_TIME_VALID = true;
 	}
 }
 
@@ -139,8 +140,6 @@ static void apply_sphere_on_sphere_event(){
 	}
 	if(source->id == SECTOR->id){
 		PRIOR_TIME_VALID = false;
-	} else {
-		PRIOR_TIME_VALID = true;
 	}
 }
 
@@ -180,8 +179,6 @@ static void apply_sphere_transfer_event_all_help(){
 	}
 	if(source->id == SECTOR->id || dest->id == SECTOR->id){
 		PRIOR_TIME_VALID = false;
-	} else {
-		PRIOR_TIME_VALID = true;
 	}
 }
 
@@ -221,8 +218,6 @@ static void apply_sphere_transfer_event_neighbours_help(){
 	}
 	if(source->id == SECTOR->id || dest->id == SECTOR->id){
 		PRIOR_TIME_VALID = false;
-	} else {
-		PRIOR_TIME_VALID = true;
 	}
 }
 
@@ -251,8 +246,6 @@ static void apply_partial_crossing_event_all_help(){
 	}
 	if(source->id == SECTOR->id || dest->id == SECTOR->id){
 		PRIOR_TIME_VALID = false;
-	} else {
-		PRIOR_TIME_VALID = true;
 	}
 }
 
@@ -296,8 +289,6 @@ static void apply_partial_crossing_event_neighbours_help(){
 	}
 	if(source->id == SECTOR->id || dest->id == SECTOR->id){
 		PRIOR_TIME_VALID = false;
-	} else {
-		PRIOR_TIME_VALID = true;
 	}
 }
 
@@ -306,11 +297,17 @@ static void apply_partial_crossing_event_neighbours_help(){
 // Each other sector must update their file pointer however.
 // TODO: clean this up
 void apply_event(){
+	PRIOR_TIME_VALID = true;
+	memset(prior_time_valid_buffer, 1, NUM_NODES); // all true at first, invalidate later
 	if (next_event->type == COL_SPHERE_WITH_GRID) {
 		apply_sphere_with_grid_event();
+		prior_time_valid_buffer[next_event->source_sector_id] = false;
+		num_invalid = 1;
 		stats.num_grid_collisions++;
 	} else if (next_event->type == COL_TWO_SPHERES) {
 		apply_sphere_on_sphere_event();
+		prior_time_valid_buffer[next_event->source_sector_id] = false;
+		num_invalid = 1;
 		stats.num_two_sphere_collisions++;
 	} else if (next_event->type == COL_SPHERE_WITH_SECTOR) {
 		if(ALL_HELP){
@@ -318,14 +315,19 @@ void apply_event(){
 		} else {
 			apply_sphere_transfer_event_neighbours_help();
 		}
-		
 		stats.num_sector_transfers++;
+		prior_time_valid_buffer[next_event->source_sector_id] = false;
+		prior_time_valid_buffer[next_event->dest_sector_id] = false;
+		num_invalid = 2;
 	} else if(next_event->type == COL_TWO_SPHERES_PARTIAL_CROSSING){
 		if(ALL_HELP){
 			apply_partial_crossing_event_all_help();
 		} else {
 			apply_partial_crossing_event_neighbours_help();
 		}
+		prior_time_valid_buffer[next_event->source_sector_id] = false;
+		prior_time_valid_buffer[next_event->dest_sector_id] = false;
+		num_invalid = 2;
 		stats.num_partial_crossings++;
 	}
 }

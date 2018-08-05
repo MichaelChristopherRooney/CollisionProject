@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 #include "collision.h"
 #include "sphere.h"
 
@@ -36,6 +38,10 @@ struct transmit_event_s {
 
 struct transmit_event_s event_to_send;
 struct transmit_event_s *next_event; // agreed upon by all nodes
+
+// bool at index i gives whether or not sector with id i has valid prior time
+bool *prior_time_valid_buffer;
+int num_invalid;
 
 void reduce_events();
 void init_events();
