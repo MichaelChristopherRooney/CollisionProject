@@ -75,10 +75,10 @@ void sanity_check() {
 				if (sphere->pos.vals[a] < 0.0 || sphere->pos.vals[a] > sim_data.grid_size.vals[a]) {
 					error = 1;
 				}
-				if(sphere->sector_id < 0){
-					error = 1;
-					printf("Negative sector id!!!\n");
-				}
+			}
+			if(sphere->sector_id < 0){
+				printf("Sector %d: my copy of sphere %ld in sector %d has negative sector id.\n", SECTOR->id, sphere->id, s->id);
+				exit(1);
 			}
 			if (error) {
 				printf("Sector at %d, %d, %d incorrectly has sphere with pos %f, %f, %f\n", s->pos.x, s->pos.y, s->pos.z, sphere->pos.x, sphere->pos.y, sphere->pos.z);

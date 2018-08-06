@@ -35,7 +35,6 @@ static void prepare_help_event_to_send(){
 	help_event_to_send.time = helping_event_details.time;
 	help_event_to_send.type = helping_event_details.type;
 	help_event_to_send.sphere_1 = *helping_event_details.sphere_1;
-	printf("%d sending sphere with sector id %ld\n", GRID_RANK, help_event_to_send.sphere_1.sector_id);
 	if(helping_event_details.sphere_2 != NULL){
 		help_event_to_send.sphere_2 = *helping_event_details.sphere_2;
 	} else {
@@ -107,7 +106,6 @@ void reduce_all_help_events_one_invalid(){
 // TODO: use derived data type rather than sending MPI_CHAR * sizeof(...) number of bytes
 void reduce_events(){
 	prepare_event_to_send();
-	//printf("%d soonest time is %f\n", GRID_RANK, event_details.time);
 	MPI_Allgather(
 		&event_to_send, sizeof(struct transmit_event_s), MPI_CHAR,
 		event_buffer, sizeof(struct transmit_event_s), MPI_CHAR, GRID_COMM
@@ -121,12 +119,8 @@ void reduce_events(){
 		}
 	}
 	next_event = &event_buffer[GRID_RANK_NEXT_EVENT];
-	if(next_event->sphere_1.sector_id < 0 || next_event->sphere_1.sector_id > 10000){
-		printf("!!!!!!!!!!!\n");
-		exit(1);
-	}
 	if(GRID_RANK == 0){
-		printf("Soonest time is %f from rank %d\n", next_event->time, GRID_RANK_NEXT_EVENT);
+		//printf("Soonest time is %f from rank %d\n", next_event->time, GRID_RANK_NEXT_EVENT);
 	}
 }
 
@@ -208,10 +202,10 @@ static void apply_sphere_with_grid_event(){
 	struct sphere_s *sphere = NULL;
 	if(ALL_HELP && !source->is_local_neighbour){
 		sphere = &source->spheres[next_event->sphere_1.sector_id];
-		sphere->vel.vals[event_details.grid_axis] *= -1.0;
+		sphere->vel.vals[next_event->grid_axis] *= -1.0;
 	} else if((source->is_neighbour && !source->is_local_neighbour) || source->id == SECTOR->id){
 		sphere = &source->spheres[next_event->sphere_1.sector_id];
-		sphere->vel.vals[event_details.grid_axis] *= -1.0;
+		sphere->vel.vals[next_event->grid_axis] *= -1.0;
 	}
 	if(source->id != SECTOR->id){
 		seek_one_sphere();
@@ -275,6 +269,10 @@ static void apply_sphere_transfer_event(){
 		seek_one_sphere();
 	} else {
 		write_iteration_data(sphere, NULL);
+		if(sphere->sector_id < 0){
+			printf("!!!!!!!!\n");
+			exit(1);
+		}
 	}
 	MPI_Barrier(GRID_COMM); 
 	// If resize_needed is true then the above barrier ensures the
