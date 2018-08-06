@@ -128,9 +128,7 @@ static void find_partial_crossing_events_between_sphere_and_sector(const struct 
 	for (j = 0; j < sector_2->num_spheres; j++) {
 		struct sphere_s *sphere_2 = &sector_2->spheres[j];
 		double time = find_collision_time_spheres(sphere_1, sphere_2);
-		if (time < event_details.time) {
-			set_event_details(time, COL_TWO_SPHERES_PARTIAL_CROSSING, sphere_1, sphere_2, AXIS_NONE, sector_1, sector_2);
-		}
+		set_event_details(time, COL_TWO_SPHERES_PARTIAL_CROSSING, sphere_1, sphere_2, AXIS_NONE, sector_1, sector_2);
 	}
 }
 
@@ -371,7 +369,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_ax
 // If by the time of the current soonest event it is within a certain distance 
 // of any sector it is travelling towards we must check for partial crossings.
 static void find_partial_crossing_events_for_sector(const struct sector_s *sector) {
-	int i;
+	int64_t i;
 	for (i = 0; i < sector->num_spheres; i++) {
 		const struct sphere_s *sphere = &sector->spheres[i];
 		union vector_3d new_pos;
@@ -387,15 +385,13 @@ static void find_partial_crossing_events_for_sector(const struct sector_s *secto
 // Finds when all spheres in a given sector will collide with other and returns
 // the soonest time.
 static void find_collision_times_between_spheres_in_sector(const struct sector_s *sector) {
-	int i, j;
+	int64_t i, j;
 	for (i = 0; i < sector->num_spheres - 1; i++) {
 		struct sphere_s *s1 = &sector->spheres[i];
 		for (j = i + 1; j < sector->num_spheres; j++) {
 			struct sphere_s *s2 = &sector->spheres[j];
 			double time = find_collision_time_spheres(s1, s2);
-			if (time < event_details.time) {
-				set_event_details(time, COL_TWO_SPHERES, s1, s2, AXIS_NONE, sector, NULL);
-			}
+			set_event_details(time, COL_TWO_SPHERES, s1, s2, AXIS_NONE, sector, NULL);
 		}
 	}
 }
@@ -403,21 +399,37 @@ static void find_collision_times_between_spheres_in_sector(const struct sector_s
 // Finds time to both collide with grid and to cross sector boundaries.
 // Can optimise further so that grid boundaries are not checked if another
 // sector will be entered first.
+// If a single sector is finding its own next event then start will be 0 and
+// end will be sector->num_spheres
+// If other nodes are helping then they will provide start and end for the range
+// they are checking
 static void find_collision_times_grid_boundary_for_sector(const struct sector_s *sector) {
 	enum axis axis = COL_NONE;
-	int i;
+	int64_t i;
 	for (i = 0; i < sector->num_spheres; i++) {
 		struct sphere_s *sphere = &sector->spheres[i];
 		double time = find_collision_time_grid(sphere, &axis);
-		if (time < event_details.time) {
-			set_event_details(time, COL_SPHERE_WITH_GRID, sphere, NULL, axis, sector, NULL);
-		}
+		set_event_details(time, COL_SPHERE_WITH_GRID, sphere, NULL, axis, sector, NULL);
 		struct sector_s *temp_dest = NULL;
 		time = find_collision_time_sector(sector, sphere, &temp_dest);
-		if (time < event_details.time) {
-			set_event_details(time, COL_SPHERE_WITH_SECTOR, sphere, NULL, AXIS_NONE, sector, temp_dest);
-		}
+		set_event_details(time, COL_SPHERE_WITH_SECTOR, sphere, NULL, AXIS_NONE, sector, temp_dest);
 	}
+}
+
+static void find_event_times_all_help_one_invalid(){
+	if(PRIOR_TIME_VALID == true){
+		event_details.time -= next_event->time; // next_event is still set from the prior iteration
+		helping = true; // changes behaviour of set_event_details
+		reset_event_details_helping();
+	} else {
+		reset_event_details();
+	}
+	// TODO: actually divide the work later
+	//printf("Node %d: I think sector %d has %ld spheres\n", GRID_RANK, invalid_1->id, invalid_1->num_spheres);
+	find_collision_times_between_spheres_in_sector(invalid_1);
+	find_collision_times_grid_boundary_for_sector(invalid_1);
+	reduce_all_help_events_one_invalid();
+	helping = false;
 }
 
 // Given a sector finds the soonest occuring event.
@@ -425,11 +437,10 @@ static void find_collision_times_grid_boundary_for_sector(const struct sector_s 
 // boundary, or a sphere passing into another sector.
 // Any partial crossings will be handled once this function has been called for each sector.
 void find_event_times_for_sector(const struct sector_s *sector) {
-	if (sector->num_spheres == 0) {
-		return;
-	}
-	if(PRIOR_TIME_VALID == true){
-		event_details.time -= next_event->time; // next_event is still set from the prior iteration 
+	// TODO: clean up below conditions
+	// TODO: num_nodes > num_spheres
+	if(ALL_HELP && num_invalid == 1){
+		find_event_times_all_help_one_invalid();
 	} else {
 		reset_event_details();
 		find_collision_times_between_spheres_in_sector(sector);

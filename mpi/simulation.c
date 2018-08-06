@@ -55,23 +55,37 @@ static void compare_results() {
 // Helps catch any issues with transfering spheres between sectors.
 void sanity_check() {
 	static const double eps = 10E-12;
-	int i;
-	for(i = 0; i < SECTOR->num_spheres; i++){
-		struct sphere_s *sphere = &SECTOR->spheres[i];
-		int error = 0;
-		enum axis a;
-		for (a = X_AXIS; a <= Z_AXIS; a++) {
-			if (sphere->pos.vals[a] - SECTOR->end.vals[a] > eps) {
-				error = 1;
+	int64_t i, j;
+	for(i = 0; i < sim_data.num_sectors; i++){
+		struct sector_s *s = &sim_data.sectors_flat[i];
+		bool cont = ALL_HELP || (s->is_neighbour && !s->is_local_neighbour) || SECTOR->id == s->id;
+		if(!cont){
+			continue;
+		}
+		for(j = 0; j < s->num_spheres; j++){
+			struct sphere_s *sphere = &s->spheres[j];
+			int error = 0;
+			enum axis a;
+			for (a = X_AXIS; a <= Z_AXIS; a++) {
+				double e1 = sphere->pos.vals[a] - s->end.vals[a];
+				double e2 = s->start.vals[a] - sphere->pos.vals[a];
+				if (e1 > eps || e2 > eps) {
+					error = 1;
+				}
+				if (sphere->pos.vals[a] < 0.0 || sphere->pos.vals[a] > sim_data.grid_size.vals[a]) {
+					error = 1;
+				}
+				if(sphere->sector_id < 0){
+					error = 1;
+					printf("Negative sector id!!!\n");
+				}
 			}
-			if (SECTOR->start.vals[a] - sphere->pos.vals[a] > eps ) {
-				error = 1;
+			if (error) {
+				printf("Sector at %d, %d, %d incorrectly has sphere with pos %f, %f, %f\n", s->pos.x, s->pos.y, s->pos.z, sphere->pos.x, sphere->pos.y, sphere->pos.z);
+				exit(1);
 			}
 		}
-		if (error) {
-			printf("Sector at %d, %d, %d incorrectly has sphere with pos %f, %f, %f\n", SECTOR->pos.x, SECTOR->pos.y, SECTOR->pos.z, sphere->pos.x, sphere->pos.y, sphere->pos.z);
-			exit(1);
-		}
+
 	}
 }
 
@@ -157,7 +171,7 @@ static void print_stats(){
 
 void simulation_run() {
 	sim_data.iteration_number = 1; // start at 1 as 0 is iteration num for the initial state
-	while (sim_data.elapsed_time < sim_data.time_limit) {	
+	while (sim_data.elapsed_time < sim_data.time_limit) {
 		do_grid_iteration();
 		MPI_Barrier(GRID_COMM);
 		sim_data.iteration_number++;

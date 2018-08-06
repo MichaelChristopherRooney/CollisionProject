@@ -245,7 +245,7 @@ static void set_sectors(){
 						s->is_neighbour = true;
 						NEIGHBOUR_IDS[NUM_NEIGHBOURS] = s->id;
 						NUM_NEIGHBOURS++;
-						if(strcmp(recv_hn, send_hn) == 0){
+						if(false && strcmp(recv_hn, send_hn) == 0){
 							s->is_local_neighbour = true;
 							s->spheres_fd = open(spheres_fn_recv, O_CREAT | O_RDWR, S_IRWXU);
 							s->spheres = mmap_wrapper(NULL, s->max_spheres * sizeof(struct sphere_s), PROT_READ | PROT_WRITE, MAP_SHARED, s->spheres_fd, 0);

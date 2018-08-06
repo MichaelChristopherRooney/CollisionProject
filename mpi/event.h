@@ -19,8 +19,6 @@ struct event_s {
 	struct sector_s *dest_sector;
 };
 
-struct event_s event_details; // tracks local next event
-
 // This is the event data that is sent/received to/from other nodes.
 // Instead of using pointers as above it uses sector ids and includes the full
 // sphere struct.
@@ -36,16 +34,21 @@ struct transmit_event_s {
 	int dest_sector_id;
 };
 
+struct event_s event_details; // tracks local next event
+
 struct transmit_event_s event_to_send;
 struct transmit_event_s *next_event; // agreed upon by all nodes
 
-// bool at index i gives whether or not sector with id i has valid prior time
-bool *prior_time_valid_buffer;
+struct sector_s *invalid_1;
+struct sector_s *invalid_2;
 int num_invalid;
+bool helping; // is the node helping another node this iteration
 
 void reduce_events();
+void reduce_all_help_events_one_invalid();
 void init_events();
 void reset_event_details();
+void reset_event_details_helping();
 void set_event_details(
 	const double time, const enum collision_type type, const struct sphere_s *sphere_1, 
 	const struct sphere_s *sphere_2, const enum axis grid_axis, const struct sector_s *source_sector,
