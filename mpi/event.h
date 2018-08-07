@@ -35,7 +35,6 @@ struct transmit_event_s {
 };
 
 struct event_s event_details; // tracks local next event
-
 struct transmit_event_s event_to_send;
 struct transmit_event_s *next_event; // agreed upon by all nodes
 

@@ -151,17 +151,12 @@ bool does_sphere_belong_to_sector(const struct sphere_s *sphere, const struct se
 }
 
 struct sector_s *find_sector_that_sphere_belongs_to(struct sphere_s *sphere){
-	int x, y, z;
-	for (x = 0; x < sim_data.sector_dims[X_AXIS]; x++) {
-		for (y = 0; y < sim_data.sector_dims[Y_AXIS]; y++) {
-			for (z = 0; z < sim_data.sector_dims[Z_AXIS]; z++) {
-				bool res = does_sphere_belong_to_sector(sphere, &sim_data.sectors[x][y][z]);
-				if (res) {
-					return &sim_data.sectors[x][y][z];
-				}
-			}
+	int i;
+	for(i = 0; i < sim_data.num_sectors; i++){
+		if (does_sphere_belong_to_sector(sphere, &sim_data.sectors_flat[i])) {
+			return &sim_data.sectors_flat[i];
 		}
-	}
+	}	
 	// Shouldn't reach here
 	printf("Error: sphere does not belong to any sector\n");
 	exit(1);
@@ -207,56 +202,65 @@ static void set_local_sector(){
 	init_local_files_for_file_backed_memory();
 }
 
+static double x_inc;
+static double y_inc;
+static double z_inc;
+static int id;
+static char recv_hn[MAX_HOSTNAME_LENGTH];
+static char send_hn[MAX_HOSTNAME_LENGTH];
+static char spheres_fn_recv[SECTOR_MAX_FILENAME_LENGTH];
+
+static void set_sector(int i, int j, int k){
+	struct sector_s *s = &sim_data.sectors[i][j][k];
+	s->num_spheres = 0;
+	s->max_spheres = SECTOR_DEFAULT_MAX_SPHERES;
+	s->start.x = x_inc * i;
+	s->end.x = s->start.x + x_inc;
+	s->start.y = y_inc * j;
+	s->end.y = s->start.y + y_inc;
+	s->start.z = z_inc * k;
+	s->end.z = s->start.z + z_inc;
+	if(s == SECTOR){
+		MPI_Bcast(send_hn, MAX_HOSTNAME_LENGTH, MPI_CHAR, id, GRID_COMM);
+		MPI_Bcast(SECTOR->spheres_filename, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
+		SECTOR->spheres = mmap_wrapper(NULL, SECTOR->max_spheres * sizeof(struct sphere_s), PROT_READ | PROT_WRITE, MAP_SHARED, SECTOR->spheres_fd, 0);
+	} else {
+		s->id = id;
+		s->pos.x = i;
+		s->pos.y = j;
+		s->pos.z = k;
+		MPI_Bcast(recv_hn, MAX_HOSTNAME_LENGTH, MPI_CHAR, id, GRID_COMM);
+		MPI_Bcast(spheres_fn_recv, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
+		if(check_is_neighbour(s)){
+			s->is_neighbour = true;
+			NEIGHBOUR_IDS[NUM_NEIGHBOURS] = s->id;
+			NUM_NEIGHBOURS++;
+			if(strcmp(recv_hn, send_hn) == 0){
+				s->is_local_neighbour = true;
+				s->spheres_fd = open(spheres_fn_recv, O_CREAT | O_RDWR, S_IRWXU);
+				s->spheres = mmap_wrapper(NULL, s->max_spheres * sizeof(struct sphere_s), PROT_READ | PROT_WRITE, MAP_SHARED, s->spheres_fd, 0);
+			} else {
+				s->spheres = calloc(s->max_spheres, sizeof(struct sphere_s));
+			}
+		} else if(ALL_HELP){
+			s->spheres = calloc(s->max_spheres, sizeof(struct sphere_s));
+		}
+	}
+	id++;	
+}
+
 static void set_sectors(){
 	set_local_sector();
-	double x_inc = sim_data.grid_size.x / sim_data.sector_dims[X_AXIS];
-	double y_inc = sim_data.grid_size.y / sim_data.sector_dims[Y_AXIS];
-	double z_inc = sim_data.grid_size.z / sim_data.sector_dims[Z_AXIS];
-	int id = 0;
+	x_inc = sim_data.grid_size.x / sim_data.sector_dims[X_AXIS];
+	y_inc = sim_data.grid_size.y / sim_data.sector_dims[Y_AXIS];
+	z_inc = sim_data.grid_size.z / sim_data.sector_dims[Z_AXIS];
+	id = 0;
 	int i, j, k;
-	char recv_hn[MAX_HOSTNAME_LENGTH];
-	char send_hn[MAX_HOSTNAME_LENGTH];
-	char spheres_fn_recv[SECTOR_MAX_FILENAME_LENGTH];
 	gethostname(send_hn, MAX_HOSTNAME_LENGTH);
 	for (i = 0; i < sim_data.sector_dims[X_AXIS]; i++) {
 		for (j = 0; j < sim_data.sector_dims[Y_AXIS]; j++) {
 			for (k = 0; k < sim_data.sector_dims[Z_AXIS]; k++) {
-				struct sector_s *s = &sim_data.sectors[i][j][k];
-				s->num_spheres = 0;
-				s->max_spheres = SECTOR_DEFAULT_MAX_SPHERES;
-				s->start.x = x_inc * i;
-				s->end.x = s->start.x + x_inc;
-				s->start.y = y_inc * j;
-				s->end.y = s->start.y + y_inc;
-				s->start.z = z_inc * k;
-				s->end.z = s->start.z + z_inc;
-				if(s == SECTOR){
-					MPI_Bcast(send_hn, MAX_HOSTNAME_LENGTH, MPI_CHAR, id, GRID_COMM);
-					MPI_Bcast(SECTOR->spheres_filename, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
-					SECTOR->spheres = mmap_wrapper(NULL, SECTOR->max_spheres * sizeof(struct sphere_s), PROT_READ | PROT_WRITE, MAP_SHARED, SECTOR->spheres_fd, 0);
-				} else {
-					s->id = id;
-					s->pos.x = i;
-					s->pos.y = j;
-					s->pos.z = k;
-					MPI_Bcast(recv_hn, MAX_HOSTNAME_LENGTH, MPI_CHAR, id, GRID_COMM);
-					MPI_Bcast(spheres_fn_recv, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
-					if(check_is_neighbour(s)){
-						s->is_neighbour = true;
-						NEIGHBOUR_IDS[NUM_NEIGHBOURS] = s->id;
-						NUM_NEIGHBOURS++;
-						if(false && strcmp(recv_hn, send_hn) == 0){
-							s->is_local_neighbour = true;
-							s->spheres_fd = open(spheres_fn_recv, O_CREAT | O_RDWR, S_IRWXU);
-							s->spheres = mmap_wrapper(NULL, s->max_spheres * sizeof(struct sphere_s), PROT_READ | PROT_WRITE, MAP_SHARED, s->spheres_fd, 0);
-						} else {
-							s->spheres = calloc(s->max_spheres, sizeof(struct sphere_s));
-						}
-					} else if(ALL_HELP){
-						s->spheres = calloc(s->max_spheres, sizeof(struct sphere_s));
-					}
-				}
-				id++;	
+				set_sector(i, j, k);
 			}
 		}
 	}

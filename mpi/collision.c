@@ -396,6 +396,39 @@ static void find_collision_times_between_spheres_in_sector(const struct sector_s
 	}
 }
 
+// Similar to find_collision_times_between_spheres_in_sector but each
+// process takes part of the work.
+// Because the inner loop uses (i+1) as a starting point we can't simply divide
+// the outer loop or the workload will be unbalanced.
+// Instead each process has the same outer loop, but in the inner loop it starts
+// at (i+1+rank) and uses an increment of num_nodes.
+static void find_collision_times_between_spheres_in_sector_all_help(const struct sector_s *sector) {
+	int64_t i, j;
+	for (i = 0; i < sector->num_spheres - 1; i++) {
+		struct sphere_s *s1 = &sector->spheres[i];
+		for (j = i + 1 + GRID_RANK; j < sector->num_spheres; j = j + NUM_NODES) {
+			struct sphere_s *s2 = &sector->spheres[j];
+			double time = find_collision_time_spheres(s1, s2);
+			set_event_details(time, COL_TWO_SPHERES, s1, s2, AXIS_NONE, sector, NULL);
+		}
+	}
+}
+
+// Similar to find_collision_times_grid_boundary_for_sector_all_help but work is
+// divided between all processes.
+static void find_collision_times_grid_boundary_for_sector_all_help(const struct sector_s *sector) {
+	enum axis axis = COL_NONE;
+	int64_t i;
+	for (i = GRID_RANK; i < sector->num_spheres; i = i + NUM_NODES) {
+		struct sphere_s *sphere = &sector->spheres[i];
+		double time = find_collision_time_grid(sphere, &axis);
+		set_event_details(time, COL_SPHERE_WITH_GRID, sphere, NULL, axis, sector, NULL);
+		struct sector_s *temp_dest = NULL;
+		time = find_collision_time_sector(sector, sphere, &temp_dest);
+		set_event_details(time, COL_SPHERE_WITH_SECTOR, sphere, NULL, AXIS_NONE, sector, temp_dest);
+	}
+}
+
 // Finds time to both collide with grid and to cross sector boundaries.
 // Can optimise further so that grid boundaries are not checked if another
 // sector will be entered first.
@@ -424,10 +457,9 @@ static void find_event_times_all_help_one_invalid(){
 	} else {
 		reset_event_details();
 	}
-	// TODO: actually divide the work later
-	//printf("Node %d: I think sector %d has %ld spheres\n", GRID_RANK, invalid_1->id, invalid_1->num_spheres);
-	find_collision_times_between_spheres_in_sector(invalid_1);
-	find_collision_times_grid_boundary_for_sector(invalid_1);
+	//printf("Iter %d: Node %d: I think sector %d has %ld spheres\n", sim_data.iteration_number, GRID_RANK, invalid_1->id, invalid_1->num_spheres);
+	find_collision_times_between_spheres_in_sector_all_help(invalid_1);
+	find_collision_times_grid_boundary_for_sector_all_help(invalid_1);
 	reduce_all_help_events_one_invalid();
 	helping = false;
 }
@@ -441,10 +473,12 @@ void find_event_times_for_sector(const struct sector_s *sector) {
 	// TODO: num_nodes > num_spheres
 	if(ALL_HELP && num_invalid == 1){
 		find_event_times_all_help_one_invalid();
-	} else {
+	} else if(PRIOR_TIME_VALID == false){
 		reset_event_details();
 		find_collision_times_between_spheres_in_sector(sector);
 		find_collision_times_grid_boundary_for_sector(sector);
+	} else {
+		event_details.time -= next_event->time;
 	}
 	find_partial_crossing_events_for_sector(sector);
 }

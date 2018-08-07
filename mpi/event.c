@@ -53,7 +53,7 @@ static void copy_received_help_to_event_details(){
 	int i;
 	int soonest = GRID_RANK;
 	for(i = 0; i < NUM_NODES; i++){
-		if(help_event_buffer[i].time < event_details.time){
+		if(help_event_buffer[i].time < help_event_buffer[soonest].time){
 			soonest = i;
 		}
 	}
@@ -78,7 +78,7 @@ static void copy_received_help_to_event_details(){
 	if(e->dest_sector_id != -1){
 		event_details.dest_sector = &sim_data.sectors_flat[e->dest_sector_id];
 	}
-	printf("Soonest time after reduce is %f\n", event_details.time);
+	//printf("iter %d rank %d Soonest time after reduce is %f\n", sim_data.iteration_number, GRID_RANK, event_details.time);
 }
 
 // All nodes helping send their soonest event for the helped sector to the
@@ -120,7 +120,7 @@ void reduce_events(){
 	}
 	next_event = &event_buffer[GRID_RANK_NEXT_EVENT];
 	if(GRID_RANK == 0){
-		//printf("Soonest time is %f from rank %d\n", next_event->time, GRID_RANK_NEXT_EVENT);
+		//printf("Iteration: %d. Soonest time is %f from rank %d\n", sim_data.iteration_number, next_event->time, GRID_RANK_NEXT_EVENT);
 	}
 }
 
@@ -269,10 +269,6 @@ static void apply_sphere_transfer_event(){
 		seek_one_sphere();
 	} else {
 		write_iteration_data(sphere, NULL);
-		if(sphere->sector_id < 0){
-			printf("!!!!!!!!\n");
-			exit(1);
-		}
 	}
 	MPI_Barrier(GRID_COMM); 
 	// If resize_needed is true then the above barrier ensures the
