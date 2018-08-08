@@ -123,7 +123,7 @@ static double find_collision_time_grid(const struct sphere_s *s, enum axis *col_
 
 // Given a sphere that is known to be heading towards the given sector
 // check if the sphere will collide with spheres in the sector.
-static void find_partial_crossing_events_between_sphere_and_sector(const struct sphere_s *sphere_1, const struct sector_s *sector_1, const struct sector_s *sector_2) {
+static void find_partial_crossing_events_between_sphere_and_sector(struct sphere_s *sphere_1, struct sector_s *sector_1, struct sector_s *sector_2) {
 	int j;
 	for (j = 0; j < sector_2->num_spheres; j++) {
 		struct sphere_s *sphere_2 = &sector_2->spheres[j];
@@ -134,7 +134,7 @@ static void find_partial_crossing_events_between_sphere_and_sector(const struct 
 
 // Checks for partial crossings with sectors that are immediately adjacent to 
 // the left/right, top/bottom or front/back.
-static void find_partial_crossing_events_for_sector_directly_adjacent(const struct sphere_s *sphere, const struct sector_s *sector, const union vector_3d new_pos) {
+static void find_partial_crossing_events_for_sector_directly_adjacent(struct sphere_s *sphere, struct sector_s *sector, const union vector_3d new_pos) {
 	enum axis a;
 	for (a = X_AXIS; a <= Z_AXIS; a++) { // right/up/forward on x/y/z axis
 		if (sphere->vel.vals[a] >= 0.0 && sector->pos.vals[a] != sim_data.sector_dims[a] - 1) {
@@ -161,7 +161,7 @@ static void find_partial_crossing_events_for_sector_directly_adjacent(const stru
 }
 
 // Positive in both axes
-static void find_partial_crossing_events_for_sector_diagonally_adjacent_pos_pos(const struct sphere_s *sphere, const struct sector_s *sector, const union vector_3d new_pos, enum axis a1, enum axis a2) {
+static void find_partial_crossing_events_for_sector_diagonally_adjacent_pos_pos(struct sphere_s *sphere, struct sector_s *sector, const union vector_3d new_pos, const enum axis a1, const enum axis a2) {
 	if (sphere->vel.vals[a1] >= 0.0 && sector->pos.vals[a1] != sim_data.sector_dims[a1] - 1 && sphere->vel.vals[a2] >= 0.0 && sector->pos.vals[a2] != sim_data.sector_dims[a2] - 1) {
 		int x = sector->pos.x + SECTOR_MODIFIERS[DIR_POSITIVE][a1][X_AXIS] + SECTOR_MODIFIERS[DIR_POSITIVE][a2][X_AXIS];
 		int y = sector->pos.y + SECTOR_MODIFIERS[DIR_POSITIVE][a1][Y_AXIS] + SECTOR_MODIFIERS[DIR_POSITIVE][a2][Y_AXIS];
@@ -174,7 +174,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_pos_pos(
 }
 
 // Positive in a1 and negative in a2
-static void find_partial_crossing_events_for_sector_diagonally_adjacent_pos_neg(const struct sphere_s *sphere, const struct sector_s *sector, const union vector_3d new_pos, enum axis a1, enum axis a2) {
+static void find_partial_crossing_events_for_sector_diagonally_adjacent_pos_neg(struct sphere_s *sphere, struct sector_s *sector, const union vector_3d new_pos, const enum axis a1, const enum axis a2) {
 	if (sphere->vel.vals[a1] >= 0.0 && sector->pos.vals[a1] != sim_data.sector_dims[a1] - 1 && sphere->vel.vals[a2] <= 0.0 && sector->pos.vals[a2] != 0) {
 		int x = sector->pos.x + SECTOR_MODIFIERS[DIR_POSITIVE][a1][X_AXIS] + SECTOR_MODIFIERS[DIR_NEGATIVE][a2][X_AXIS];
 		int y = sector->pos.y + SECTOR_MODIFIERS[DIR_POSITIVE][a1][Y_AXIS] + SECTOR_MODIFIERS[DIR_NEGATIVE][a2][Y_AXIS];
@@ -187,7 +187,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_pos_neg(
 }
 
 // Negative in a1 and positive in a2
-static void find_partial_crossing_events_for_sector_diagonally_adjacent_neg_pos(const struct sphere_s *sphere, const struct sector_s *sector, const union vector_3d new_pos, enum axis a1, enum axis a2) {
+static void find_partial_crossing_events_for_sector_diagonally_adjacent_neg_pos(struct sphere_s *sphere, struct sector_s *sector, const union vector_3d new_pos, const enum axis a1, const enum axis a2) {
 	if (sphere->vel.vals[a1] <= 0.0 && sector->pos.vals[a1] != 0 && sphere->vel.vals[a2] >= 0.0 && sector->pos.vals[a2] != sim_data.sector_dims[a2] - 1) {
 		int x = sector->pos.x + SECTOR_MODIFIERS[DIR_NEGATIVE][a1][X_AXIS] + SECTOR_MODIFIERS[DIR_POSITIVE][a2][X_AXIS];
 		int y = sector->pos.y + SECTOR_MODIFIERS[DIR_NEGATIVE][a1][Y_AXIS] + SECTOR_MODIFIERS[DIR_POSITIVE][a2][Y_AXIS];
@@ -200,7 +200,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_neg_pos(
 }
 
 // Negative in both axes
-static void find_partial_crossing_events_for_sector_diagonally_adjacent_neg_neg(const struct sphere_s *sphere, const struct sector_s *sector, const union vector_3d new_pos, enum axis a1, enum axis a2) {
+static void find_partial_crossing_events_for_sector_diagonally_adjacent_neg_neg(struct sphere_s *sphere, struct sector_s *sector, const union vector_3d new_pos, const enum axis a1, const enum axis a2) {
 	if (sphere->vel.vals[a1] <= 0.0 && sector->pos.vals[a1] != 0 && sphere->vel.vals[a2] <= 0.0 && sector->pos.vals[a2] != 0) {
 		int x = sector->pos.x + SECTOR_MODIFIERS[DIR_NEGATIVE][a1][X_AXIS] + SECTOR_MODIFIERS[DIR_NEGATIVE][a2][X_AXIS];
 		int y = sector->pos.y + SECTOR_MODIFIERS[DIR_NEGATIVE][a1][Y_AXIS] + SECTOR_MODIFIERS[DIR_NEGATIVE][a2][Y_AXIS];
@@ -213,7 +213,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_neg_neg(
 }
 
 // Checks for partial crossings with sectors that are diagonally adjacent along two axes.
-static void find_partial_crossing_events_for_sector_diagonally_adjacent(const struct sphere_s *sphere, const struct sector_s *sector, const union vector_3d new_pos) {
+static void find_partial_crossing_events_for_sector_diagonally_adjacent(struct sphere_s *sphere, struct sector_s *sector, const union vector_3d new_pos) {
 	// x/y combinations
 	if (sim_data.xy_check_needed) {
 		find_partial_crossing_events_for_sector_diagonally_adjacent_pos_pos(sphere, sector, new_pos, X_AXIS, Y_AXIS);
@@ -240,7 +240,7 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent(const st
 // Checks for partial crossings with sectors that are diagonally adjacent along three axes.
 // Ex: if passed sector at [0][0][0] it will check [1][1][1].
 // TODO: make this more generic
-static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_axes(const struct sphere_s *sphere, const struct sector_s *sector, const union vector_3d new_pos) {
+static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_axes(struct sphere_s *sphere, struct sector_s *sector, const union vector_3d new_pos) {
 	bool heading_towards;
 	bool within_range;
 	// all positive
@@ -368,10 +368,10 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_ax
 // For each sphere check which sectors it is going towards.
 // If by the time of the current soonest event it is within a certain distance 
 // of any sector it is travelling towards we must check for partial crossings.
-static void find_partial_crossing_events_for_sector(const struct sector_s *sector) {
+static void find_partial_crossing_events_for_sector(struct sector_s *sector) {
 	int64_t i;
 	for (i = 0; i < sector->num_spheres; i++) {
-		const struct sphere_s *sphere = &sector->spheres[i];
+		struct sphere_s *sphere = &sector->spheres[i];
 		union vector_3d new_pos;
 		new_pos.x = sphere->pos.x + (sphere->vel.x * event_details.time);
 		new_pos.y = sphere->pos.y + (sphere->vel.y * event_details.time);
@@ -384,7 +384,7 @@ static void find_partial_crossing_events_for_sector(const struct sector_s *secto
 
 // Finds when all spheres in a given sector will collide with other and returns
 // the soonest time.
-static void find_collision_times_between_spheres_in_sector(const struct sector_s *sector) {
+static void find_collision_times_between_spheres_in_sector(struct sector_s *sector) {
 	int64_t i, j;
 	for (i = 0; i < sector->num_spheres - 1; i++) {
 		struct sphere_s *s1 = &sector->spheres[i];
@@ -402,7 +402,9 @@ static void find_collision_times_between_spheres_in_sector(const struct sector_s
 // the outer loop or the workload will be unbalanced.
 // Instead each process has the same outer loop, but in the inner loop it starts
 // at (i+1+rank) and uses an increment of num_nodes.
-static void find_collision_times_between_spheres_in_sector_all_help(const struct sector_s *sector) {
+// TODO: this isn't very cache friendly as each process is accessing disjoint
+// elements in the inner loop. Perhaps unroll the inner loop later.
+static void find_collision_times_between_spheres_in_sector_all_help(struct sector_s *sector) {
 	int64_t i, j;
 	for (i = 0; i < sector->num_spheres - 1; i++) {
 		struct sphere_s *s1 = &sector->spheres[i];
@@ -416,7 +418,7 @@ static void find_collision_times_between_spheres_in_sector_all_help(const struct
 
 // Similar to find_collision_times_grid_boundary_for_sector_all_help but work is
 // divided between all processes.
-static void find_collision_times_grid_boundary_for_sector_all_help(const struct sector_s *sector) {
+static void find_collision_times_grid_boundary_for_sector_all_help(struct sector_s *sector) {
 	enum axis axis = COL_NONE;
 	int64_t i;
 	for (i = GRID_RANK; i < sector->num_spheres; i = i + NUM_NODES) {
@@ -436,7 +438,7 @@ static void find_collision_times_grid_boundary_for_sector_all_help(const struct 
 // end will be sector->num_spheres
 // If other nodes are helping then they will provide start and end for the range
 // they are checking
-static void find_collision_times_grid_boundary_for_sector(const struct sector_s *sector) {
+static void find_collision_times_grid_boundary_for_sector(struct sector_s *sector) {
 	enum axis axis = COL_NONE;
 	int64_t i;
 	for (i = 0; i < sector->num_spheres; i++) {
@@ -449,36 +451,48 @@ static void find_collision_times_grid_boundary_for_sector(const struct sector_s 
 	}
 }
 
-static void find_event_times_all_help_one_invalid(){
-	if(PRIOR_TIME_VALID == true){
-		event_details.time -= next_event->time; // next_event is still set from the prior iteration
+static void find_event_times_all_help(struct sector_s *sector_to_help){
+	if(SECTOR->id != sector_to_help->id){
 		helping = true; // changes behaviour of set_event_details
 		reset_event_details_helping();
 	} else {
 		reset_event_details();
 	}
-	//printf("Iter %d: Node %d: I think sector %d has %ld spheres\n", sim_data.iteration_number, GRID_RANK, invalid_1->id, invalid_1->num_spheres);
-	find_collision_times_between_spheres_in_sector_all_help(invalid_1);
-	find_collision_times_grid_boundary_for_sector_all_help(invalid_1);
-	reduce_all_help_events_one_invalid();
+	find_collision_times_between_spheres_in_sector_all_help(sector_to_help);
+	find_collision_times_grid_boundary_for_sector_all_help(sector_to_help);
+	reduce_all_help_events(sector_to_help);
 	helping = false;
 }
 
-// Given a sector finds the soonest occuring event.
-// The event will be either two spheres colliding, a sphere colliding with a grid
-// boundary, or a sphere passing into another sector.
-// Any partial crossings will be handled once this function has been called for each sector.
-void find_event_times_for_sector(const struct sector_s *sector) {
-	// TODO: clean up below conditions
-	// TODO: num_nodes > num_spheres
-	if(ALL_HELP && num_invalid == 1){
-		find_event_times_all_help_one_invalid();
-	} else if(PRIOR_TIME_VALID == false){
+static void find_event_times_normal(struct sector_s *sector){
+	if(PRIOR_TIME_VALID == false){
 		reset_event_details();
 		find_collision_times_between_spheres_in_sector(sector);
 		find_collision_times_grid_boundary_for_sector(sector);
-	} else {
-		event_details.time -= next_event->time;
 	}
-	find_partial_crossing_events_for_sector(sector);
+}
+
+// If ALL_HELP is enabled then all processes will help find event times for the
+// sectors with invalid times.
+// Otherwise each sector just finds its own event time.
+// Partial crossings are not checked when helping sectors.
+// Each process does this itself. 
+// The NUM_NODES check is needed to prevent the helping functions being
+// used on the first iteration if NUM_NODES is 1 or 2.
+void find_event_times() {
+	// TODO: clean up below conditions
+	// TODO: num_nodes > num_spheres
+	if(PRIOR_TIME_VALID){
+		event_details.time -= next_event->time; // next_event is still set from the prior iteration
+	}	
+	if(ALL_HELP && num_invalid == 1 && NUM_NODES > 1){
+		find_event_times_all_help(invalid_1);
+	} else if(ALL_HELP && num_invalid == 2 && NUM_NODES > 2){
+		find_event_times_all_help(invalid_1);
+		find_event_times_all_help(invalid_2);
+	} else {
+		find_event_times_normal(SECTOR);
+	}
+	find_partial_crossing_events_for_sector(SECTOR);
+
 }

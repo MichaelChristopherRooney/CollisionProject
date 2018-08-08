@@ -44,14 +44,14 @@ int num_invalid;
 bool helping; // is the node helping another node this iteration
 
 void reduce_events();
-void reduce_all_help_events_one_invalid();
+void reduce_all_help_events(struct sector_s *sector_to_help);
 void init_events();
 void reset_event_details();
 void reset_event_details_helping();
 void set_event_details(
-	const double time, const enum collision_type type, const struct sphere_s *sphere_1, 
-	const struct sphere_s *sphere_2, const enum axis grid_axis, const struct sector_s *source_sector,
-	const struct sector_s *dest_sector
+	const double time, const enum collision_type type, struct sphere_s *sphere_1, 
+	struct sphere_s *sphere_2, const enum axis grid_axis, struct sector_s *source_sector,
+	struct sector_s *dest_sector
 );
 void apply_event();
 

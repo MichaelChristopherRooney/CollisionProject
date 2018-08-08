@@ -84,13 +84,13 @@ static void copy_received_help_to_event_details(){
 // All nodes helping send their soonest event for the helped sector to the
 // helped sector.
 // The helped sector then finds its own soonest event by coomparing these.
-void reduce_all_help_events_one_invalid(){
-	if(SECTOR->id == invalid_1->id){
+void reduce_all_help_events(struct sector_s *sector_to_help){
+	if(SECTOR->id == sector_to_help->id){
 		prepare_event_to_send();
 		MPI_Gather(
 			&event_to_send, sizeof(struct transmit_event_s), MPI_CHAR,
 			help_event_buffer, sizeof(struct transmit_event_s), MPI_CHAR, 
-			invalid_1->id, GRID_COMM
+			sector_to_help->id, GRID_COMM
 		);
 		copy_received_help_to_event_details();
 	} else {
@@ -98,7 +98,7 @@ void reduce_all_help_events_one_invalid(){
 		MPI_Gather(
 			&help_event_to_send, sizeof(struct transmit_event_s), MPI_CHAR,
 			NULL, sizeof(struct event_s), MPI_CHAR,
-			invalid_1->id, GRID_COMM
+			sector_to_help->id, GRID_COMM
 		);
 	}
 }
@@ -169,9 +169,9 @@ void reset_event_details(){
 }
 
 void set_event_details(
-	const double time, const enum collision_type type, const struct sphere_s *sphere_1, 
-	const struct sphere_s *sphere_2, const enum axis grid_axis, const struct sector_s *source_sector,
-	const struct sector_s *dest_sector
+	const double time, const enum collision_type type, struct sphere_s *sphere_1, 
+	struct sphere_s *sphere_2, const enum axis grid_axis, struct sector_s *source_sector,
+	struct sector_s *dest_sector
 ){
 	if(helping){
 		if(time < helping_event_details.time){

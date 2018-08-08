@@ -13,4 +13,4 @@ enum collision_type {
 	COL_NONE = -1
 };
 
-void find_event_times_for_sector(const struct sector_s *sector);
+void find_event_times();

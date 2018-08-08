@@ -77,7 +77,7 @@ void sanity_check() {
 				}
 			}
 			if (error) {
-				printf("Sector at %d, %d, %d incorrectly has sphere with pos %f, %f, %f\n", s->pos.x, s->pos.y, s->pos.z, sphere->pos.x, sphere->pos.y, sphere->pos.z);
+				printf("Sector at %d, %d, %d with pos %f, %f, %f, incorrectly has sphere with pos %f, %f, %f\n", s->pos.x, s->pos.y, s->pos.z, s->start.x, s->start.y, s->start.z, sphere->pos.x, sphere->pos.y, sphere->pos.z);
 				exit(1);
 			}
 		}
@@ -138,7 +138,7 @@ static void do_grid_iteration(){
 	sanity_check();
 	// Now find event + time of event
 	// Final event may take place after time limit, so cut it short if so
-	find_event_times_for_sector(SECTOR);
+	find_event_times();
 	reduce_events();
 	if (sim_data.time_limit - sim_data.elapsed_time < next_event->time) {
 		next_event->time = sim_data.time_limit - sim_data.elapsed_time;
