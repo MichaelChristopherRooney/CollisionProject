@@ -271,6 +271,7 @@ void init_sectors(){
 	sim_data.xy_check_needed = sim_data.sector_dims[X_AXIS] > 1 && sim_data.sector_dims[Y_AXIS] > 1;
 	sim_data.xz_check_needed = sim_data.sector_dims[X_AXIS] > 1 && sim_data.sector_dims[Z_AXIS] > 1;
 	sim_data.yz_check_needed = sim_data.sector_dims[Y_AXIS] > 1 && sim_data.sector_dims[Z_AXIS] > 1;
+	sim_data.xyz_check_needed = sim_data.sector_dims[Y_AXIS] > 1 && sim_data.sector_dims[Y_AXIS] > 1 && sim_data.sector_dims[Z_AXIS] > 1;
 	alloc_sector_array();
 	set_sectors();
 	MPI_Barrier(GRID_COMM);

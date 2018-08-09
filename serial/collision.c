@@ -262,6 +262,9 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent(struct s
 // Ex: if passed sector at [0][0][0] it will check [1][1][1].
 // TODO: make this more generic
 static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_axes(struct sphere_s *sphere, struct sector_s *sector, const union vector_3d new_pos) {
+	if(!sim_data.xyz_check_needed){
+		return;
+	}
 	bool heading_towards;
 	bool within_range;
 	// all positive

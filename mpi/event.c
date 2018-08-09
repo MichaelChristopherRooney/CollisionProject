@@ -16,14 +16,22 @@ struct transmit_event_s *event_buffer; // receive buffer
 static void prepare_event_to_send(){
 	event_to_send.time = event_details.time;
 	event_to_send.type = event_details.type;
-	event_to_send.sphere_1 = *event_details.sphere_1;
+	if(event_details.sphere_1 != NULL){
+		event_to_send.sphere_1 = *event_details.sphere_1;
+	} else {
+		event_to_send.sphere_1.id = -1;
+	}
 	if(event_details.sphere_2 != NULL){
 		event_to_send.sphere_2 = *event_details.sphere_2;
 	} else {
 		event_to_send.sphere_2.id = -1;
 	}
 	event_to_send.grid_axis = event_details.grid_axis;
-	event_to_send.source_sector_id = event_details.source_sector->id;
+	if(event_details.source_sector != NULL){
+		event_to_send.source_sector_id = event_details.source_sector->id;
+	} else {
+		event_to_send.source_sector_id = -1;
+	}
 	if(event_details.dest_sector != NULL){
 		event_to_send.dest_sector_id = event_details.dest_sector->id;
 	} else {

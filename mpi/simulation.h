@@ -22,6 +22,7 @@ struct simulation_s {
 	bool xy_check_needed;
 	bool xz_check_needed;
 	bool yz_check_needed;
+	bool xyz_check_needed;
 	int64_t total_num_spheres;
 	int iteration_number;
 };
