@@ -77,7 +77,7 @@ void sanity_check() {
 				}
 			}
 			if (error) {
-				printf("Sector at %d, %d, %d with pos %f, %f, %f, incorrectly has sphere with pos %f, %f, %f\n", s->pos.x, s->pos.y, s->pos.z, s->start.x, s->start.y, s->start.z, sphere->pos.x, sphere->pos.y, sphere->pos.z);
+				printf("Sector at %d, %d, %d with pos %f, %f, %f, incorrectly has sphere %ld with pos %f, %f, %f\n", s->pos.x, s->pos.y, s->pos.z, s->start.x, s->start.y, s->start.z, sphere->id, sphere->pos.x, sphere->pos.y, sphere->pos.z);
 				exit(1);
 			}
 		}

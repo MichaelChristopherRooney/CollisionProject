@@ -172,10 +172,10 @@ static void init_local_files_for_file_backed_memory(){
 
 // Check if the passed sector is a neighbour to the local sector
 // It's a neighbour if it is within 0 or 1 unit in all directions.
-static bool check_is_neighbour(struct sector_s *s){
-	int x_dist = abs(SECTOR->pos.x - s->pos.x);
-	int y_dist = abs(SECTOR->pos.y - s->pos.y);
-	int z_dist = abs(SECTOR->pos.z - s->pos.z);
+static bool are_sectors_neighbours(struct sector_s *s1, struct sector_s *s2){
+	int x_dist = abs(s1->pos.x - s2->pos.x);
+	int y_dist = abs(s1->pos.y - s2->pos.y);
+	int z_dist = abs(s1->pos.z - s2->pos.z);
 	return x_dist <= 1 && y_dist <= 1 && z_dist <= 1;
 }
 
@@ -231,11 +231,14 @@ static void set_sector(int i, int j, int k){
 		s->pos.x = i;
 		s->pos.y = j;
 		s->pos.z = k;
+		s->neighbour_ids = malloc(sizeof(int) * MAX_NUM_NEIGHBOURS);
+		s->num_neighbours = 0;
 		MPI_Bcast(recv_hn, MAX_HOSTNAME_LENGTH, MPI_CHAR, id, GRID_COMM);
 		MPI_Bcast(spheres_fn_recv, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
-		if(check_is_neighbour(s)){
+		if(are_sectors_neighbours(SECTOR, s)){
 			SECTOR->neighbour_ids[SECTOR->num_neighbours] = s->id;
 			SECTOR->num_neighbours++;
+			s->is_neighbour = true;
 			if(strcmp(recv_hn, send_hn) == 0){
 				s->is_local_neighbour = true;
 				s->spheres_fd = open(spheres_fn_recv, O_CREAT | O_RDWR, S_IRWXU);
@@ -248,6 +251,33 @@ static void set_sector(int i, int j, int k){
 		}
 	}
 	id++;	
+}
+
+// Once all sectors have been initalised count the neighbours of each sector.
+// Note: the sector handled by this process has its neighbours counted elsehwere.
+// This is because extra steps are required, so we ignore it here.
+// Finally sort the neighbour ids
+// This is needed for when ALL_HELP is not set and neighbours help each other.
+static void set_sectors_neighbours(){
+	int i, j;
+	for(i = 0; i < sim_data.num_sectors; i++){
+		if(i == SECTOR->id){
+			continue;
+		}
+		struct sector_s *s1 = &sim_data.sectors_flat[i];
+		for(j = 0; j < sim_data.num_sectors; j++){
+			if(i == j){
+				continue;
+			}
+			struct sector_s *s2 = &sim_data.sectors_flat[j];
+			if(!are_sectors_neighbours(s1, s2)){
+				continue;
+			}
+			s1->neighbour_ids[s1->num_neighbours] = s2->id;
+			s1->num_neighbours++;
+		}
+		// sort
+	}
 }
 
 static void set_sectors(){
@@ -265,6 +295,7 @@ static void set_sectors(){
 			}
 		}
 	}
+	set_sectors_neighbours();
 }
 
 void init_sectors(){

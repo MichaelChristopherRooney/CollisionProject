@@ -293,21 +293,15 @@ static void apply_sphere_transfer_event(){
 static void apply_partial_crossing_event(){
 	struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
 	struct sector_s *dest = &sim_data.sectors_flat[next_event->dest_sector_id];
-	struct sphere_s *s1 = NULL;
-	struct sphere_s *s2 = NULL;
-	if(source->is_local_neighbour){
-		s1 = &next_event->sphere_1; // dummy
-	} else if(ALL_HELP || source->is_neighbour || source->id == SECTOR->id){
+	struct sphere_s *s1 = &next_event->sphere_1; // default to dummy;
+	struct sphere_s *s2 = &next_event->sphere_2; // default to dummy;
+	if(ALL_HELP || (source->is_neighbour && !source->is_local_neighbour) || source->id == SECTOR->id){
 		s1 = &source->spheres[next_event->sphere_1.sector_id]; // local copy
 	}
-	if(dest->is_local_neighbour){
-		s2 = &next_event->sphere_2; // dummy
-	} else if(ALL_HELP || dest->is_neighbour || dest->id == SECTOR->id){
+	if(ALL_HELP || (dest->is_neighbour && !dest->is_local_neighbour) || dest->id == SECTOR->id){
 		s2 = &dest->spheres[next_event->sphere_2.sector_id]; // local copy
 	}
-	if(s1 != NULL && s2 != NULL){
-		apply_bounce_between_spheres(s1, s2);
-	}
+	apply_bounce_between_spheres(s1, s2);
 	if(source->id != SECTOR->id){
 		seek_two_spheres();
 	} else {
