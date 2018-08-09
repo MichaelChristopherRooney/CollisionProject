@@ -42,14 +42,22 @@ static void prepare_event_to_send(){
 static void prepare_help_event_to_send(){
 	help_event_to_send.time = helping_event_details.time;
 	help_event_to_send.type = helping_event_details.type;
-	help_event_to_send.sphere_1 = *helping_event_details.sphere_1;
+	if(helping_event_details.sphere_1 != NULL){
+		help_event_to_send.sphere_1 = *helping_event_details.sphere_1;
+	} else {
+		help_event_to_send.sphere_1.id = -1;
+	}
 	if(helping_event_details.sphere_2 != NULL){
 		help_event_to_send.sphere_2 = *helping_event_details.sphere_2;
 	} else {
 		help_event_to_send.sphere_2.id = -1;
 	}
 	help_event_to_send.grid_axis = helping_event_details.grid_axis;
-	help_event_to_send.source_sector_id = helping_event_details.source_sector->id;
+	if(helping_event_details.source_sector != NULL){
+		help_event_to_send.source_sector_id = helping_event_details.source_sector->id;
+	} else {
+		help_event_to_send.dest_sector_id = -1;
+	}
 	if(helping_event_details.dest_sector != NULL){
 		help_event_to_send.dest_sector_id = helping_event_details.dest_sector->id;
 	} else {
@@ -293,12 +301,20 @@ static void apply_sphere_transfer_event(){
 static void apply_partial_crossing_event(){
 	struct sector_s *source = &sim_data.sectors_flat[next_event->source_sector_id];
 	struct sector_s *dest = &sim_data.sectors_flat[next_event->dest_sector_id];
-	struct sphere_s *s1 = &next_event->sphere_1; // default to dummy;
-	struct sphere_s *s2 = &next_event->sphere_2; // default to dummy;
-	if(ALL_HELP || (source->is_neighbour && !source->is_local_neighbour) || source->id == SECTOR->id){
+	struct sphere_s *s1 = &next_event->sphere_1; // default to dummy
+	struct sphere_s *s2 = &next_event->sphere_2; // default to dummy
+	bool use_s1_copy =
+		(ALL_HELP && !source->is_local_neighbour)
+		|| (source->is_neighbour && !source->is_local_neighbour)
+		|| source->id == SECTOR->id;
+	bool use_s2_copy =
+		(ALL_HELP && !dest->is_local_neighbour)
+		|| (dest->is_neighbour && !dest->is_local_neighbour)
+		|| dest->id == SECTOR->id;
+	if(use_s1_copy){
 		s1 = &source->spheres[next_event->sphere_1.sector_id]; // local copy
 	}
-	if(ALL_HELP || (dest->is_neighbour && !dest->is_local_neighbour) || dest->id == SECTOR->id){
+	if(use_s2_copy){
 		s2 = &dest->spheres[next_event->sphere_2.sector_id]; // local copy
 	}
 	apply_bounce_between_spheres(s1, s2);
