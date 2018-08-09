@@ -73,8 +73,9 @@ void apply_bounce_between_spheres(struct sphere_s *s1, struct sphere_s *s2) {
 
 static void update_neighbour_spheres(){
 	int i, j;
-	for(i = 0; i < NUM_NEIGHBOURS; i++){
-		struct sector_s *sector = &sim_data.sectors_flat[NEIGHBOUR_IDS[i]];
+	for(i = 0; i < SECTOR->num_neighbours; i++){
+		int id = SECTOR->neighbour_ids[i];
+		struct sector_s *sector = &sim_data.sectors_flat[id];
 		if(sector->is_local_neighbour){
 			continue;
 		}

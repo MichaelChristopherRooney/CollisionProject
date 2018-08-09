@@ -18,12 +18,16 @@ enum direction {
 // Using 20 gives more space than will ever be needed.
 #define SECTOR_MAX_FILENAME_LENGTH 20
 
+#define MAX_NUM_NEIGHBOURS 26
+
 struct sector_s {
 	struct sphere_s *spheres;
 	int64_t num_spheres;
 	bool is_neighbour; // used by the local node to track neighbours
 	bool is_local_neighbour; // used by local process to track if other processes are logical and physical neighbours
 	int id;
+	int num_neighbours;
+	int *neighbour_ids; // sorted array of neighbour ids
 	union vector_3d start;
 	union vector_3d end;
 	int64_t max_spheres;

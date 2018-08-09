@@ -20,8 +20,8 @@
 // Note that neighbours with non-shared memory will have already been resized.
 void check_for_resizing_after_sphere_loading(){
 	int i;
-	for(i = 0; i < NUM_NEIGHBOURS; i++){
-		int s_id = NEIGHBOUR_IDS[i];
+	for(i = 0; i < SECTOR->num_neighbours; i++){
+		int s_id = SECTOR->neighbour_ids[i];
 		struct sector_s *s = &sim_data.sectors_flat[s_id];
 		if(s->is_local_neighbour && s->num_spheres >= s->max_spheres){
 			while(s->max_spheres < s->num_spheres){
@@ -198,6 +198,8 @@ static void set_local_sector(){
 	SECTOR->pos.x = COORDS[X_AXIS];
 	SECTOR->pos.y = COORDS[Y_AXIS];
 	SECTOR->pos.z = COORDS[Z_AXIS];
+	SECTOR->neighbour_ids = malloc(sizeof(int) * MAX_NUM_NEIGHBOURS); // some entries are blank which is fine
+	SECTOR->num_neighbours = 0;
 	PRIOR_TIME_VALID = false;
 	init_local_files_for_file_backed_memory();
 }
@@ -232,9 +234,8 @@ static void set_sector(int i, int j, int k){
 		MPI_Bcast(recv_hn, MAX_HOSTNAME_LENGTH, MPI_CHAR, id, GRID_COMM);
 		MPI_Bcast(spheres_fn_recv, SECTOR_MAX_FILENAME_LENGTH, MPI_CHAR, id, GRID_COMM);
 		if(check_is_neighbour(s)){
-			s->is_neighbour = true;
-			NEIGHBOUR_IDS[NUM_NEIGHBOURS] = s->id;
-			NUM_NEIGHBOURS++;
+			SECTOR->neighbour_ids[SECTOR->num_neighbours] = s->id;
+			SECTOR->num_neighbours++;
 			if(strcmp(recv_hn, send_hn) == 0){
 				s->is_local_neighbour = true;
 				s->spheres_fd = open(spheres_fn_recv, O_CREAT | O_RDWR, S_IRWXU);
