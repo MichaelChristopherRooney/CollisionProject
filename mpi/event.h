@@ -44,7 +44,7 @@ int num_invalid;
 bool helping; // is the node helping another node this iteration
 
 void reduce_events();
-void reduce_all_help_events(struct sector_s *sector_to_help);
+void reduce_help_events(struct sector_s *sector_to_help);
 void init_events();
 void reset_event_details();
 void reset_event_details_helping();

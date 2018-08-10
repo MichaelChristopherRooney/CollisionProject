@@ -97,10 +97,12 @@ static void copy_received_help_to_event_details(){
 	//printf("iter %d rank %d Soonest time after reduce is %f\n", sim_data.iteration_number, GRID_RANK, event_details.time);
 }
 
-// All nodes helping send their soonest event for the helped sector to the
+// All nodes send their soonest event for the helped sector to the
 // helped sector.
-// The helped sector then finds its own soonest event by coomparing these.
-void reduce_all_help_events(struct sector_s *sector_to_help){
+// The helped sector then finds its own soonest event by comparing these.
+// If all help is set then all nodes will have an actual time they found.
+// If all help is not set then non-neighbours will just send DBL_MAX.
+void reduce_help_events(struct sector_s *sector_to_help){
 	if(SECTOR->id == sector_to_help->id){
 		prepare_event_to_send();
 		MPI_Gather(

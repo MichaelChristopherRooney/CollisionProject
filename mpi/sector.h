@@ -28,6 +28,7 @@ struct sector_s {
 	int id;
 	int num_neighbours;
 	int *neighbour_ids; // sorted array of neighbour ids
+	int my_id_index; // local process' sector id position in array
 	union vector_3d start;
 	union vector_3d end;
 	int64_t max_spheres;

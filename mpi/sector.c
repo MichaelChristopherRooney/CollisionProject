@@ -12,6 +12,20 @@
 #include "simulation.h"
 #include "sector.h"
 
+// Give a sector finds where the local sector is stored in the passed
+// sector's neighbour array (which is sorted by id).
+static int find_my_id_in_neighbour_array(struct sector_s *s){
+	int i;
+	for(i = 0; i < s->num_neighbours; i++){
+		int id = s->neighbour_ids[i];
+		if(id == SECTOR->id){
+			return i;
+		}
+	}
+	printf("Error: id not fonud in neighbour array\n");
+	exit(1);
+}
+
 // During sphere loading any local neighbours will resize their sphere array if
 // needed.
 // Here the local view of this shared memory if resized if needed.
@@ -253,6 +267,22 @@ static void set_sector(int i, int j, int k){
 	id++;	
 }
 
+static void sort_sectors_neighbours(struct sector_s *s){
+	bool swapped = true;
+	int i;
+	while(swapped){
+		swapped = false;
+		for(i = 0; i < s->num_neighbours - 1; i++){
+			if(s->neighbour_ids[i] > s->neighbour_ids[i+1]){
+				swapped = true;
+				int temp = s->neighbour_ids[i];
+				s->neighbour_ids[i] = s->neighbour_ids[i+1];
+				s->neighbour_ids[i+1] = temp;
+			}
+		}
+	}
+}
+
 // Once all sectors have been initalised count the neighbours of each sector.
 // Note: the sector handled by this process has its neighbours counted elsehwere.
 // This is because extra steps are required, so we ignore it here.
@@ -276,7 +306,10 @@ static void set_sectors_neighbours(){
 			s1->neighbour_ids[s1->num_neighbours] = s2->id;
 			s1->num_neighbours++;
 		}
-		// sort
+		sort_sectors_neighbours(s1);
+		if(s1->is_neighbour){
+			s1->my_id_index = find_my_id_in_neighbour_array(s1);
+		}
 	}
 }
 
@@ -295,7 +328,9 @@ static void set_sectors(){
 			}
 		}
 	}
-	set_sectors_neighbours();
+	if(!ALL_HELP){
+		set_sectors_neighbours();
+	}
 }
 
 void init_sectors(){
