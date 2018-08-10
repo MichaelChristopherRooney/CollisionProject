@@ -439,7 +439,13 @@ static void find_collision_times_grid_boundary_for_sector_all_help(struct sector
 static void find_collision_times_grid_boundary_for_sector_neighbours_help(struct sector_s *sector) {
 	enum axis axis = COL_NONE;
 	int64_t i;
-	for (i = sector->my_id_index; i < sector->num_spheres; i = i + sector->num_neighbours) {
+	int64_t start;
+	if(sector->id == SECTOR->id){
+		start = 0;
+	} else {
+		start = sector->my_id_index + 1;
+	}
+	for (i = start; i < sector->num_spheres; i = i + sector->num_neighbours + 1) {
 		struct sphere_s *sphere = &sector->spheres[i];
 		double time = find_collision_time_grid(sphere, &axis);
 		set_event_details(time, COL_SPHERE_WITH_GRID, sphere, NULL, axis, sector, NULL);
@@ -456,9 +462,15 @@ static void find_collision_times_grid_boundary_for_sector_neighbours_help(struct
 // to determine what part of the workload each sector will take.
 static void find_collision_times_between_spheres_in_sector_neighbours_help(struct sector_s *sector) {
 	int64_t i, j;
+	int64_t start;
+	if(sector->id == SECTOR->id){
+		start = 0;
+	} else {
+		start = sector->my_id_index + 1;
+	}
 	for (i = 0; i < sector->num_spheres - 1; i++) {
 		struct sphere_s *s1 = &sector->spheres[i];
-		for (j = i + 1 + sector->my_id_index; j < sector->num_spheres; j = j + sector->num_neighbours) {
+		for (j = i + 1 + start; j < sector->num_spheres; j = j + sector->num_neighbours + 1) {
 			struct sphere_s *s2 = &sector->spheres[j];
 			double time = find_collision_time_spheres(s1, s2);
 			set_event_details(time, COL_TWO_SPHERES, s1, s2, AXIS_NONE, sector, NULL);
@@ -506,7 +518,7 @@ static void find_event_times_neighbours_help(struct sector_s *sector_to_help){
 	} else {
 		reset_event_details();
 	}
-	if(sector_to_help->is_neighbour){ // non-neighbours skip this and send DBL_MAX as a time in the reduce
+	if(SECTOR->id == sector_to_help->id || sector_to_help->is_neighbour){ // non-neighbours skip this and send DBL_MAX as a time in the reduce
 		find_collision_times_between_spheres_in_sector_neighbours_help(sector_to_help);
 		find_collision_times_grid_boundary_for_sector_neighbours_help(sector_to_help);
 	}
