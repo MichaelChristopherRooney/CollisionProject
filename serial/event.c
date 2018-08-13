@@ -7,6 +7,27 @@
 #include "simulation.h"
 #include "sphere.h"
 
+
+static double increment_double_by_smallest_amount(double val){
+	void *p = &val;
+	int64_t *i = (int64_t *)p;
+	(*i)++;
+	return val;
+}
+
+static const double eps = 0.0001;
+
+static void set_new_time(const int i){
+	if(sector_events[i].time != 0.0){
+		double t = sector_events[i].time - event_details.time;
+		if(t < eps){
+			sector_events[i].time = increment_double_by_smallest_amount(t);
+		} else {
+			sector_events[i].time = t;
+		}
+	}
+}
+
 static void set_valid_time_for_all_but_source(){
 	int i;
 	for(i = 0; i < sim_data.num_sectors; i++){
@@ -15,8 +36,7 @@ static void set_valid_time_for_all_but_source(){
 			s->prior_time_valid = false;
 		} else {
 			s->prior_time_valid = true;
-			sector_events[i].time -= event_details.time;
-			//printf("Next valid time is: %f\n", sector_events[i].time);
+			set_new_time(i);
 		}
 	}
 }
@@ -29,8 +49,7 @@ static void set_valid_time_for_all_but_source_and_dest(){
 			s->prior_time_valid = false;
 		} else {
 			s->prior_time_valid = true;
-			sector_events[i].time -= event_details.time;
-			//printf("Next valid time is: %f\n", sector_events[i].time);
+			set_new_time(i);
 		}
 	}
 }

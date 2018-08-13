@@ -474,11 +474,7 @@ static void find_event_times_normal(struct sector_s *sector){
 // Each process does this itself. 
 // The NUM_NODES check is needed to prevent the helping functions being
 // used on the first iteration if NUM_NODES is 1 or 2.
-void find_event_times() {
-	// TODO: clean up conditions here
-	if(PRIOR_TIME_VALID){
-		event_details.time -= next_event->time; // next_event is still set from the prior iteration
-	}	
+void find_event_times() {	
 	if(ALL_HELP && num_invalid == 1 && NUM_NODES > 1){
 		find_event_times_all_help(invalid_1);
 	} else if(ALL_HELP && num_invalid == 2 && NUM_NODES > 2){

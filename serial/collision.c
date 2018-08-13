@@ -90,6 +90,7 @@ double find_collision_time_sector(const struct sector_s *sector, const struct sp
 				if (sphere->vel.vals[a] > 0.0) {
 					*dest = get_adjacent_sector_non_diagonal(sector, a, DIR_POSITIVE);
 				} else {
+
 					*dest = get_adjacent_sector_non_diagonal(sector, a, DIR_NEGATIVE);
 				}
 			}

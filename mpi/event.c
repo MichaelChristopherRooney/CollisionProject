@@ -330,6 +330,27 @@ static void apply_partial_crossing_event(){
 	}
 }
 
+static double increment_double_by_smallest_amount(double val){
+	void *p = &val;
+	int64_t *i = (int64_t *)p;
+	(*i)++;
+	return val;
+}
+
+static const double eps = 0.0001;
+
+static void set_new_time(){
+	if(event_details.time != 0.0 && next_event->time != 0.0){
+		double t = event_details.time - next_event->time;
+		if(t < eps){
+			event_details.time = increment_double_by_smallest_amount(t);
+		} else {
+			event_details.time = t;
+		}
+	}
+}
+
+
 // Apply events and write changes to file.
 // In each case the source sector is responsible for writing data.
 // Each other sector must update their file pointer however.
@@ -358,6 +379,9 @@ void apply_event(){
 		invalid_2 = &sim_data.sectors_flat[next_event->dest_sector_id];
 		num_invalid = 2;
 		stats.num_partial_crossings++;
+	}
+	if(PRIOR_TIME_VALID){
+		set_new_time(); // still valid from the prior iteration so subtract new time
 	}
 }
 
