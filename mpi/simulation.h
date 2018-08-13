@@ -2,7 +2,7 @@
 #include "sector.h"
 #include "vector_3.h"
 
-void simulation_init(int argc, char *argv[], double time_limit);
+void simulation_init(int argc, char *argv[]);
 void simulation_run();
 void simulation_cleanup();
 

@@ -94,7 +94,7 @@ static void copy_received_help_to_event_details(){
 	if(e->dest_sector_id != -1){
 		event_details.dest_sector = &sim_data.sectors_flat[e->dest_sector_id];
 	}
-	//printf("iter %d rank %d Soonest time after reduce is %f\n", sim_data.iteration_number, GRID_RANK, event_details.time);
+	//printf("iter %d rank %d Soonest time after reduce is %.17g\n", sim_data.iteration_number, GRID_RANK, event_details.time);
 }
 
 // All nodes send their soonest event for the helped sector to the
@@ -138,7 +138,7 @@ void reduce_events(){
 	}
 	next_event = &event_buffer[GRID_RANK_NEXT_EVENT];
 	if(GRID_RANK == 0){
-		//printf("Iteration: %d. Soonest time is %f from rank %d\n", sim_data.iteration_number, next_event->time, GRID_RANK_NEXT_EVENT);
+		//printf("Iteration: %d. Soonest time is %.17g from rank %d\n", sim_data.iteration_number, next_event->time, GRID_RANK_NEXT_EVENT);
 	}
 }
 

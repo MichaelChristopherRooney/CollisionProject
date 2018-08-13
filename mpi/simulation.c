@@ -115,12 +115,11 @@ static void parse_args_and_init_mpi(int argc, char *argv[]){
 	MPI_Cart_coords(GRID_COMM, GRID_RANK, NUM_DIMS, COORDS);
 }
 
-void simulation_init(int argc, char *argv[], double time_limit) {
+void simulation_init(int argc, char *argv[]) {
 	parse_args_and_init_mpi(argc, argv);
 	init_stats();
 	sim_data.iteration_number = 0;
 	sim_data.elapsed_time = 0.0;
-	sim_data.time_limit = time_limit;
 	delete_old_files();
 	init_output_file();
 	FILE *initial_state_fp = fopen(initial_state_file, "rb");
@@ -146,7 +145,7 @@ static void do_grid_iteration(){
 			MPI_Status s;
 			MPI_File_write(MPI_OUTPUT_FILE, &sim_data.time_limit, 1, MPI_DOUBLE, &s);
 		}
-		update_spheres();
+		update_my_spheres(); // last iteration, so don't care about other sector's spheress
 	} else {
 		update_spheres();
 		apply_event();

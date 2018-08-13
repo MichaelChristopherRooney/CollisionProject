@@ -86,7 +86,7 @@ static void update_neighbour_spheres(){
 	}
 }
 
-static void update_my_spheres(){
+void update_my_spheres(){
 	int i;
 	for (i = 0; i < SECTOR->num_spheres; i++) {
 		struct sphere_s *s = &(SECTOR->spheres[i]);

@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[]) {
 	clock_t start = clock();
-	simulation_init(argc, argv, 10.0);
+	simulation_init(argc, argv);
 	simulation_run();
 	simulation_cleanup();
 	clock_t end = clock();

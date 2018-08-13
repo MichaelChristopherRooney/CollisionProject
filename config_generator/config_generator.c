@@ -25,9 +25,9 @@ static void create_spheres(int num, double x_start, double y_start, double z_sta
 	double z = z_start;
 	int i;
 	for (i = 0; i < num; i++) {
-		double xv = rand() / (RAND_MAX + 1.0);
-		double yv = rand() / (RAND_MAX + 1.0);
-		double zv = rand() / (RAND_MAX + 1.0);
+		double xv = (rand() / (RAND_MAX + 1.0)) * 10.0;
+		double yv = (rand() / (RAND_MAX + 1.0)) * 10.0;
+		double zv = (rand() / (RAND_MAX + 1.0)) * 10.0;
 		create_sphere(x, y, z, xv, yv, zv);
 		x += x_inc;
 		y += y_inc;

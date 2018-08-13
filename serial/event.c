@@ -45,7 +45,7 @@ static void set_valid_time_for_all_but_source_and_dest(){
 	int i;
 	for(i = 0; i < sim_data.num_sectors; i++){
 		struct sector_s *s = &sim_data.sectors_flat[i];
-		if(event_details.source_sector->id == s->id || event_details.dest_sector->id){
+		if(event_details.source_sector->id == s->id || event_details.dest_sector->id == s->id){
 			s->prior_time_valid = false;
 		} else {
 			s->prior_time_valid = true;

@@ -52,10 +52,9 @@ static void init_stats(){
 	stats.num_partial_crossings = 0;
 }
 
-void simulation_init(double time_limit) {
+void simulation_init() {
 	FILE *initial_state_fp = fopen(initial_state_file, "rb");
 	sim_data.elapsed_time = 0.0;
-	sim_data.time_limit = time_limit;
 	init_grid(initial_state_fp);
 	init_stats();
 	init_sectors();
@@ -126,6 +125,7 @@ static void do_simulation_iteration_dd(){
 	reset_event();
 	// Now find event + time of event
 	find_event_times_for_all_sectors();
+	//printf("Iteration: %d. Soonest time is %.17g from %d\n", sim_data.iteration_number, event_details.time, event_details.source_sector->id);
 	// Final event may take place after time limit, so cut it short
 	if (sim_data.time_limit - sim_data.elapsed_time < event_details.time) {
 		event_details.time = sim_data.time_limit - sim_data.elapsed_time;

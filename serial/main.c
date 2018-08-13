@@ -8,7 +8,7 @@
 #include "simulation.h"
 
 static void run() {
-	simulation_init(10.0);
+	simulation_init();
 	clock_t start = clock();
 	simulation_run();
 	clock_t end = clock();

@@ -35,6 +35,6 @@ struct stats_s {
 
 struct stats_s stats;
 
-void simulation_init(double time_limit);
+void simulation_init();
 void simulation_run();
 void simulation_cleanup();

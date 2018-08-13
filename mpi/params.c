@@ -13,6 +13,7 @@ static void set_default_params(){
 	sim_data.sector_dims[0] = 1;
 	sim_data.sector_dims[1] = 1;
 	sim_data.sector_dims[2] = 1;
+	sim_data.time_limit = 0.0;
 	initial_state_file = NULL;
 	final_state_file = NULL;
 	compare_file = NULL;
@@ -37,6 +38,7 @@ static void print_config(){
 	printf("Number of x slices: %d\n", sim_data.sector_dims[0]);
 	printf("Number of y slices: %d\n", sim_data.sector_dims[1]);
 	printf("Number of z slices: %d\n", sim_data.sector_dims[2]);
+	printf("Time limit: %f\n", sim_data.time_limit);
 	printf("Initial state file: %s\n", initial_state_file);
 	printf("Output file: %s\n", output_file);
 	if(final_state_file != NULL){
@@ -54,12 +56,20 @@ static void print_config(){
 	} else {
 		printf("ALL_HELP is NOT set.\nOnly neighbour nodes will find events for sectors without valid prior times\n");
 	}
+	printf("Time limit is %f\n", sim_data.time_limit);
 }
 
 static void validate_args(){
 	check_dim_arg(sim_data.sector_dims[X_AXIS], 'x');
 	check_dim_arg(sim_data.sector_dims[Y_AXIS], 'y');
 	check_dim_arg(sim_data.sector_dims[Z_AXIS], 'z');
+	if(sim_data.time_limit <= 0.0){
+		if(WORLD_RANK == 0){
+			printf("Error: time limit should be > 0\n");
+		}
+		MPI_Finalize();
+		exit(1);
+	}
 	if(sim_data.sector_dims[X_AXIS] * sim_data.sector_dims[Y_AXIS] * sim_data.sector_dims[Z_AXIS] != NUM_NODES){
 		if(WORLD_RANK == 0){
 			printf("Error: number of sectors should match number of nodes\n");
@@ -91,6 +101,7 @@ static void print_help(){
 		printf("-f:\n\tOptional.\n\tSets the final state file. This will contain only the final velocity and position of each sphere.\n");
 		printf("-o:\n\tRequired.\n\tSets the output file. This contains all data needed to make use of the simulation.\n");
 		printf("-i:\n\tRequired.\n\tSets the inital state file.\n");
+		printf("-t:\n\tRequired.\n\tSets the time the simulation will run for.\n");
 	}
 	MPI_Finalize();
 	exit(0);
@@ -99,7 +110,7 @@ static void print_help(){
 void parse_args(int argc, char *argv[]) {
 	set_default_params();
 	int c;
-	while((c = getopt(argc, argv, "ai:c:f:ho:x:y:z:")) != -1) {
+	while((c = getopt(argc, argv, "ai:c:f:ho:x:y:z:t:")) != -1) {
 		switch(c) {
 		case 'a':
 			ALL_HELP = true;
@@ -127,6 +138,9 @@ void parse_args(int argc, char *argv[]) {
 			break;
 		case 'i':
 			initial_state_file = optarg;
+			break;
+		case 't':
+			sim_data.time_limit = atof(optarg);
 			break;
 		}
 	}
