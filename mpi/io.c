@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "io.h"
 
 #include "grid.h"
@@ -142,4 +144,52 @@ void save_final_state_file(){
 	}
 }
 
+void compare_results() {
+	if(compare_file == NULL){
+		return;
+	}
+	MPI_Status stat;
+	MPI_File c_file;
+	MPI_File_open(MPI_COMM_WORLD, compare_file, MPI_MODE_RDWR, MPI_INFO_NULL, &c_file);
+	int64_t comp_num_spheres;
+	MPI_File_read(c_file, &comp_num_spheres, 1, MPI_LONG_LONG, &stat);
+	if(comp_num_spheres != sim_data.total_num_spheres){
+		if(GRID_RANK == 0){
+			printf("Error: cannot compare files as number of spheres differs\n");
+		}
+		return;
+	}
+	union vector_3d vel_comp;
+	union vector_3d pos_comp;
+	double max_pos_err = 0.0;
+	double max_vel_err = 0.0;
+	enum axis a;
+	int i;
+	for(i = 0; i < SECTOR->num_spheres; i++){
+		struct sphere_s *s = &SECTOR->spheres[i];
+		int64_t offset = (final_file_sphere_size * s->id) + sizeof(int64_t);
+		MPI_File_seek(c_file, offset, MPI_SEEK_SET);
+		MPI_File_read(c_file, &vel_comp, 3, MPI_DOUBLE, &stat);
+		MPI_File_read(c_file, &pos_comp, 3, MPI_DOUBLE, &stat);
+		for (a = X_AXIS; a <= Z_AXIS; a++) {
+			if (fabs(s->pos.vals[a] - pos_comp.vals[a]) > max_pos_err) {
+				max_pos_err = fabs(s->pos.vals[a] - pos_comp.vals[a]);
+			}
+			if (fabs(s->vel.vals[a] - vel_comp.vals[a]) > max_vel_err) {
+				max_vel_err = fabs(s->vel.vals[a] - vel_comp.vals[a]);
+			}
+		}
+		
+	}
+	if(GRID_RANK == 0){
+		double v_max, p_max;
+		MPI_Reduce(&max_vel_err, &v_max, 1, MPI_DOUBLE, MPI_MAX, 0, GRID_COMM);
+		MPI_Reduce(&max_pos_err, &p_max, 1, MPI_DOUBLE, MPI_MAX, 0, GRID_COMM);
+		printf("vel abs err: %.17g\n", v_max);
+		printf("pos abs err: %.17g\n", p_max);
+	} else {
+		MPI_Reduce(&max_vel_err, NULL, 1, MPI_DOUBLE, MPI_MAX, 0, GRID_COMM);
+		MPI_Reduce(&max_pos_err, NULL, 1, MPI_DOUBLE, MPI_MAX, 0, GRID_COMM);
+	}
+}
 

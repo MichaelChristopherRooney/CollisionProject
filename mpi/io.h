@@ -14,3 +14,4 @@ void seek_one_sphere();
 void seek_two_spheres();
 void init_output_file();
 void save_final_state_file();
+void compare_results();
