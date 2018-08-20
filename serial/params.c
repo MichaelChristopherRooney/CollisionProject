@@ -6,6 +6,8 @@
 #include "sector.h"
 #include "simulation.h"
 
+void run_tests(); // defined in tests.c
+
 static void set_default_params(){
 	sim_data.sector_dims[0] = 1;
 	sim_data.sector_dims[1] = 1;
@@ -68,14 +70,15 @@ static void print_help(){
 	printf("-f:\n\tOptional.\n\tSets the final state file. This will contain only the final velocity and position of each sphere.\n");
 	printf("-o:\n\tRequired.\n\tSets the output file. This contains all data needed to make use of the simulation.\n");
 	printf("-i:\n\tRequired.\n\tSets the inital state file.\n");
-	printf("-t:\n\tRequired.\n\tSets the time the simulation will run for.\n");
+	printf("-l:\n\tRequired.\n\tSets the time limit the simulation will run for.\n");
+	printf("-t:\n\tOptional.\n\tRuns some tests which verify the collision system works.\t\nIf set then all other work is skipped and other args are ignored.\n");
 	exit(0);
 }
 
 void parse_args(int argc, char *argv[]) {
 	set_default_params();
 	int c;
-	while((c = getopt(argc, argv, "i:c:f:ho:x:y:z:t:")) != -1) {
+	while((c = getopt(argc, argv, "i:c:f:ho:x:y:z:l:t")) != -1) {
 		switch(c) {
 		case 'x':
 			sim_data.sector_dims[X_AXIS] = atoi(optarg);
@@ -101,8 +104,12 @@ void parse_args(int argc, char *argv[]) {
 		case 'i':
 			initial_state_file = optarg;
 			break;
-		case 't':
+		case 'l':
 			sim_data.time_limit = atof(optarg);
+			break;
+		case 't':
+			run_tests();
+			exit(0);
 			break;
 		}
 	}
