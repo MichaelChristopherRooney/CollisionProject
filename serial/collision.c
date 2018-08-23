@@ -157,7 +157,7 @@ static void find_partial_crossing_events_between_sphere_and_sector(struct sector
 // Note: a2, a3 may be AXIS_NONE and dir_2, dir_3 may be DIR_NONE.
 // In those cases the modifier will be 0 so the position on those axes won't change.
 static struct sector_s *get_sector_adjacent_on_axes(
-		struct sector_s *s, 
+		const struct sector_s *s, 
 		const enum axis a1, const enum axis a2, const enum axis a3,
 		const enum direction dir_1, const enum direction dir_2, const enum direction dir_3
 	){
@@ -167,6 +167,70 @@ static struct sector_s *get_sector_adjacent_on_axes(
 	return &sim_data.sectors[x][y][z];
 }
 
+// Returns true if the sphere is within the minimum distance from an adjacent
+// sector to need partial crossing checks.
+static bool is_sphere_within_range_of_sector_one_axis(
+		const struct sphere_s *sphere, const union vector_3d new_pos, 
+		const struct sector_s *dest, const enum axis a, const enum direction dir
+	){
+	return
+		(dir == DIR_POSITIVE && new_pos.vals[a] >= dest->start.vals[a] - sphere->radius - dest->largest_radius) ||
+		(dir == DIR_NEGATIVE && new_pos.vals[a] <= dest->end.vals[a] + sphere->radius + dest->largest_radius);
+}
+
+static bool is_sphere_within_range_of_sector_two_axis(
+		const struct sphere_s *sphere, const union vector_3d new_pos, 
+		const struct sector_s *dest, const enum axis a1, const enum axis a2,
+		const enum direction dir_1, const enum direction dir_2
+	){
+		return
+			is_sphere_within_range_of_sector_one_axis(sphere, new_pos, dest, a1, dir_1) &&
+			is_sphere_within_range_of_sector_one_axis(sphere, new_pos, dest, a2, dir_2);
+}
+
+static bool is_sphere_within_range_of_sector_three_axis(
+		const struct sphere_s *sphere, const union vector_3d new_pos, 
+		const struct sector_s *dest, const enum axis a1, const enum axis a2, const enum axis a3,
+		const enum direction dir_1, const enum direction dir_2, const enum direction dir_3
+	){
+		return
+			is_sphere_within_range_of_sector_one_axis(sphere, new_pos, dest, a1, dir_1) &&
+			is_sphere_within_range_of_sector_one_axis(sphere, new_pos, dest, a2, dir_2) &&
+			is_sphere_within_range_of_sector_one_axis(sphere, new_pos, dest, a3, dir_3);
+}
+
+// Returns true if the sphere is heading towards the containing sector's 
+// boundary along the specified axis in the specified direction.
+static bool is_sphere_heading_towards_sector_one_axis(
+		const struct sphere_s *sphere, const struct sector_s *sector, 
+		const enum axis a, const enum direction dir
+	){
+	return
+		(dir == DIR_POSITIVE && sphere->vel.vals[a] >= 0.0 && sector->pos.vals[a] != sim_data.sector_dims[a] - 1) ||
+		(dir == DIR_NEGATIVE && sphere->vel.vals[a] <= 0.0 && sector->pos.vals[a] != 0);
+}
+
+static bool is_sphere_heading_towards_sector_two_axis(
+		const struct sphere_s *sphere, const struct sector_s *sector, 
+		const enum axis a1, const enum axis a2,
+		const enum direction dir_1, const enum direction dir_2
+	){
+	return
+		is_sphere_heading_towards_sector_one_axis(sphere, sector, a1, dir_1) &&
+		is_sphere_heading_towards_sector_one_axis(sphere, sector, a2, dir_2);
+}
+
+static bool is_sphere_heading_towards_sector_three_axis(
+		const struct sphere_s *sphere, const struct sector_s *sector, 
+		const enum axis a1, const enum axis a2, const enum axis a3,
+		const enum direction dir_1, const enum direction dir_2, const enum direction dir_3
+	){
+	return
+		is_sphere_heading_towards_sector_one_axis(sphere, sector, a1, dir_1) &&
+		is_sphere_heading_towards_sector_one_axis(sphere, sector, a2, dir_2) &&
+		is_sphere_heading_towards_sector_one_axis(sphere, sector, a3, dir_3);
+}
+
 // Checks for partial crossings with sectors that are immediately adjacent to 
 // the left/right, top/bottom or front/back.
 static void find_partial_crossing_events_for_sector_directly_adjacent(struct sphere_s *sphere, struct sector_s *sector, const union vector_3d new_pos) {
@@ -174,15 +238,9 @@ static void find_partial_crossing_events_for_sector_directly_adjacent(struct sph
 	enum direction dir;
 	for(dir = DIR_POSITIVE; dir <= DIR_NEGATIVE; dir++){
 		for (a = X_AXIS; a <= Z_AXIS; a++) {
-			bool should_check =
-				(dir == DIR_POSITIVE && sphere->vel.vals[a] >= 0.0 && sector->pos.vals[a] != sim_data.sector_dims[a] - 1) ||
-				(dir == DIR_NEGATIVE && sphere->vel.vals[a] <= 0.0 && sector->pos.vals[a] != 0);
-			if (should_check) {
+			if (is_sphere_heading_towards_sector_one_axis(sphere, sector, a, dir)) {
 				struct sector_s *sector_2 = get_sector_adjacent_on_axes(sector, a, AXIS_NONE, AXIS_NONE, dir, DIR_NONE, DIR_NONE);
-				bool heading_towards = 
-					(dir == DIR_POSITIVE && new_pos.vals[a] >= sector_2->start.vals[a] - sphere->radius - sector_2->largest_radius) ||
-					(dir == DIR_NEGATIVE && new_pos.vals[a] <= sector_2->end.vals[a] + sphere->radius + sector_2->largest_radius);
-				if (heading_towards) {
+				if (is_sphere_within_range_of_sector_one_axis(sphere, new_pos, sector_2, a, dir)) {
 					find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 				}
 			}
@@ -194,21 +252,9 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent_helper(
 		struct sphere_s *sphere, struct sector_s *sector, const union vector_3d new_pos, 
 		const enum axis a1, const enum axis a2, const enum direction dir_1, const enum direction dir_2
 	){
-	bool should_check_1 =
-		(dir_1 == DIR_POSITIVE && sphere->vel.vals[a1] >= 0.0 && sector->pos.vals[a1] != sim_data.sector_dims[a1] - 1) ||
-		(dir_1 == DIR_NEGATIVE && sphere->vel.vals[a1] <= 0.0 && sector->pos.vals[a1] != 0);
-	bool should_check_2 =
-		(dir_2 == DIR_POSITIVE && sphere->vel.vals[a2] >= 0.0 && sector->pos.vals[a2] != sim_data.sector_dims[a2] - 1) ||
-		(dir_2 == DIR_NEGATIVE && sphere->vel.vals[a2] <= 0.0 && sector->pos.vals[a2] != 0);
-	if(should_check_1 && should_check_2){
+	if(is_sphere_heading_towards_sector_two_axis(sphere, sector, a1, a2, dir_1, dir_2)){
 		struct sector_s *sector_2 = get_sector_adjacent_on_axes(sector, a1, a2, AXIS_NONE, dir_1, dir_2, DIR_NONE);
-		bool heading_towards_1 =
-			(dir_1 == DIR_POSITIVE && new_pos.vals[a1] >= sector_2->start.vals[a1] - sphere->radius - sector_2->largest_radius) ||
-			(dir_1 == DIR_NEGATIVE && new_pos.vals[a1] <= sector_2->end.vals[a1] + sphere->radius + sector_2->largest_radius);
-		bool heading_towards_2 =
-			(dir_2 == DIR_POSITIVE && new_pos.vals[a2] >= sector_2->start.vals[a2] - sphere->radius - sector_2->largest_radius) ||
-			(dir_2 == DIR_NEGATIVE && new_pos.vals[a2] <= sector_2->end.vals[a2] + sphere->radius + sector_2->largest_radius);
-		if(heading_towards_1 && heading_towards_2){
+		if(is_sphere_within_range_of_sector_two_axis(sphere, new_pos, sector_2, a1, a2, dir_1, dir_2)){
 			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
 		}
 	}	
@@ -241,131 +287,21 @@ static void find_partial_crossing_events_for_sector_diagonally_adjacent(struct s
 
 // Checks for partial crossings with sectors that are diagonally adjacent along three axes.
 // Ex: if passed sector at [0][0][0] it will check [1][1][1].
-// TODO: make this more generic
 static void find_partial_crossing_events_for_sector_diagonally_adjacent_three_axes(struct sphere_s *sphere, struct sector_s *sector, const union vector_3d new_pos) {
 	if(!sim_data.xyz_check_needed){
 		return;
 	}
-	bool heading_towards;
-	bool within_range;
-	// all positive
-	heading_towards = 
-		sphere->vel.x >= 0.0 && sector->pos.x != sim_data.sector_dims[X_AXIS] - 1
-		&& sphere->vel.y >= 0.0 && sector->pos.y != sim_data.sector_dims[Y_AXIS] - 1 
-		&& sphere->vel.z >= 0.0 && sector->pos.z != sim_data.sector_dims[Z_AXIS] - 1;
-	if (heading_towards) {
-		struct sector_s *sector_2 = &sim_data.sectors[sector->pos.x + 1][sector->pos.y + 1][sector->pos.z + 1];
-		within_range =
-			new_pos.x >= sector_2->start.x - sphere->radius - sector_2->largest_radius
-			&& new_pos.y >= sector_2->start.y - sphere->radius - sector_2->largest_radius
-			&& new_pos.z >= sector_2->start.z - sphere->radius - sector_2->largest_radius;
-		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
-		}
-	}
-	// all negative
-	heading_towards =
-		sphere->vel.x <= 0.0 && sector->pos.x != 0
-		&& sphere->vel.y <= 0.0 && sector->pos.y != 0
-		&& sphere->vel.z <= 0.0 && sector->pos.z != 0;
-	if (heading_towards) {
-		struct sector_s *sector_2 = &sim_data.sectors[sector->pos.x - 1][sector->pos.y - 1][sector->pos.z - 1];
-		within_range =
-			new_pos.x <= sector_2->end.x + sphere->radius + sector_2->largest_radius
-			&& new_pos.y <= sector_2->end.y + sphere->radius + sector_2->largest_radius
-			&& new_pos.z <= sector_2->end.z + sphere->radius + sector_2->largest_radius;
-		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
-		}
-	}
-	// x positive, y positive, z negative
-	heading_towards =
-		sphere->vel.x >= 0.0 && sector->pos.x != sim_data.sector_dims[X_AXIS] - 1
-		&& sphere->vel.y >= 0.0 && sector->pos.y != sim_data.sector_dims[Y_AXIS] - 1
-		&& sphere->vel.z <= 0.0 && sector->pos.z != 0;
-	if (heading_towards) {
-		struct sector_s *sector_2 = &sim_data.sectors[sector->pos.x + 1][sector->pos.y + 1][sector->pos.z - 1];
-		within_range =
-			new_pos.x >= sector_2->start.x - sphere->radius - sector_2->largest_radius
-			&& new_pos.y >= sector_2->start.y - sphere->radius - sector_2->largest_radius
-			&& new_pos.z <= sector_2->end.z + sphere->radius + sector_2->largest_radius;
-		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
-		}
-	}
-	// x positive, y negative, z positive
-	heading_towards =
-		sphere->vel.x >= 0.0 && sector->pos.x != sim_data.sector_dims[X_AXIS] - 1
-		&& sphere->vel.y <= 0.0 && sector->pos.y != 0
-		&& sphere->vel.z >= 0.0 && sector->pos.z != sim_data.sector_dims[Z_AXIS] - 1;
-	if (heading_towards) {
-		struct sector_s *sector_2 = &sim_data.sectors[sector->pos.x + 1][sector->pos.y - 1][sector->pos.z + 1];
-		within_range =
-			new_pos.x >= sector_2->start.x - sphere->radius - sector_2->largest_radius
-			&& new_pos.y <= sector_2->end.y + sphere->radius + sector_2->largest_radius
-			&& new_pos.z >= sector_2->start.z - sphere->radius - sector_2->largest_radius;
-		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
-		}
-	}
-	// x positive, y negative, z negative
-	heading_towards =
-		sphere->vel.x >= 0.0 && sector->pos.x != sim_data.sector_dims[X_AXIS] - 1
-		&& sphere->vel.y <= 0.0 && sector->pos.y != 0
-		&& sphere->vel.z <= 0.0 && sector->pos.z != 0;
-	if (heading_towards) {
-		struct sector_s *sector_2 = &sim_data.sectors[sector->pos.x + 1][sector->pos.y - 1][sector->pos.z - 1];
-		within_range =
-			new_pos.x >= sector_2->start.x - sphere->radius - sector_2->largest_radius
-			&& new_pos.y <= sector_2->end.y + sphere->radius + sector_2->largest_radius
-			&& new_pos.z <= sector_2->end.z + sphere->radius + sector_2->largest_radius;
-		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
-		}
-	}
-	// x negative, y positive, z positive
-	heading_towards =
-		sphere->vel.x <= 0.0 && sector->pos.x != 0
-		&& sphere->vel.y >= 0.0 && sector->pos.y != sim_data.sector_dims[Y_AXIS] - 1
-		&& sphere->vel.z >= 0.0 && sector->pos.z != sim_data.sector_dims[Z_AXIS] - 1;
-	if (heading_towards) {
-		struct sector_s *sector_2 = &sim_data.sectors[sector->pos.x - 1][sector->pos.y + 1][sector->pos.z + 1];
-		within_range =
-			new_pos.x <= sector_2->end.x + sphere->radius + sector_2->largest_radius
-			&& new_pos.y >= sector_2->start.y - sphere->radius - sector_2->largest_radius
-			&& new_pos.z >= sector_2->start.z - sphere->radius - sector_2->largest_radius;
-		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
-		}
-	}
-	// x negative, y positive, z negative
-	heading_towards =
-		sphere->vel.x <= 0.0 && sector->pos.x != 0
-		&& sphere->vel.y >= 0.0 && sector->pos.y != sim_data.sector_dims[Y_AXIS] - 1
-		&& sphere->vel.z <= 0.0 && sector->pos.z != 0;
-	if (heading_towards) {
-		struct sector_s *sector_2 = &sim_data.sectors[sector->pos.x - 1][sector->pos.y + 1][sector->pos.z - 1];
-		within_range =
-			new_pos.x <= sector_2->end.x + sphere->radius + sector_2->largest_radius
-			&& new_pos.y >= sector_2->start.y - sphere->radius - sector_2->largest_radius
-			&& new_pos.z <= sector_2->end.z + sphere->radius + sector_2->largest_radius;
-		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
-		}
-	}
-	// x negative, y negative, z positive
-	heading_towards =
-		sphere->vel.x <= 0.0 && sector->pos.x != 0
-		&& sphere->vel.y <= 0.0 && sector->pos.y != 0
-		&& sphere->vel.z >= 0.0 && sector->pos.z != sim_data.sector_dims[Z_AXIS] - 1;
-	if (heading_towards) {
-		struct sector_s *sector_2 = &sim_data.sectors[sector->pos.x - 1][sector->pos.y - 1][sector->pos.z + 1];
-		within_range =
-			new_pos.x <= sector_2->end.x + sphere->radius + sector_2->largest_radius
-			&& new_pos.y <= sector_2->end.y + sphere->radius + sector_2->largest_radius
-			&& new_pos.z >= sector_2->start.z - sphere->radius - sector_2->largest_radius;
-		if (within_range) {
-			find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
+	enum direction dir_1, dir_2, dir_3;
+	for(dir_1 = DIR_POSITIVE; dir_1 <= DIR_NEGATIVE; dir_1++){
+		for(dir_2 = DIR_POSITIVE; dir_2 <= DIR_NEGATIVE; dir_2++){
+			for(dir_3 = DIR_POSITIVE; dir_3 <= DIR_NEGATIVE; dir_3++){
+				if (is_sphere_heading_towards_sector_three_axis(sphere, sector, X_AXIS, Y_AXIS, Z_AXIS, dir_1, dir_2, dir_3)) {
+					struct sector_s *sector_2 = get_sector_adjacent_on_axes(sector, X_AXIS, Y_AXIS, Z_AXIS, dir_1, dir_2, dir_3);
+					if (is_sphere_within_range_of_sector_three_axis(sphere, new_pos, sector_2, X_AXIS, Y_AXIS, Z_AXIS, dir_1, dir_2, dir_3)) {
+						find_partial_crossing_events_between_sphere_and_sector(sector, sphere, sector_2);
+					}
+				}
+			}
 		}
 	}
 }

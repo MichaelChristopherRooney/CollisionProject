@@ -100,7 +100,7 @@ static void print_help(){
 		printf("-f:\n\tOptional.\n\tSets the final state file. This will contain only the final velocity and position of each sphere.\n");
 		printf("-o:\n\tRequired.\n\tSets the output file. This contains all data needed to make use of the simulation.\n");
 		printf("-i:\n\tRequired.\n\tSets the inital state file.\n");
-		printf("-t:\n\tRequired.\n\tSets the time the simulation will run for.\n");
+		printf("-l:\n\tRequired.\n\tSets the time the simulation will run for.\n");
 	}
 	MPI_Finalize();
 	exit(0);
@@ -109,7 +109,7 @@ static void print_help(){
 void parse_args(int argc, char *argv[]) {
 	set_default_params();
 	int c;
-	while((c = getopt(argc, argv, "ai:c:f:ho:x:y:z:t:")) != -1) {
+	while((c = getopt(argc, argv, "ai:c:f:ho:x:y:z:l:")) != -1) {
 		switch(c) {
 		case 'a':
 			ALL_HELP = true;
@@ -138,7 +138,7 @@ void parse_args(int argc, char *argv[]) {
 		case 'i':
 			initial_state_file = optarg;
 			break;
-		case 't':
+		case 'l':
 			sim_data.time_limit = atof(optarg);
 			break;
 		}
