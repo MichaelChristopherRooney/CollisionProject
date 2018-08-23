@@ -20,6 +20,7 @@ static void compare_results() {
 	fread_wrapper(&comp_num_spheres, sizeof(int64_t), 1, fp);
 	if(comp_num_spheres != sim_data.total_num_spheres){
 		printf("Error: cannot compare files as number of spheres differs\n");
+		printf("Simulation has %ld spheres but file has %ld\n", sim_data.total_num_spheres, comp_num_spheres);
 		return;
 	}
 	double max_pos_err = 0.0;
@@ -99,25 +100,6 @@ static void sanity_check() {
 		}
 	}
 }
-
-/*
-static void debug_events(){
-	printf("=====================\n");
-	printf("Iteration: %d\n", sim_data.iteration_number);
-	printf("Total time elapsed: %f\n", sim_data.elapsed_time);
-	printf("Global next event time: %f\n", event_details.time);
-	int i;
-	for(i = 0; i < sim_data.num_sectors; i++){
-		struct sector_s *s = &sim_data.sectors_flat[i];
-		if(s->prior_time_valid){
-			printf("Sector %d's time IS valid\n", i);
-		} else {
-			printf("Sector %d's time is NOT valid\n", i);
-		}
-		printf("Next event time for sector %d: %f\n", i, sector_events[i].time);
-	}
-}
-*/
 
 static void do_simulation_iteration_dd(){
 	sanity_check();

@@ -56,7 +56,6 @@ static void print_config(){
 	} else {
 		printf("ALL_HELP is NOT set.\nOnly neighbour nodes will find events for sectors without valid prior times\n");
 	}
-	printf("Time limit is %f\n", sim_data.time_limit);
 }
 
 static void validate_args(){

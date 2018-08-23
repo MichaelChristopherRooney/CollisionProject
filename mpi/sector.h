@@ -7,7 +7,8 @@
 
 enum direction {
 	DIR_POSITIVE = 0,
-	DIR_NEGATIVE = 1
+	DIR_NEGATIVE = 1,
+	DIR_NONE = 2
 };
 
 #define SECTOR_DEFAULT_MAX_SPHERES 10000
@@ -43,9 +44,9 @@ struct sector_s {
 	int spheres_fd;
 };
 
-// Used when iterating over axes and nned to access sector adjacent on the current axis.
+// Used when iterating over axes and need to access sector adjacent on the current axis.
 // Allows sectors to be found in a generic way. 
-const int SECTOR_MODIFIERS[2][3][3];
+const int SECTOR_MODIFIERS[3][4][3];
 
 void resize_sphere_array(struct sector_s *s);
 void check_for_resizing_after_sphere_loading();

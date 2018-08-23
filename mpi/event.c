@@ -138,7 +138,7 @@ void reduce_events(){
 	}
 	next_event = &event_buffer[GRID_RANK_NEXT_EVENT];
 	if(GRID_RANK == 0){
-		//printf("Iteration: %d. Soonest time is %.17g from rank %d\n", sim_data.iteration_number, next_event->time, GRID_RANK_NEXT_EVENT);
+		//printf("Iteration: %d. Soonest time is %.17g from rank %d. Simulation current time is %.17g\n", sim_data.iteration_number, next_event->time, GRID_RANK_NEXT_EVENT, sim_data.elapsed_time);
 	}
 }
 

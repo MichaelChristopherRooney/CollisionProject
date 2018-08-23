@@ -6,7 +6,7 @@ enum axis {
 	X_AXIS = 0,
 	Y_AXIS = 1,
 	Z_AXIS = 2,
-	AXIS_NONE = -1
+	AXIS_NONE = 3
 };
 
 // Can either access x/y/z directly, or access vals[X/Y/Z_AXIS]

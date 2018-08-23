@@ -7,9 +7,9 @@
 
 enum direction {
 	DIR_POSITIVE = 0,
-	DIR_NEGATIVE = 1
+	DIR_NEGATIVE = 1,
+	DIR_NONE = 2
 };
-
 struct sector_s {
 	union vector_3d start;
 	union vector_3d end;
@@ -26,9 +26,9 @@ struct sector_s {
 
 struct event_s *sector_events;
 
-// Used when iterating over axes and nned to access sector adjacent on the current axis.
+// Used when iterating over axes and need to access sector adjacent on the current axis.
 // Allows sectors to be found in a generic way. 
-const int SECTOR_MODIFIERS[2][3][3];
+const int SECTOR_MODIFIERS[3][4][3];
 
 void add_sphere_to_sector(struct sector_s *sector, struct sphere_s *sphere);
 void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *sphere);

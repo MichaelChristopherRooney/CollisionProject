@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 static int64_t count;
 static FILE *fp;
@@ -18,6 +19,7 @@ static void create_sphere(double x, double y, double z, double x_vel, double y_v
 	count++;
 }
 
+static const double mod = 100.0;
 // Creates a number of spheres in a line
 static void create_spheres(int num, double x_start, double y_start, double z_start, double x_inc, double y_inc, double z_inc) {
 	double x = x_start;
@@ -25,9 +27,9 @@ static void create_spheres(int num, double x_start, double y_start, double z_sta
 	double z = z_start;
 	int i;
 	for (i = 0; i < num; i++) {
-		double xv = (rand() / (RAND_MAX + 1.0)) * 10.0;
-		double yv = (rand() / (RAND_MAX + 1.0)) * 10.0;
-		double zv = (rand() / (RAND_MAX + 1.0)) * 10.0;
+		double xv = ((drand48() - 0.5) * 2.0) * mod;
+		double yv = ((drand48() - 0.5) * 2.0) * mod;
+		double zv = ((drand48() - 0.5) * 2.0) * mod;
 		create_sphere(x, y, z, xv, yv, zv);
 		x += x_inc;
 		y += y_inc;
@@ -38,7 +40,7 @@ static void create_spheres(int num, double x_start, double y_start, double z_sta
 // Simple test with one sphere going back and forth
 static void generate_transfer(){
 	count = 0;
-	srand(123);
+	srand48(123);
 	fp = fopen("transfer.spheres", "wb");
 	double grid_size = 100.0;
 	fwrite(&grid_size, sizeof(double), 1, fp); // x
@@ -54,7 +56,7 @@ static void generate_transfer(){
 // Each sphere has a random velocity.
 static void generate_4000(){
 	count = 0;
-	srand(123);
+	srand48(123);
 	fp = fopen("4000.spheres", "wb");
 	double grid_size = 1000.0;
 	fwrite(&grid_size, sizeof(double), 1, fp); // x
@@ -85,7 +87,7 @@ static void generate_4000(){
 // Each sphere has a random velocity.
 static void generate_10000(){
 	count = 0;
-	srand(123);
+	srand48(123);
 	fp = fopen("10000.spheres", "wb");
 	double grid_size = 1000.0;
 	fwrite(&grid_size, sizeof(double), 1, fp); // x
@@ -108,7 +110,31 @@ static void generate_10000(){
 	fclose(fp);
 }
 
-
+// Generates 50176 spheres placed in lines.
+// Each sphere has a random velocity.
+static void generate_50000(){
+	count = 0;
+	srand48(123);
+	fp = fopen("50000.spheres", "wb");
+	double grid_size = 500.0;
+	fwrite(&grid_size, sizeof(double), 1, fp); // x
+	fwrite(&grid_size, sizeof(double), 1, fp); // y
+	fwrite(&grid_size, sizeof(double), 1, fp); // z
+	int64_t num_spheres = 50176;
+	fwrite(&num_spheres, sizeof(int64_t), 1, fp);
+	int i, j;
+	double x, y, z;
+	const double offset = 1.5;
+	const double inc = (grid_size - (offset * 2.0)) / sqrt(num_spheres);
+	printf("inc is %.17g\n", inc);
+	const double num_in_line = 224;
+	z = 10.0;
+	for(i = 0; i < num_in_line; i++){
+		y = 2.0 + (inc * i);
+		create_spheres(num_in_line, 2.0, y, z, inc, 0.0, 0.0);
+	}
+	fclose(fp);
+}
 static void generate_one_axis_crossing_test(){
 	count = 0;
 	fp = fopen("one_axis.spheres", "wb");
@@ -148,7 +174,7 @@ static void generate_two_axis_crossing_test(){
 	fwrite(&grid_size, sizeof(double), 1, fp); // y
 	grid_size = 50.0;
 	fwrite(&grid_size, sizeof(double), 1, fp); // z
-	int64_t num_spheres = 18;
+	int64_t num_spheres = 13;
 	fwrite(&num_spheres, sizeof(int64_t), 1, fp);
 	create_sphere(40.0, 40.0, 10.0, 5.5, 5.5, 0.0);
 	create_sphere(60.0, 60.0, 10.0, -5.1, -5.1, 0.0);
@@ -197,6 +223,7 @@ static void generate_three_axis_crossing_test(){
 int main(void){
 	generate_4000();
 	generate_10000();
+	generate_50000();
 	generate_one_axis_crossing_test();
 	generate_two_axis_crossing_test();	
 	generate_three_axis_crossing_test();

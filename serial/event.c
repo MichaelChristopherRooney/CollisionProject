@@ -7,7 +7,6 @@
 #include "simulation.h"
 #include "sphere.h"
 
-
 static double increment_double_by_smallest_amount(double val){
 	void *p = &val;
 	int64_t *i = (int64_t *)p;

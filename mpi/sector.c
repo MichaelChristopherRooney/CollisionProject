@@ -12,6 +12,28 @@
 #include "simulation.h"
 #include "sector.h"
 
+// Used when iterating over axes and nned to access sector adjacent on the current axis.
+const int SECTOR_MODIFIERS[3][4][3] = {
+	{ // DIR_POSITIVE
+		{ 1, 0, 0 }, // x
+		{ 0, 1, 0 }, // y
+		{ 0, 0, 1 }, // z
+		{ 0, 0, 0 }, // used for AXIS_NONE, when no change is desired
+	},
+	{ // DIR_NEGATIVE
+		{ -1, 0, 0 }, // x
+		{ 0, -1, 0 }, // y
+		{ 0, 0, -1 }, // z
+		{ 0, 0, 0 }, // used for AXIS_NONE, when no change is desired
+	},
+	{ // DIR_NONE, when no change is desired
+		{ 0, 0, 0 }, // x
+		{ 0, 0, 0 }, // y
+		{ 0, 0, 0 }, // z
+		{ 0, 0, 0 }, // used for AXIS_NONE, when no change is desired
+	}
+};
+
 // Give a sector finds where the local sector is stored in the passed
 // sector's neighbour array (which is sorted by id).
 static int find_my_id_in_neighbour_array(struct sector_s *s){
@@ -47,20 +69,6 @@ void check_for_resizing_after_sphere_loading(){
 		}
 	}
 }
-
-// Used when iterating over axes and nned to access sector adjacent on the current axis.
-const int SECTOR_MODIFIERS[2][3][3] = {
-	{
-		{ 1, 0, 0 }, // x
-		{ 0, 1, 0 }, // y
-		{ 0, 0, 1 }, // z
-	},
-	{
-		{ -1, 0, 0 }, // x
-		{ 0, -1, 0 }, // y
-		{ 0, 0, -1 }, // z
-	}
-};
 
 void set_largest_radius_after_insertion(struct sector_s *sector, const struct sphere_s *sphere) {
 	if (sphere->radius == sector->largest_radius) {
