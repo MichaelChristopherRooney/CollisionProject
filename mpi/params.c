@@ -99,7 +99,7 @@ static void print_help(){
 		printf("-c:\n\tOptional.\n\tSets the compare file. This should be a final state file from a previous run.\n\tThe max error between this run and the compare file will be printed.\n");
 		printf("-f:\n\tOptional.\n\tSets the final state file. This will contain only the final velocity and position of each sphere.\n");
 		printf("-o:\n\tRequired.\n\tSets the output file. This contains all data needed to make use of the simulation.\n");
-		printf("-i:\n\tRequired.\n\tSets the inital state file.\n");
+		printf("-i:\n\tRequired.\n\tSets the initial state file.\n");
 		printf("-l:\n\tRequired.\n\tSets the time the simulation will run for.\n");
 	}
 	MPI_Finalize();

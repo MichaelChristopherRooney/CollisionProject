@@ -40,7 +40,7 @@ static void save_sphere_initial_state_to_file() {
 void save_sphere_state_to_file(uint64_t iteration_num, double time_elapsed) {
 	fwrite(&iteration_num, sizeof(uint64_t), 1, data_file);
 	fwrite(&time_elapsed, sizeof(double), 1, data_file);
-	if (event_details.type == COL_TWO_SPHERES) {
+	if (event_details.type == COL_TWO_SPHERES || event_details.type == COL_TWO_SPHERES_PARTIAL_CROSSING) {
 		uint64_t count = 2;
 		fwrite(&count, sizeof(uint64_t), 1, data_file);
 		save_sphere_to_file(event_details.sphere_1);
