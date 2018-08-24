@@ -76,6 +76,19 @@ static double find_time_to_cross_boundary(const double bound_start, const double
 	return dist / axis_vel;
 }
 
+// Note: a2, a3 may be AXIS_NONE and dir_2, dir_3 may be DIR_NONE.
+// In those cases the modifier will be 0 so the position on those axes won't change.
+static struct sector_s *get_sector_adjacent_on_axes(
+		const struct sector_s *s, 
+		const enum axis a1, const enum axis a2, const enum axis a3,
+		const enum direction dir_1, const enum direction dir_2, const enum direction dir_3
+	){
+	int x = s->pos.x + SECTOR_MODIFIERS[dir_1][a1][X_AXIS] + SECTOR_MODIFIERS[dir_2][a2][X_AXIS] + SECTOR_MODIFIERS[dir_3][a3][X_AXIS];
+	int y = s->pos.y + SECTOR_MODIFIERS[dir_1][a1][Y_AXIS] + SECTOR_MODIFIERS[dir_2][a2][Y_AXIS] + SECTOR_MODIFIERS[dir_3][a3][Y_AXIS];
+	int z = s->pos.z + SECTOR_MODIFIERS[dir_1][a1][Z_AXIS] + SECTOR_MODIFIERS[dir_2][a2][Z_AXIS] + SECTOR_MODIFIERS[dir_3][a3][Z_AXIS];
+	return &sim_data.sectors[x][y][z];
+}
+
 // Finds the time when the sphere will pass into another sector
 // Note: we want to know when the center of the sphere crosses the sector boundary so we set
 // radius to 0 when calling find_time_to_cross_boundary().
@@ -88,10 +101,9 @@ double find_collision_time_sector(const struct sector_s *sector, const struct sp
 			if (temp_time < time) {
 				time = temp_time;
 				if (sphere->vel.vals[a] > 0.0) {
-					*dest = get_adjacent_sector_non_diagonal(sector, a, DIR_POSITIVE);
+					*dest = get_sector_adjacent_on_axes(sector, a, AXIS_NONE, AXIS_NONE, DIR_POSITIVE, DIR_NONE, DIR_NONE);
 				} else {
-
-					*dest = get_adjacent_sector_non_diagonal(sector, a, DIR_NEGATIVE);
+					*dest = get_sector_adjacent_on_axes(sector, a, AXIS_NONE, AXIS_NONE, DIR_NEGATIVE, DIR_NONE, DIR_NONE);
 				}
 			}
 		}
@@ -152,19 +164,6 @@ static void find_partial_crossing_events_between_sphere_and_sector(struct sector
 		double time = find_collision_time_spheres(sphere_1, sphere_2);
 		set_event_details(time, COL_TWO_SPHERES_PARTIAL_CROSSING, sphere_1, sphere_2, AXIS_NONE, sector_1, sector_2);
 	}
-}
-
-// Note: a2, a3 may be AXIS_NONE and dir_2, dir_3 may be DIR_NONE.
-// In those cases the modifier will be 0 so the position on those axes won't change.
-static struct sector_s *get_sector_adjacent_on_axes(
-		const struct sector_s *s, 
-		const enum axis a1, const enum axis a2, const enum axis a3,
-		const enum direction dir_1, const enum direction dir_2, const enum direction dir_3
-	){
-	int x = s->pos.x + SECTOR_MODIFIERS[dir_1][a1][X_AXIS] + SECTOR_MODIFIERS[dir_2][a2][X_AXIS] + SECTOR_MODIFIERS[dir_3][a3][X_AXIS];
-	int y = s->pos.y + SECTOR_MODIFIERS[dir_1][a1][Y_AXIS] + SECTOR_MODIFIERS[dir_2][a2][Y_AXIS] + SECTOR_MODIFIERS[dir_3][a3][Y_AXIS];
-	int z = s->pos.z + SECTOR_MODIFIERS[dir_1][a1][Z_AXIS] + SECTOR_MODIFIERS[dir_2][a2][Z_AXIS] + SECTOR_MODIFIERS[dir_3][a3][Z_AXIS];
-	return &sim_data.sectors[x][y][z];
 }
 
 // Returns true if the sphere is within the minimum distance from an adjacent

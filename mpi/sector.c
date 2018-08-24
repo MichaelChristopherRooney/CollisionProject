@@ -149,17 +149,6 @@ void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *s
 	set_largest_radius_after_removal(sector, sphere);
 }
 
-// Given a sector returns the sector adjacent in specified direction on the
-// specified axis.
-// Ex: If x axis and positive direction returns sector to the right.
-struct sector_s *get_adjacent_sector_non_diagonal(const struct sector_s *sector, const enum axis a, const enum direction dir) {
-	int x = sector->pos.x + SECTOR_MODIFIERS[dir][a][X_AXIS];
-	int y = sector->pos.y + SECTOR_MODIFIERS[dir][a][Y_AXIS];
-	int z = sector->pos.z + SECTOR_MODIFIERS[dir][a][Z_AXIS];
-	struct sector_s *adj = &sim_data.sectors[x][y][z];
-	return adj;
-}
-
 // Helper for add_sphere_to_correct_sector function.
 // Also used when MPI code is loading sphere data from file.
 bool does_sphere_belong_to_sector(const struct sphere_s *sphere, const struct sector_s *sector) {

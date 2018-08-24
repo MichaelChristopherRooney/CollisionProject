@@ -102,7 +102,7 @@ static void sanity_check() {
 }
 
 static void do_simulation_iteration_dd(){
-	sanity_check();
+	//sanity_check();
 	// First reset records.
 	reset_event();
 	// Now find event + time of event
@@ -116,7 +116,7 @@ static void do_simulation_iteration_dd(){
 		update_spheres();
 		apply_event_dd();
 	}
-	sanity_check();
+	//sanity_check();
 	sim_data.elapsed_time += event_details.time;
 }
 

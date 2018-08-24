@@ -56,6 +56,5 @@ bool does_sphere_belong_to_sector(const struct sphere_s *sphere, const struct se
 struct sector_s *find_sector_that_sphere_belongs_to(struct sphere_s *sphere);
 void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere);
 void remove_sphere_from_sector(struct sector_s *sector, const struct sphere_s *sphere);
-struct sector_s *get_adjacent_sector_non_diagonal(const struct sector_s *sector, const enum axis a, const enum direction dir);
 void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere);
 void init_sectors();
