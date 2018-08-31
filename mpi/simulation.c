@@ -100,7 +100,7 @@ static void do_grid_iteration(){
 	// Final event may take place after time limit, so cut it short if so
 	find_event_times();
 	reduce_events();
-	if (sim_data.time_limit - sim_data.elapsed_time < next_event->time) {
+	if (sim_data.uses_time_limit && sim_data.time_limit - sim_data.elapsed_time < next_event->time) {
 		next_event->time = sim_data.time_limit - sim_data.elapsed_time;
 		if(GRID_RANK == 0){
 			MPI_Status s;
@@ -125,9 +125,23 @@ static void print_stats(){
 	printf("Number of partial crossings: %d\n", stats.num_partial_crossings);
 }
 
+static bool is_simulation_finished(){
+	if(sim_data.uses_time_limit){
+		if(sim_data.elapsed_time >= sim_data.time_limit){
+			return true;
+		}
+	} else {
+		int total = stats.num_two_sphere_collisions + stats.num_grid_collisions + stats.num_partial_crossings;
+		if(total >= sim_data.event_limit){
+			return true;
+		}
+	}
+	return false;
+}
+
 void simulation_run() {
 	sim_data.iteration_number = 1; // start at 1 as 0 is iteration num for the initial state
-	while (sim_data.elapsed_time < sim_data.time_limit) {
+	while (is_simulation_finished() == false) {
 		do_grid_iteration();
 		MPI_Barrier(GRID_COMM);
 		sim_data.iteration_number++;

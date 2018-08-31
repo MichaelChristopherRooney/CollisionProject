@@ -14,6 +14,8 @@ struct simulation_s {
 	struct sector_s *sectors_flat;
 	int num_sectors;
 	double time_limit;
+	int event_limit;
+	bool uses_time_limit; // if false use event_limit instead
 	double elapsed_time;
 	bool xy_check_needed;
 	bool xz_check_needed;

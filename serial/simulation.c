@@ -108,9 +108,9 @@ static void do_simulation_iteration_dd(){
 	reset_event();
 	// Now find event + time of event
 	find_event_times_for_all_sectors();
-	printf("Iteration: %d. Soonest time is %.17g from %d. Elapsed time is %.17g\n", sim_data.iteration_number, event_details.time, event_details.source_sector->id, sim_data.elapsed_time);
+	//printf("Iteration: %d. Soonest time is %.17g from %d. Elapsed time is %.17g\n", sim_data.iteration_number, event_details.time, event_details.source_sector->id, sim_data.elapsed_time);
 	// Final event may take place after time limit, so cut it short
-	if (sim_data.time_limit - sim_data.elapsed_time < event_details.time) {
+	if (sim_data.uses_time_limit && sim_data.time_limit - sim_data.elapsed_time < event_details.time) {
 		event_details.time = sim_data.time_limit - sim_data.elapsed_time;
 		update_spheres();
 	} else {
@@ -126,9 +126,9 @@ static void do_simulation_iteration_no_dd(){
 	reset_event();
 	// Now find event + time of event
 	find_event_times_no_dd();
-	printf("Iteration: %d. Soonest time is %.17g. Elapsed time is %.17g\n", sim_data.iteration_number, event_details.time, sim_data.elapsed_time);
+	//printf("Iteration: %d. Soonest time is %.17g. Elapsed time is %.17g\n", sim_data.iteration_number, event_details.time, sim_data.elapsed_time);
 	// Final event may take place after time limit, so cut it short
-	if (sim_data.time_limit - sim_data.elapsed_time < event_details.time) {
+	if (sim_data.uses_time_limit && sim_data.time_limit - sim_data.elapsed_time < event_details.time) {
 		event_details.time = sim_data.time_limit - sim_data.elapsed_time;
 		update_spheres();
 	} else {
@@ -138,15 +138,29 @@ static void do_simulation_iteration_no_dd(){
 	sim_data.elapsed_time += event_details.time;
 }
 
+static bool is_simulation_finished(){
+	if(sim_data.uses_time_limit){
+		if(sim_data.elapsed_time >= sim_data.time_limit){
+			return true;
+		}
+	} else {
+		int total = stats.num_two_sphere_collisions + stats.num_grid_collisions + stats.num_partial_crossings;
+		if(total >= sim_data.event_limit){
+			return true;
+		}
+	}
+	return false;
+}
+
 void simulation_run() {
 	sim_data.iteration_number = 1; // start at 1 as 0 is iteration num for the initial state
-	while (sim_data.elapsed_time < sim_data.time_limit) {
+	while (1) {
 		if(sim_data.num_sectors > 1){
 			do_simulation_iteration_dd();
 		} else {
 			do_simulation_iteration_no_dd();
 		}
-		if (sim_data.elapsed_time >= sim_data.time_limit) {
+		if(is_simulation_finished()){
 			write_final_time_to_file();
 			break;
 		}
