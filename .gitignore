@@ -1,6 +1,9 @@
 #Ignore simulation data file
 *.bin
 
+#Ignore data sets
+*.spheres
+
 #Ignore exec and object files
 serial/prog
 serial/*.o

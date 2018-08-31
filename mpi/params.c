@@ -38,7 +38,7 @@ static void print_config(){
 	printf("Number of x slices: %d\n", sim_data.sector_dims[0]);
 	printf("Number of y slices: %d\n", sim_data.sector_dims[1]);
 	printf("Number of z slices: %d\n", sim_data.sector_dims[2]);
-	printf("Time limit: %f\n", sim_data.time_limit);
+	printf("Time limit: %.17g\n", sim_data.time_limit);
 	printf("Initial state file: %s\n", initial_state_file);
 	printf("Output file: %s\n", output_file);
 	if(final_state_file != NULL){

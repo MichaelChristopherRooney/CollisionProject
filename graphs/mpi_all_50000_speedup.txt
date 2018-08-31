@@ -1,0 +1,21 @@
+# This is the speedup of the MPI all help version vs the serial version using the same number of sectors
+#
+# 2x1 = 2 sectors/cores, serial took 8235 seconds, ALL_HELP MPI took 4262
+2, 1.9
+# 2x2 = 4 sectors/cores, serial took 2015.05 seconds, ALL_HELP MPI took 531.8
+4, 3.8
+# 4x2 = 8 sectors/cores, serial took 619.78 seconds, ALL_HELP MPI took 85.56
+8, 7.2
+# 4x3 = 12 sectors/cores, serial took 339.31 seconds, ALL_HELP MPI took 35.57
+12, 9.5
+# 4x4 = 16 sectors/cores, serial took 233.73 seconds, ALL_HELP MPI took 19.99
+16, 11.7
+# 6x4 = 24 sectors/cores, serial took 158.32 seconds, ALL_HELP MPI took 11.1
+24, 14.26
+# 8x4 = 32 sectors/cores, serial took 121.56 seconds, ALL_HELP MPI took 8.63
+32, 14.1
+# 8x6 = 48 sectors/cores, serial took 89.71 seconds, ALL_HELP MPI took 6.14
+48, 14.6
+# 8x8 = 64 sectors/cores, serial took 70.97 seconds, ALL_HELP MPI took 5.56
+64, 12.8
+

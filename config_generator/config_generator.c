@@ -135,6 +135,136 @@ static void generate_50000(){
 	}
 	fclose(fp);
 }
+
+// Generates 50176 spheres placed in lines.
+// Each sphere has a random velocity.
+static void generate_50000_sparse(){
+	count = 0;
+	srand48(123);
+	fp = fopen("50000_sparse.spheres", "wb");
+	double grid_size = 50000.0;
+	fwrite(&grid_size, sizeof(double), 1, fp); // x
+	fwrite(&grid_size, sizeof(double), 1, fp); // y
+	fwrite(&grid_size, sizeof(double), 1, fp); // z
+	int64_t num_spheres = 50176;
+	fwrite(&num_spheres, sizeof(int64_t), 1, fp);
+	int i, j;
+	double x, y, z;
+	const double offset = 1.5;
+	const double inc = (grid_size - (offset * 2.0)) / sqrt(num_spheres);
+	printf("inc is %.17g\n", inc);
+	const double num_in_line = 224;
+	z = 10.0;
+	for(i = 0; i < num_in_line; i++){
+		y = 2.0 + (inc * i);
+		create_spheres(num_in_line, 2.0, y, z, inc, 0.0, 0.0);
+	}
+	fclose(fp);
+}
+// Generates 500'000 spheres placed in lines.
+// Each sphere has a random velocity.
+static void generate_500k(){
+	count = 0;
+	srand48(123);
+	fp = fopen("500k.spheres", "wb");
+	double grid_size = 1750.0;
+	fwrite(&grid_size, sizeof(double), 1, fp); // x
+	fwrite(&grid_size, sizeof(double), 1, fp); // y
+	fwrite(&grid_size, sizeof(double), 1, fp); // z
+	int64_t num_spheres = 501264;
+	fwrite(&num_spheres, sizeof(int64_t), 1, fp);
+	int i, j;
+	double x, y, z;
+	const double offset = 1.5;
+	const double inc = (grid_size - (offset * 2.0)) / sqrt(num_spheres);
+	printf("inc is %.17g\n", inc);
+	const double num_in_line = 708;
+	z = 10.0;
+	for(i = 0; i < num_in_line; i++){
+		y = 2.0 + (inc * i);
+		create_spheres(num_in_line, 2.0, y, z, inc, 0.0, 0.0);
+	}
+	fclose(fp);
+}
+
+// Generates 1'000'000 spheres placed in lines.
+// Each sphere has a random velocity.
+static void generate_1mil(){
+	count = 0;
+	srand48(123);
+	fp = fopen("1mil.spheres", "wb");
+	double grid_size = 2200.0;
+	fwrite(&grid_size, sizeof(double), 1, fp); // x
+	fwrite(&grid_size, sizeof(double), 1, fp); // y
+	fwrite(&grid_size, sizeof(double), 1, fp); // z
+	int64_t num_spheres = 1000000;
+	fwrite(&num_spheres, sizeof(int64_t), 1, fp);
+	int i, j;
+	double x, y, z;
+	const double offset = 1.75;
+	const double inc = (grid_size - (offset * 2.0)) / sqrt(num_spheres);
+	printf("inc is %.17g\n", inc);
+	const double num_in_line = 1000;
+	z = 10.0;
+	for(i = 0; i < num_in_line; i++){
+		y = 2.0 + (inc * i);
+		create_spheres(num_in_line, 2.0, y, z, inc, 0.0, 0.0);
+	}
+	fclose(fp);
+}
+
+// Generates 2'502'724 spheres placed in lines.
+// Each sphere has a random velocity.
+static void generate_2mil(){
+	count = 0;
+	srand48(123);
+	fp = fopen("2mil.spheres", "wb");
+	double grid_size = 3750.0;
+	fwrite(&grid_size, sizeof(double), 1, fp); // x
+	fwrite(&grid_size, sizeof(double), 1, fp); // y
+	fwrite(&grid_size, sizeof(double), 1, fp); // z
+	int64_t num_spheres = 2502724;
+	fwrite(&num_spheres, sizeof(int64_t), 1, fp);
+	int i, j;
+	double x, y, z;
+	const double offset = 1.25;
+	const double inc = (grid_size - (offset * 2.0)) / sqrt(num_spheres);
+	printf("inc is %.17g\n", inc);
+	const double num_in_line = 1582;
+	z = 10.0;
+	for(i = 0; i < num_in_line; i++){
+		y = 2.0 + (inc * i);
+		create_spheres(num_in_line, 2.0, y, z, inc, 0.0, 0.0);
+	}
+	fclose(fp);
+}
+
+// Generates 5'004'169 spheres placed in lines.
+// Each sphere has a random velocity.
+static void generate_5mil(){
+	count = 0;
+	srand48(123);
+	fp = fopen("5mil.spheres", "wb");
+	double grid_size = 4750.0;
+	fwrite(&grid_size, sizeof(double), 1, fp); // x
+	fwrite(&grid_size, sizeof(double), 1, fp); // y
+	fwrite(&grid_size, sizeof(double), 1, fp); // z
+	int64_t num_spheres = 2237 * 2237;
+	fwrite(&num_spheres, sizeof(int64_t), 1, fp);
+	int i, j;
+	double x, y, z;
+	const double offset = 1.25;
+	const double inc = (grid_size - (offset * 2.0)) / sqrt(num_spheres);
+	printf("inc is %.17g\n", inc);
+	const double num_in_line = 2237;
+	z = 10.0;
+	for(i = 0; i < num_in_line; i++){
+		y = 2.0 + (inc * i);
+		create_spheres(num_in_line, 2.0, y, z, inc, 0.0, 0.0);
+	}
+	fclose(fp);
+}
+
 static void generate_one_axis_crossing_test(){
 	count = 0;
 	fp = fopen("one_axis.spheres", "wb");
@@ -224,6 +354,11 @@ int main(void){
 	generate_4000();
 	generate_10000();
 	generate_50000();
+	generate_50000_sparse();
+	generate_500k();
+	generate_1mil();
+	generate_2mil();
+	generate_5mil();
 	generate_one_axis_crossing_test();
 	generate_two_axis_crossing_test();	
 	generate_three_axis_crossing_test();

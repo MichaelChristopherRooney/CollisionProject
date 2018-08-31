@@ -1,0 +1,22 @@
+# # This is the speedup of the MPI neighbour help version vs the serial version using the same number of sectors
+#
+# 2x1 = 2 sectors/cores, serial took 8235 seconds, NEIGHBOURS HELP  MPI took 4262
+2, 1.9
+# 2x2 = 4 sectors/cores, serial took 2015.05 seconds, NEIGHBOURS HELP MPI took 528.97
+4, 3.8
+# 4x2 = 8 sectors/cores, serial took 619.78 seconds, NEIGHBOURS HELP MPI took 123.3
+8, 5
+# 4x3 = 12 sectors/cores, serial took 339.31 seconds, NEIGHBOURS HELP MPI took 55.25
+12, 6.1
+# 4x4 = 16 sectors/cores, serial took 233.73 seconds, NEIGHBOURS HELP MPI took 31.64
+16, 7.4
+# 6x4 = 24 sectors/cores, serial took 158.32 seconds, NEIGHBOURS HELP MPI took 15.78
+24, 10
+# 8x4 = 32 sectors/cores, serial took 121.56 seconds, NEIGHBOURS HELP MPI took 11.3
+32, 10.8
+# 8x6 = 48 sectors/cores, serial took 89.71 seconds, NEIGHBOURS HELP MPI took 6.23
+48, 14.4
+# 8x8 = 64 sectors/cores, serial took 70.97 seconds, NEIGHBOURS HELP MPI took 5.91
+64, 12
+
+

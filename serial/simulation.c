@@ -102,12 +102,13 @@ static void sanity_check() {
 }
 
 static void do_simulation_iteration_dd(){
+	printf("Iteration: %d\n", sim_data.iteration_number);
 	//sanity_check();
 	// First reset records.
 	reset_event();
 	// Now find event + time of event
 	find_event_times_for_all_sectors();
-	//printf("Iteration: %d. Soonest time is %.17g from %d\n", sim_data.iteration_number, event_details.time, event_details.source_sector->id);
+	printf("Iteration: %d. Soonest time is %.17g from %d. Elapsed time is %.17g\n", sim_data.iteration_number, event_details.time, event_details.source_sector->id, sim_data.elapsed_time);
 	// Final event may take place after time limit, so cut it short
 	if (sim_data.time_limit - sim_data.elapsed_time < event_details.time) {
 		event_details.time = sim_data.time_limit - sim_data.elapsed_time;
@@ -125,6 +126,7 @@ static void do_simulation_iteration_no_dd(){
 	reset_event();
 	// Now find event + time of event
 	find_event_times_no_dd();
+	printf("Iteration: %d. Soonest time is %.17g. Elapsed time is %.17g\n", sim_data.iteration_number, event_details.time, sim_data.elapsed_time);
 	// Final event may take place after time limit, so cut it short
 	if (sim_data.time_limit - sim_data.elapsed_time < event_details.time) {
 		event_details.time = sim_data.time_limit - sim_data.elapsed_time;
