@@ -1,0 +1,35 @@
+5mil
+
+Number of x slices: 8
+Number of y slices: 8
+Number of z slices: 1
+Time limit: 0
+Event limit: 20
+Initial state file: 5mil.spheres
+Output file: data5mil.bin
+Final state file not set.
+Compare file not set
+Time taken in seconds: 47365.023438
+Number of sphere on sphere collisions: 20
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+
+
+Number of x slices: 8
+Number of y slices: 8
+Number of z slices: 1
+Time limit: 0
+Event limit: 20
+Initial state file: 5mil.spheres
+Output file: data_8x8.bin
+Final state file not set.
+Compare file not set
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 20
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+Time taken in seconds: 930.989990
+

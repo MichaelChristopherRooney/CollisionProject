@@ -1,0 +1,44 @@
+Serial 1mil
+
+Number of x slices: 4
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.000992
+Initial state file: 1mil.spheres
+Output file: data_4x4.bin
+Final state file not set.
+Compare file not set
+Time taken in seconds: 12468.190430
+Number of sphere on sphere collisions: 21
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+
+Number of x slices: 8
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.000992
+Initial state file: 1mil.spheres
+Output file: data_8x4.bin
+Final state file not set.
+Compare file not set
+Time taken in seconds: 5113.679688
+Number of sphere on sphere collisions: 21
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+
+Number of x slices: 8
+Number of y slices: 8
+Number of z slices: 1
+Time limit: 0.000992
+Initial state file: 1mil.spheres
+Output file: data_8x8.bin
+Final state file not set.
+Compare file not set
+Time taken in seconds: 2280.320068
+Number of sphere on sphere collisions: 21
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+

@@ -1,0 +1,208 @@
+Results for serial 50k
+
+Number of x slices: 1
+Number of y slices: 1
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data.bin
+Final state file: final_serial_50k.bin
+Compare file not set
+Time taken in seconds: 31435.019531
+Number of sphere on sphere collisions: 159
+Number of collisions with grid boundary: 0
+
+Number of x slices: 2
+Number of y slices: 1
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+vel abs err: 7.957368097777362e-11
+pos abs err: 1.2505552149377763e-12
+Time taken in seconds: 8235.230469
+Number of sphere on sphere collisions: 159
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+
+
+Number of x slices: 2
+Number of y slices: 2
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+vel abs err: 6.3678839978820179e-11
+pos abs err: 1.3642420526593924e-12
+Time taken in seconds: 2015.049927
+Number of sphere on sphere collisions: 159
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+
+Number of x slices: 4
+Number of y slices: 2
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+vel abs err: 1.0447820386616513e-10
+pos abs err: 1.1937117960769683e-12
+Time taken in seconds: 619.779968
+Number of sphere on sphere collisions: 159
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+
+Number of x slices: 4
+Number of y slices: 3
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+vel abs err: 7.8998141361807939e-11
+pos abs err: 1.3073986337985843e-12
+Time taken in seconds: 339.310028
+Number of sphere on sphere collisions: 159
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+
+Number of x slices: 4
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+vel abs err: 5.4072302191343624e-11
+pos abs err: 1.2505552149377763e-12
+Time taken in seconds: 233.729996
+Number of sphere on sphere collisions: 159
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+
+Number of x slices: 6
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+vel abs err: 9.021050573210232e-11
+pos abs err: 1.4779288903810084e-12
+Time taken in seconds: 158.320007
+Number of sphere on sphere collisions: 156
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 3
+
+Number of x slices: 8
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+vel abs err: 8.4142470768711064e-11
+pos abs err: 1.1937117960769683e-12
+Time taken in seconds: 121.559998
+Number of sphere on sphere collisions: 156
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 3
+
+Number of x slices: 8
+Number of y slices: 6
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+vel abs err: 8.645173465993139e-11
+pos abs err: 1.3642420526593924e-12
+Time taken in seconds: 89.709999
+Number of sphere on sphere collisions: 155
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 4
+
+
+Number of x slices: 8
+Number of y slices: 8
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+vel abs err: 9.5610630523879081e-11
+pos abs err: 1.1937117960769683e-12
+Time taken in seconds: 70.970001
+Number of sphere on sphere collisions: 151
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 8
+
+Number of x slices: 16
+Number of y slices: 16
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+vel abs err: 9.0409457698115148e-11
+pos abs err: 1.4210854715202004e-12
+Time taken in seconds: 57.630001
+Number of sphere on sphere collisions: 143
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 103
+Number of partial crossings: 16
+
+Number of x slices: 32
+Number of y slices: 32
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+vel abs err: 1.0518874660192523e-10
+pos abs err: 1.7621459846850485e-12
+Time taken in seconds: 56.980000
+Number of sphere on sphere collisions: 136
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 274
+Number of partial crossings: 23
+
+Number of x slices: 64
+Number of y slices: 64
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+vel abs err: 1.2105871860512707e-10
+pos abs err: 1.8189894035458565e-12
+Time taken in seconds: 69.239998
+Number of sphere on sphere collisions: 117
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 567
+Number of partial crossings: 42
+

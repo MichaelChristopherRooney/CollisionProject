@@ -1,0 +1,115 @@
+2mil serial
+
+Number of x slices: 4
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.000900
+Initial state file: 2mil.spheres
+Output file: data_8x8.bin
+Final state file not set.
+Compare file not set
+Time taken in seconds: 30736.171875
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+
+
+Number of x slices: 8
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.000900
+Initial state file: 2mil.spheres
+Output file: data_8x8.bin
+Final state file not set.
+Compare file not set
+Time taken in seconds: 25547.750000
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 9
+Number of partial crossings: 0
+
+Number of x slices: 8
+Number of y slices: 8
+Number of z slices: 1
+Time limit: 0.000900
+Initial state file: 2mil.spheres
+Output file: data_8x8.bin
+Final state file not set.
+Compare file not set
+Time taken in seconds: 13919.780273
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 17
+Number of partial crossings: 0
+
+
+2 mil mpi
+
+
+Number of x slices: 4
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.000900
+Initial state file: 2mil.spheres
+Output file: data_8x8.bin
+Final state file not set.
+Compare file not set
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+Time taken in seconds: 1992.440063
+
+
+Number of x slices: 8
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.000900
+Initial state file: 2mil.spheres
+Output file: data_8x8.bin
+Final state file not set.
+Compare file not set
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 9
+Number of partial crossings: 0
+Time taken in seconds: 1039.939941
+
+
+Number of x slices: 8
+Number of y slices: 8
+Number of z slices: 1
+Time limit: 0.000900
+Initial state file: 2mil.spheres
+Output file: data_8x8.bin
+Final state file not set.
+Compare file not set
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 17
+Number of partial crossings: 0
+Time taken in seconds: 326.899994
+
+Number of x slices: 8
+Number of y slices: 8
+Number of z slices: 1
+Time limit: 0.000900
+Initial state file: 2mil.spheres
+Output file: data_8x8.bin
+Final state file not set.
+Compare file not set
+ALL_HELP is NOT set.
+Only neighbour nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 17
+Number of partial crossings: 0
+Time taken in seconds: 1040.020020
+

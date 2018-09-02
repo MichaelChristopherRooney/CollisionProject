@@ -1,0 +1,162 @@
+Results for MPI all help 50k
+
+Number of x slices: 2
+Number of y slices: 1
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data_2x1.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 159
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+vel abs err: 7.957368097777362e-11
+pos abs err: 1.2505552149377763e-12
+Time taken in seconds: 4262.459961
+
+Number of x slices: 2
+Number of y slices: 2
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data_2x2.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 159
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+vel abs err: 6.3678839978820179e-11
+pos abs err: 1.3642420526593924e-12
+Time taken in seconds: 531.809998
+
+Number of x slices: 4
+Number of y slices: 2
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data_4x2.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 159
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+vel abs err: 1.0447820386616513e-10
+pos abs err: 1.1937117960769683e-12
+Time taken in seconds: 85.559998
+
+Number of x slices: 4
+Number of y slices: 3
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data_4x2.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 159
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+vel abs err: 7.8998141361807939e-11
+pos abs err: 1.3073986337985843e-12
+Time taken in seconds: 35.570000
+
+Number of x slices: 4
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data_4x2.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 159
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+vel abs err: 5.4072302191343624e-11
+pos abs err: 1.2505552149377763e-12
+Time taken in seconds: 19.990000
+
+Number of x slices: 6
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data_4x2.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 156
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 3
+vel abs err: 9.021050573210232e-11
+pos abs err: 1.4779288903810084e-12
+Time taken in seconds: 11.100000
+
+Number of x slices: 8
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data_4x2.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 156
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 3
+vel abs err: 8.4142470768711064e-11
+pos abs err: 1.1937117960769683e-12
+Time taken in seconds: 8.630000
+
+Number of x slices: 8
+Number of y slices: 6
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data_8x6.bin
+Final state file not set.
+Compare file set to: final_serial_50k.bin
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 155
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 4
+vel abs err: 8.645173465993139e-11
+pos abs err: 1.3642420526593924e-12
+Time taken in seconds: 6.140000
+
+Number of x slices: 8
+Number of y slices: 8
+Number of z slices: 1
+Time limit: 0.001180
+Initial state file: 50000.spheres
+Output file: data_8x8.bin
+Final state file not set.
+Compare file not set
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 151
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 8
+Time taken in seconds: 5.560000
+

@@ -265,6 +265,32 @@ static void generate_5mil(){
 	fclose(fp);
 }
 
+// Generates 10'004'569 spheres placed in lines.
+// Each sphere has a random velocity.
+static void generate_10mil(){
+	count = 0;
+	srand48(123);
+	fp = fopen("10mil.spheres", "wb");
+	double grid_size = 6500.0;
+	fwrite(&grid_size, sizeof(double), 1, fp); // x
+	fwrite(&grid_size, sizeof(double), 1, fp); // y
+	fwrite(&grid_size, sizeof(double), 1, fp); // z
+	const double num_in_line = 3163;
+	int64_t num_spheres = num_in_line * num_in_line;
+	fwrite(&num_spheres, sizeof(int64_t), 1, fp);
+	int i, j;
+	double x, y, z;
+	const double offset = 1.25;
+	const double inc = (grid_size - (offset * 2.0)) / sqrt(num_spheres);
+	printf("inc is %.17g\n", inc);
+	z = 10.0;
+	for(i = 0; i < num_in_line; i++){
+		y = 2.0 + (inc * i);
+		create_spheres(num_in_line, 2.0, y, z, inc, 0.0, 0.0);
+	}
+	fclose(fp);
+}
+
 static void generate_one_axis_crossing_test(){
 	count = 0;
 	fp = fopen("one_axis.spheres", "wb");
@@ -359,6 +385,7 @@ int main(void){
 	generate_1mil();
 	generate_2mil();
 	generate_5mil();
+	generate_10mil();
 	generate_one_axis_crossing_test();
 	generate_two_axis_crossing_test();	
 	generate_three_axis_crossing_test();

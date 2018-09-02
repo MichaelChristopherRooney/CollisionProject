@@ -1,0 +1,50 @@
+MPI neighbours help 1mil
+
+Number of x slices: 4
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.000992
+Initial state file: 1mil.spheres
+Output file: data_4x4.bin
+Final state file not set.
+Compare file not set
+ALL_HELP is NOT set.
+Only neighbour nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 21
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+Time taken in seconds: 2014.089966
+
+Number of x slices: 8
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.000992
+Initial state file: 1mil.spheres
+Output file: data_8x4.bin
+Final state file not set.
+Compare file not set
+ALL_HELP is NOT set.
+Only neighbour nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 21
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+Time taken in seconds: 410.310028
+
+Number of x slices: 8
+Number of y slices: 8
+Number of z slices: 1
+Time limit: 0.000992
+Initial state file: 1mil.spheres
+Output file: data_8x8.bin
+Final state file not set.
+Compare file not set
+ALL_HELP is NOT set.
+Only neighbour nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 21
+Number of collisions with grid boundary: 0
+Number of transfers between sectors: 0
+Number of partial crossings: 0
+Time taken in seconds: 115.220001
+

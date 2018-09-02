@@ -1,0 +1,82 @@
+50k sparse MPI
+
+Number of x slices: 2
+Number of y slices: 1
+Number of z slices: 1
+Time limit: 0.010180
+Initial state file: 50000_sparse.spheres
+Output file: data_2x1.bin
+Final state file not set.
+Compare file not set
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 6
+Number of transfers between sectors: 63
+Number of partial crossings: 0
+Time taken in seconds: 3310.050049
+
+Number of x slices: 2
+Number of y slices: 2
+Number of z slices: 1
+Time limit: 0.010180
+Initial state file: 50000_sparse.spheres
+Output file: data_2x1.bin
+Final state file not set.
+Compare file not set
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 6
+Number of transfers between sectors: 116
+Number of partial crossings: 0
+Time taken in seconds: 747.479980
+
+Number of x slices: 4
+Number of y slices: 2
+Number of z slices: 1
+Time limit: 0.010180
+Initial state file: 50000_sparse.spheres
+Output file: data_2x1.bin
+Final state file not set.
+Compare file not set
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 6
+Number of transfers between sectors: 192
+Number of partial crossings: 0
+Time taken in seconds: 166.100006
+
+Number of x slices: 4
+Number of y slices: 3
+Number of z slices: 1
+Time limit: 0.010180
+Initial state file: 50000_sparse.spheres
+Output file: data_2x1.bin
+Final state file not set.
+Compare file not set
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 6
+Number of transfers between sectors: 139
+Number of partial crossings: 0
+Time taken in seconds: 39.439999
+
+Number of x slices: 4
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.010180
+Initial state file: 50000_sparse.spheres
+Output file: data_2x1.bin
+Final state file not set.
+Compare file not set
+ALL_HELP is set.
+All nodes will find events for sectors without valid prior times
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 6
+Number of transfers between sectors: 267
+Number of partial crossings: 0
+Time taken in seconds: 39.720001
+

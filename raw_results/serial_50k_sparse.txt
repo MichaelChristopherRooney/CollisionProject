@@ -1,0 +1,101 @@
+50k sparse serial
+
+Number of x slices: 1
+Number of y slices: 1
+Number of z slices: 1
+Time limit: 0.010180
+Initial state file: 50000_sparse.spheres
+Output file: data.bin
+Final state file not set.
+Compare file not set
+Time taken in seconds: 1373.599976
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 6
+
+Number of x slices: 2
+Number of y slices: 1
+Number of z slices: 1
+Time limit: 0.010180
+Initial state file: 50000_sparse.spheres
+Output file: data2.bin
+Final state file not set.
+Compare file not set
+Time taken in seconds: 6476.740234
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 6
+Number of transfers between sectors: 63
+Number of partial crossings: 0
+
+
+Number of x slices: 2
+Number of y slices: 2
+Number of z slices: 1
+Time limit: 0.010180
+Initial state file: 50000_sparse.spheres
+Output file: data1.bin
+Final state file not set.
+Compare file not set
+Time taken in seconds: 2815.469971
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 6
+Number of transfers between sectors: 116
+Number of partial crossings: 0
+
+Number of x slices: 4
+Number of y slices: 2
+Number of z slices: 1
+Time limit: 0.010180
+Initial state file: 50000_sparse.spheres
+Output file: data3.bin
+Final state file not set.
+Compare file not set
+Time taken in seconds: 1209.439941
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 6
+Number of transfers between sectors: 192
+Number of partial crossings: 0
+
+Number of x slices: 4
+Number of y slices: 3
+Number of z slices: 1
+Time limit: 0.010180
+Initial state file: 50000_sparse.spheres
+Output file: data4.bin
+Final state file not set.
+Compare file not set
+Time taken in seconds: 402.430023
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 6
+Number of transfers between sectors: 139
+Number of partial crossings: 0
+
+Number of x slices: 4
+Number of y slices: 4
+Number of z slices: 1
+Time limit: 0.010180
+Initial state file: 50000_sparse.spheres
+Output file: data5.bin
+Final state file not set.
+Compare file not set
+Time taken in seconds: 471.380005
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 6
+Number of transfers between sectors: 267
+Number of partial crossings: 0
+
+
+umber of x slices: 8
+Number of y slices: 8
+Number of z slices: 1
+Time limit: 0.010180
+Initial state file: 50000_sparse.spheres
+Output file: data1.bin
+Final state file not set.
+Compare file not set
+Time taken in seconds: 155.270004
+Number of sphere on sphere collisions: 0
+Number of collisions with grid boundary: 6
+Number of transfers between sectors: 576
+Number of partial crossings: 0
+
+
