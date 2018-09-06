@@ -20,8 +20,6 @@ void update_sphere_position(struct sphere_s *s, const double t) {
 // This file contains every sphere, and we need to check if the sphere belongs
 // to the sector the current MPI node is responsible for.
 void load_spheres(FILE *initial_state_fp) {
-	// result is just to shut up gcc's warnings
-	// TODO: get rid of this global and use grid->total_spheres where needed
 	fread_wrapper(&sim_data.total_num_spheres, sizeof(int64_t), 1, initial_state_fp);
 	write_num_spheres();
 	struct sphere_s in;

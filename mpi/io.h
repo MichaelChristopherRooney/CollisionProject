@@ -3,8 +3,6 @@
 #include "params.h"
 #include "sphere.h"
 
-// TODO: describe output file format
-
 void write_sphere_initial_state(const struct sphere_s *sphere);
 void write_initial_iteration_stats();
 void write_num_spheres();

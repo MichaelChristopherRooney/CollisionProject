@@ -108,7 +108,6 @@ void add_sphere_to_sector(struct sector_s *sector, const struct sphere_s *sphere
 
 void set_largest_radius_after_removal(struct sector_s *sector, const struct sphere_s *sphere) {
 	if (sphere->radius == sector->largest_radius && sector->largest_radius_shared == false && sector->num_spheres > 0) {
-		// TODO: search for new largest radius
 		printf("TODO: find new largest radius\n");
 		getchar();
 		exit(1);

@@ -27,7 +27,6 @@
 // We then have to figure out the actual point of collision, as the shortest
 // distance will very likely be when the spheres pass through one another.
 // Trigonometry is used to figure out where the spheres collide.
-// TODO: better comments on trig part
 double find_collision_time_spheres(const struct sphere_s *s1, const struct sphere_s *s2) {
 	union vector_3d rel_vel; 
 	rel_vel.x = s1->vel.x - s2->vel.x; 
@@ -115,9 +114,6 @@ double find_collision_time_sector(const struct sector_s *sector, const struct sp
 // "col_axis" will default to AXIS_NONE, and will keep that value if the sphere is stationary.
 // The time will be DBL_MAX if the sphere is stationary so that we can still
 // compare other times to see if they are sooner.
-// TODO: in the extremely unlikely event that the sphere perfectly hits a corner
-// of the grid then two iterations will be needed before it bounces properly - it
-// would be good if this could be handled in a single iteration instead. 
 double find_collision_time_grid(const struct sphere_s *s, enum axis *col_axis) {
 	double time = DBL_MAX;
 	*col_axis = AXIS_NONE;

@@ -142,25 +142,12 @@ void reduce_events(){
 	}
 }
 
-// Seems tricky to set the axis enum to a given size at compile time so 
-// determine it at runtime.
-// Only done once.
-static MPI_Datatype get_axis_enum_size(){
-	size_t s = sizeof(enum axis);
-	if(s == 4){
-		return MPI_INT;
-	}
-	printf("TODO: other enum sizes\n");
-	exit(1);
-}
-
 void init_events(){
 	event_buffer = malloc(NUM_NODES * sizeof(struct transmit_event_s));
 	help_event_buffer = malloc(NUM_NODES * sizeof(struct transmit_event_s));
 	num_invalid = NUM_NODES;
 	reset_event_details();
 	reset_event_details_helping();
-	MPI_Datatype enum_type = get_axis_enum_size();
 	helping = false;
 	// TODO: sphere struct as MPI datatype
 	// TODO: transmit_event_s as MPI datatype
@@ -354,7 +341,6 @@ static void set_new_time(){
 // Apply events and write changes to file.
 // In each case the source sector is responsible for writing data.
 // Each other sector must update their file pointer however.
-// TODO: clean this up
 void apply_event(){
 	PRIOR_TIME_VALID = true;
 	if (next_event->type == COL_SPHERE_WITH_GRID) {
