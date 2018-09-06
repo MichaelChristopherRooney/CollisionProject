@@ -5,11 +5,8 @@
 // Note: simulation uses doubles for maximum precision, but we want
 // to use floats as the precision isn't need here and it's faster on the GPU.
 
-float grid_x_start;
 float grid_x_end;
-float grid_y_start;
 float grid_y_end;
-float grid_z_start;
 float grid_z_end;
 uint64_t num_spheres;
 struct sphere_s *spheres;
@@ -21,15 +18,9 @@ static size_t bin_file_size;
 static void read_grid_dims() {
 	double temp;
 	fread(&temp, sizeof(double), 1, bin_file);
-	grid_x_start = (float)temp;
-	fread(&temp, sizeof(double), 1, bin_file);
 	grid_x_end = (float)temp;
 	fread(&temp, sizeof(double), 1, bin_file);
-	grid_y_start = (float)temp;
-	fread(&temp, sizeof(double), 1, bin_file);
 	grid_y_end = (float)temp;
-	fread(&temp, sizeof(double), 1, bin_file);
-	grid_z_start = (float)temp;
 	fread(&temp, sizeof(double), 1, bin_file);
 	grid_z_end = (float)temp;
 }
