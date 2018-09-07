@@ -12,6 +12,8 @@ To generate the data sets cd into the config_generator directory.
 
 Then make run.sh executable and run it.
 
+Use the -h argument to view supported args, or read the appendix in the report.
+
 Data sets will then be created in the serial/ and mpi/ directories.
 
 Note that some of these data sets are quite large so you will want to delete them afterwards.
