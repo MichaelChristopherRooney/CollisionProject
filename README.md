@@ -16,3 +16,8 @@ Data sets will then be created in the serial/ and mpi/ directories.
 
 Note that some of these data sets are quite large so you will want to delete them afterwards.
 
+The visualiser can accept the binary files produced by the collision detection programs.
+
+These are specified by the -i arg passed to the collision detection programs.
+
+The visualiser is Windows only and requires Visual Studio to use.
